@@ -38,14 +38,14 @@ const RecentActivities: React.FC = () => {
           <div className="relative">
             <button 
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 bg-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition-colors"
+              className="flex items-center gap-2 bg-[#1d1e24] px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition-colors"
             >
               {selectedPeriod}
               <ChevronDown size={16} className={`transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
             </button>
             
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10">
+              <div className="absolute right-0 mt-2 w-40 bg-[#1d1e24] rounded-lg shadow-lg z-10">
                 {periods.map((period) => (
                   <button
                     key={period}
