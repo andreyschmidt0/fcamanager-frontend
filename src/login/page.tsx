@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import '../index.css';
 import '../fonts.css';
 
-const LoginPage = () => {
+interface LoginPageProps {
+  onLoginSuccess?: () => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
 
@@ -10,6 +14,11 @@ const LoginPage = () => {
     e.preventDefault();
     // Lógica de autenticação aqui
     console.log('Login:', login, 'Password:', password);
+    
+    // Simulando autenticação bem-sucedida
+    if (login && password) {
+      onLoginSuccess?.();
+    }
   };
 
   const handleCancel = () => {

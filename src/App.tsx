@@ -1,11 +1,24 @@
-// src/App.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import LoginPage from './login/page';
+import MainPage from './main/page';
 import './index.css';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Função para lidar com o login bem-sucedido
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
   return (
-    <LoginPage />
+    <>
+      {!isAuthenticated ? (
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        <MainPage />
+      )}
+    </>
   );
 }
 
