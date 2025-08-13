@@ -13,7 +13,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica de autenticação aqui
-    console.log('Login:', login, 'Password:', password);
     
     // Simulando autenticação bem-sucedida
     if (login && password) {
@@ -58,7 +57,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 placeholder="LOGIN"
                 value={login}
                 onChange={(e) => setLogin(e.target.value)}
-                className="w-full px-4 py-3 bg-white text-black placeholder-gray-500 rounded-lg border-2 border-transparent focus:border-green-500 focus:outline-none transition-all duration-300 font-medium tracking-wide"
+                className="w-full px-4 py-3 bg-[#1d1e24] text-white text-xl placeholder-gray-500 rounded-lg border-2 border-transparent focus:border-green-500 focus:outline-none transition-all duration-300 font-normal tracking-wider"
                 required
               />
             </div>
@@ -70,7 +69,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 placeholder="PASSWORD"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-white text-black placeholder-gray-500 rounded-lg border-2 border-transparent focus:border-green-500 focus:outline-none transition-all duration-300 font-medium tracking-wide"
+                className="w-full px-4 py-3 bg-[#1d1e24] text-white text-xl placeholder-gray-500 rounded-lg border-2 border-transparent focus:border-green-500 focus:outline-none transition-all duration-300 font-normal tracking-wider"
                 required
               />
             </div>
@@ -80,13 +79,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="flex-1 bg-white text-lg text-black font-semibold py-3 px-4 rounded-lg hover:bg-gray-200 transition-all duration-300 tracking-wide"
+                className="flex-1 bg-green-500 text-xl hover:scale-105 text-[#111216] font-semibold py-3 px-4 rounded-lg transition-all duration-300 tracking-wider"
               >
                 CANCELAR
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-white text-lg text-black font-semibold py-3 px-4 rounded-lg hover:bg-gray-200 transition-all duration-300 tracking-wide"
+                className="flex-1 bg-green-500 text-xl hover:scale-105 text-[#111216] font-semibold py-3 px-4 rounded-lg transition-all duration-300 tracking-wider"
               >
                 ENTRAR
               </button>

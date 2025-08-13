@@ -13,7 +13,6 @@ const MainPage = () => {
   return (
     <div className="min-h-screen bg-[#1d1e24] text-white">
       <Header />
-
       {/* Main Content Grid */}
       <main className="p-6">
         <div className="grid grid-cols-12 gap-6">
@@ -33,7 +32,7 @@ const MainPage = () => {
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer/>
     </div>
   );
 };

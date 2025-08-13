@@ -26,9 +26,9 @@ const RecentActivities: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#111216] rounded-lg border border-gray-800">
+    <div className="bg-[#111216] rounded-lg border border-black">
       {/* Header */}
-      <div className="p-4 border-b border-gray-800">
+      <div className="p-4 border-b border-black">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-neofara font-medium">
             ÚLTIMAS ATIVIDADES
@@ -72,10 +72,10 @@ const RecentActivities: React.FC = () => {
           {activities.map((activity) => (
             <div 
               key={activity.id} 
-              className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-colors"
+              className="flex items-center gap-3 p-3 bg-[#1d1e24] rounded-lg hover:bg-[#525252] transition-colors"
             >
               {/* Avatar */}
-              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-[#111216] rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-medium">
                   {activity.name.split('-')[1]?.substring(0, 2).toUpperCase()}
                 </span>

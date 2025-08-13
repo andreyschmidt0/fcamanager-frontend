@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
+import BanPlayerModal from './modal/banplayermodal';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -6,8 +8,45 @@ interface SidebarMenuProps {
 }
 
 const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) => {
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedAction, setSelectedAction] = useState<{ category: string; option: string } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const toggleDropdown = (buttonName: string) => {
+    setOpenDropdown(openDropdown === buttonName ? null : buttonName);
+  };
+
+  const handleOptionClick = (category: string, option: string) => {
+    setSelectedAction({ category, option });
+    setIsModalOpen(true);
+    setOpenDropdown(null);
+  };
+  
+  const actionButtons = [
+    { name: 'CONSULTAR', options: ['Consultar Jogador', 'Consultar Item', 'Consultar Histórico'] },
+    { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item', 'Enviar Mensagem'] },
+    { name: 'BANIR', options: ['Banir Temporário', 'Banir Permanente', 'Banir IP'] },
+    { name: 'EXCLUIR', options: ['Excluir Conta', 'Excluir Item', 'Excluir Personagem'] },
+    { name: 'TRANSFERIR', options: ['Transferir Cash', 'Transferir Item', 'Transferir Personagem'] },
+    { name: 'ALTERAR', options: ['Alterar Nome', 'Alterar Level', 'Alterar Rank'] }
+  ];
+  
   return (
-    <div className="bg-[#111216] rounded-lg border border-black p-6 h-fit">
+    <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black p-6 h-fit">
       <div className="space-y-8">
         {/* Execuções Section */}
         <div>
@@ -21,88 +60,40 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
             <span className="text-lg text-white font-neofara font-medium">EXECUÇÕES</span>
           </button>
           
-          {/* Placeholder boxes for execuções */}
+          {/* Action buttons grid */}
           <div className="grid grid-cols-3 gap-4 font-neofara">
-            <div className="bg-[#1d1e24] rounded-lg h-[80px] hover:bg-[#525252] transition-colors">
-                <span className="text-xl text-white font-medium flex justify-center items-center h-full gap-2">
-                    CONSULTAR
-                    <svg 
-                        className={`w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-all duration-300`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </span> 
-            </div>
-            
-            <div className="bg-[#1d1e24] rounded-lg h-[80px] hover:bg-[#525252] transition-colors">
-                <span className="text-xl text-white font-medium flex justify-center items-center h-full gap-2">
-                    ENVIAR
-                    <svg 
-                        className={`w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-all duration-300`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </span>
-            </div>
-            <div className="bg-[#1d1e24] rounded-lg h-[80px] hover:bg-[#525252] transition-colors">
-                <span className="text-xl text-white font-medium flex justify-center items-center h-full gap-2">
-                    BANIR
-                    <svg 
-                        className={`w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-all duration-300`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </span>
-            </div>
-            <div className="bg-[#1d1e24] rounded-lg h-[80px] hover:bg-[#525252] transition-colors">
-                <span className="text-xl text-white font-medium flex justify-center items-center h-full gap-2">
-                    EXCLUIR
-                    <svg 
-                        className={`w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-all duration-300`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </span>
-            </div>
-            
-            <div className="bg-[#1d1e24] rounded-lg h-[80px] hover:bg-[#525252] transition-colors">
-                <span className="text-xl text-white font-medium flex justify-center items-center h-full gap-2">
-                    TRANSFERIR
-                    <svg 
-                        className={`w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-all duration-300`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </span>
-            </div>
-            <div className="bg-[#1d1e24] rounded-lg h-[80px] hover:bg-[#525252] transition-colors">
-                    <span className="text-xl text-white font-medium flex justify-center items-center h-full gap-2">
-                    ALTERAR
-                    <svg 
-                        className={`w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-all duration-300`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </span>
-            </div>
+            {actionButtons.map((button) => (
+              <div key={button.name} className="relative">
+                <button 
+                  onClick={() => toggleDropdown(button.name)}
+                  className="w-full bg-[#1d1e24] rounded-lg h-[80px] hover:bg-[#525252] transition-colors"
+                >
+                  <span className="text-xl text-white font-medium flex justify-center items-center h-full gap-2">
+                    {button.name}
+                    <ChevronDown 
+                      size={16} 
+                      className={`transition-transform ${openDropdown === button.name ? 'rotate-180' : ''}`} 
+                    />
+                  </span>
+                </button>
+                
+                {openDropdown === button.name && (
+                  <div className="absolute top-full left-0 mt-2 w-full bg-[#1d1e24] rounded-lg shadow-lg z-10 min-w-[200px]">
+                    {button.options.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => {
+                          handleOptionClick(button.name, option)
+                        }}
+                        className="block w-full text-left px-4 py-3 text-md tracking-wide text-white hover:bg-[#525252] transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      >
+                        {option} 
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -122,7 +113,16 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
           <div className="bg-[#1d1e24] rounded-lg h-32"></div>
         </div>
       </div>
-    </div>
+            {isModalOpen && selectedAction && (
+              <BanPlayerModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={`${selectedAction.category} - ${selectedAction.option}`}
+                category={selectedAction.category}
+                option={selectedAction.option}
+                />
+            )}
+      </div>
   );
 };
 

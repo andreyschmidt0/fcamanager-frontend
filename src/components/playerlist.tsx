@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import '../index.css';
+import { X, Search } from 'lucide-react';
+import listUsers, { User } from '../api/listusers';
+import listClans, { Clan as ApiClan } from '../api/listclans';
 
 export interface Player {
   id: string;
   name: string;
   clan: string;
+  discordId: string;
+  nexonId: string;
 }
 
 export interface Clan {
   id: string;
   name: string;
+  leader: string;
+  leaderDiscordId: string;
+  memberCount: number;
 }
 
 interface PlayersListProps {
@@ -18,34 +27,104 @@ interface PlayersListProps {
 
 
 const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
-  // Dados mockados - Players e seus respectivos clans
-  const players: Player[] = [
-    { id: '1', name: 'xXSniperEliteXx', clan: '[ELITE] Elite Squad' },
-    { id: '2', name: 'DarkShadow92', clan: '[BR] Brasil Force' },
-    { id: '3', name: 'ProGamer2024', clan: '[PRO] Professional Gaming' },
-    { id: '4', name: 'NinjaWarrior', clan: '[NJA] Ninja Clan' },
-    { id: '5', name: 'ThunderBolt', clan: '[STORM] Storm Troopers' },
-    { id: '6', name: 'IceQueen', clan: '[ICE] Frozen Legion' },
-    { id: '7', name: 'FireDragon', clan: '[FIRE] Fire Nation' },
-    { id: '8', name: 'GhostRider', clan: '[GHOST] Phantom Force' },
-    { id: '9', name: 'CyberPunk2077', clan: '[CYBER] Cyber Warriors' },
-    { id: '10', name: 'AlphaWolf', clan: '[WOLF] Wolf Pack' },
-    { id: '11', name: 'ShadowHunter', clan: '[HUNT] Hunters Guild' },
-    { id: '12', name: 'BladeRunner', clan: '[BLADE] Blade Masters' },
-  ];
-
-  const clans: Clan[] = [
-    { id: '1', name: '[ELITE] Elite Squad' },
-    { id: '2', name: '[BR] Brasil Force' },
-    { id: '3', name: '[PRO] Professional Gaming' },
-    { id: '4', name: '[NJA] Ninja Clan' },
-    { id: '5', name: '[STORM] Storm Troopers' },
-  ];
-
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [selectedClan, setSelectedClan] = useState<Clan | null>(null);
   const [viewMode, setViewMode] = useState<'players' | 'clans'>('players');
   const [search, setSearch] = useState<string>('');
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [clans, setClans] = useState<Clan[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
+  
+  // Função para buscar players
+  const searchPlayers = async (nickname: string) => {
+    if (!nickname.trim()) {
+      setPlayers([]);
+      setHasSearched(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const users: User[] = await listUsers(nickname);
+      const mappedPlayers: Player[] = users.map((user: User) => ({
+        id: user.strDiscordID,
+        name: user.NickName,
+        clan: user.ClanName || 'Sem Clan',
+        discordId: user.strDiscordID,
+        nexonId: user.strNexonID
+      }));
+      setPlayers(mappedPlayers);
+      setHasSearched(true);
+    } catch (error) {
+      console.error('Erro ao buscar players:', error);
+      setPlayers([]);
+      setHasSearched(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para buscar clans
+  const searchClans = async (nickname: string) => {
+    if (!nickname.trim()) {
+      setClans([]);
+      setHasSearched(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const apiClans: ApiClan[] = await listClans(nickname);
+      const mappedClans: Clan[] = apiClans.map((clan: ApiClan) => ({
+        id: clan.nm_clan,
+        name: clan.nm_clan,
+        leader: clan.Lider,
+        leaderDiscordId: clan.DiscordID_Lider,
+        memberCount: clan.qt_membros
+      }));
+      setClans(mappedClans);
+      setHasSearched(true);
+    } catch (error) {
+      console.error('Erro ao buscar clans:', error);
+      setClans([]);
+      setHasSearched(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Debounce para busca
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (viewMode === 'players') {
+        searchPlayers(search);
+      } else {
+        searchClans(search);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [search, viewMode]);
+
+  // Limpar resultados ao trocar de modo
+  useEffect(() => {
+    setPlayers([]);
+    setClans([]);
+    setHasSearched(false);
+    setSelectedPlayer(null);
+    setSelectedClan(null);
+    
+    // Se já tem algo digitado, buscar automaticamente
+    if (search.trim()) {
+      if (viewMode === 'players') {
+        searchPlayers(search);
+      } else {
+        searchClans(search);
+      }
+    }
+  }, [viewMode]);
+
   return (
     <>
       <div className="bg-[#111216] rounded-lg border border-black">
@@ -56,15 +135,32 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
           </h2>
         </div>    
 
-        <input onChange={(e) => setSearch(e.target.value)} value={search} type="search" placeholder="Pesquisar" className="w-[80%] bg-[#1d1e24] rounded-lg p-2 flex justify-center items-center" />
+        {/* Search Bar */}
+        <div className="px-4 pb-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input 
+              onChange={(e) => setSearch(e.target.value)} 
+              value={search} 
+              type="search" 
+              placeholder={viewMode === 'players' ? "Digite o nickname do player..." : "Digite o nickname do clan..."} 
+              className="w-full bg-[#1d1e24] rounded-lg p-3 pl-10 text-white placeholder-gray-400 border border-gray-600 focus:border-green-500 focus:outline-none transition-colors" 
+            />
+            {loading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500"></div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Toggle Buttons */}
         <div className="p-4 flex gap-2">
           <button 
             onClick={() => setViewMode('players')}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-4 rounded-lg text-lg font-medium transition-colors font-neofara ${
               viewMode === 'players' 
-                ? 'bg-blue-600 text-white' 
+                ? 'bg-green-600 text-white' 
                 : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
             }`}
           >
@@ -72,9 +168,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
           </button>
           <button 
             onClick={() => setViewMode('clans')}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-4 rounded-lg text-lg font-medium transition-colors font-neofara ${
               viewMode === 'clans' 
-                ? 'bg-blue-600 text-white' 
+                ? 'bg-green-600 text-white' 
                 : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
             }`}
           >
@@ -84,17 +180,36 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
         {/* Players List */}
         {viewMode === 'players' && (
-          <div className="p-4">
-            <div className="space-y-2">
+          <div className="p-4 h-[445px]">
+            <div className="space-y-2 h-full overflow-y-auto custom-scrollbar">
+              {!hasSearched && !loading && (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <Search size={48} className="mb-4" />
+                  <p className="text-lg">Digite um nickname para buscar</p>
+                  <p className="text-sm">Os resultados aparecerão aqui</p>
+                </div>
+              )}
+              
+              {hasSearched && !loading && players.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <X size={48} className="mb-4" />
+                  <p className="text-lg">Nenhum player encontrado</p>
+                  <p className="text-sm">Tente buscar por outro nickname</p>
+                </div>
+              )}
+              
               {players.map((player) => (
                 <div 
                   key={player.id} 
                   className="bg-[#1d1e24] rounded-lg p-3 hover:bg-[#525252] transition-colors cursor-pointer"
-                  onClick={() => setSelectedPlayer(player)}
+                  onClick={() => {
+                    setSelectedPlayer(player);
+                    setSelectedClan(null);
+                  }}
                 >
                   <div className="flex items-center gap-4">
                     {/* Avatar */}
-                    <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-[#111216] rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-xs font-bold text-white">
                         {player.name.substring(0, 2).toUpperCase()}
                       </span>
@@ -104,7 +219,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                     <div className="flex-1 flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-white">{player.name}</p>
-                        <p className="text-sm text-green-500 font-medium">{player.clan}</p>
+                        <p className="text-xs text-gray-400 font-medium">{player.clan}</p>
                       </div>
                     </div>
                   </div>
@@ -116,17 +231,36 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
         {/* Clans List */}
         {viewMode === 'clans' && (
-          <div className="p-4">
-            <div className="space-y-2">
+          <div className="p-4 h-[445px]">
+            <div className="space-y-2 h-full overflow-y-auto custom-scrollbar">
+              {!hasSearched && !loading && (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <Search size={48} className="mb-4" />
+                  <p className="text-lg">Digite um nickname para buscar</p>
+                  <p className="text-sm">Os clans aparecerão aqui</p>
+                </div>
+              )}
+              
+              {hasSearched && !loading && clans.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <X size={48} className="mb-4" />
+                  <p className="text-lg">Nenhum clan encontrado</p>
+                  <p className="text-sm">Tente buscar por outro nickname</p>
+                </div>
+              )}
+              
               {clans.map((clan) => (
                 <div 
                   key={clan.id} 
                   className="bg-[#1d1e24] rounded-lg p-3 hover:bg-[#525252] transition-colors cursor-pointer"
-                  onClick={() => setSelectedClan(clan)}
+                  onClick={() => {
+                    setSelectedClan(clan);
+                    setSelectedPlayer(null);
+                  }}
                 >
                   <div className="flex items-center gap-4">
                     {/* Clan Avatar */}
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-[#111216] rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-xs font-bold text-white">
                         {clan.name.substring(1, 3).toUpperCase()}
                       </span>
@@ -136,8 +270,11 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                     <div className="flex-1 flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-white">{clan.name}</p>
-                        <p className="text-sm text-blue-400 font-medium">
-                          {players.filter(p => p.clan === clan.name).length} membros
+                        <p className="text-xs text-gray-400 font-medium">
+                          {clan.memberCount} membro(s)
+                        </p>
+                        <p className="text-xs text-gray-500 font-medium">
+                          Líder: {clan.leader}
                         </p>
                       </div>
                     </div>
@@ -158,7 +295,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               onClick={() => setSelectedPlayer(null)}
               className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl leading-none"
             >
-              ×
+              <X size={20} />
             </button>
             
             {/* Player details */}
@@ -170,7 +307,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               </div>
               <div>
                 <h3 className="text-white font-medium text-sm">{selectedPlayer.name}</h3>
-                <p className="text-green-500 text-xs">{selectedPlayer.clan}</p>
+                <p className="text-gray-400 text-xs">{selectedPlayer.clan}</p>
+                <p className="text-gray-500 text-xs">Discord: {selectedPlayer.discordId}</p>
+                <p className="text-gray-500 text-xs">Nexon: {selectedPlayer.nexonId}</p>
               </div>
             </div>
             
@@ -193,7 +332,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               onClick={() => setSelectedClan(null)}
               className="absolute top-2 right-2 text-gray-400 hover:text-white text-xl leading-none"
             >
-              ×
+              <X size={20} /> 
             </button>
             
             {/* Clan details */}
@@ -206,7 +345,13 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               <div>
                 <h3 className="text-white font-medium text-sm">{selectedClan.name}</h3>
                 <p className="text-blue-400 text-xs">
-                  {players.filter(p => p.clan === selectedClan.name).length} membros
+                  {selectedClan.memberCount} membros
+                </p>
+                <p className="text-gray-400 text-xs">
+                  Líder: {selectedClan.leader}
+                </p>
+                <p className="text-gray-500 text-xs">
+                  Discord: {selectedClan.leaderDiscordId}
                 </p>
               </div>
             </div>
