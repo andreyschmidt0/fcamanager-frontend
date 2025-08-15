@@ -47,6 +47,31 @@ code {
   background: #a8a8a8;
 }
 
+/* Password toggle icon styling */
+.password-toggle-white::-ms-reveal {
+  color: white;
+  filter: invert(1);
+}
+
+.password-toggle-white::-webkit-credentials-auto-fill-button {
+  filter: invert(1);
+}
+
+/* For Edge browser */
+.password-toggle-white::-ms-clear {
+  filter: invert(1);
+}
+
+/* Additional browser compatibility */
+input[type="password"].password-toggle-white {
+  -webkit-text-security: disc;
+}
+
+input[type="password"].password-toggle-white::-webkit-inner-spin-button,
+input[type="password"].password-toggle-white::-webkit-outer-spin-button {
+  filter: invert(1);
+}
+
 /* Animações */
 @keyframes fadeIn {
   from {
