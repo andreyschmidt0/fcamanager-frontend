@@ -64,7 +64,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Excluir Conta', 'Excluir Item', 'Excluir Personagem'] },
     { name: 'TRANSFERIR', options: ['Transferir Cash', 'Transferir Item', 'Transferir Personagem'] },
-    { name: 'ALTERAR', options: ['Alterar Nome', 'Alterar Level', 'Alterar Rank'] }
+    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Level', 'Alterar Rank'] }
   ];
   
   return (
@@ -182,7 +182,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
             )
             }
                         {
-              isModalOpen && selectedAction && selectedAction.option === 'Alterar Nome' && (
+              isModalOpen && selectedAction && selectedAction.option === 'Alterar Nickname' && (
               <ChangeNickname 
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
