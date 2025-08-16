@@ -8,6 +8,7 @@ import SendItem from './modal/senditem';
 import ConsultInventory from './modal/consultinventory';
 import ConsultInbox from './modal/consultinbox';
 import ConsultItem from './modal/consultitem';
+import ChangeNickname from './modal/changenickname';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -58,7 +59,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   };
 
   const actionButtons = [
-    { name: 'CONSULTAR', options: ['Consultar Inbox', 'Consultar Histórico de Ban', 'Consultar Inventário'] },
+    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário'] },
     { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item', 'Enviar Mensagem'] },
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Excluir Conta', 'Excluir Item', 'Excluir Personagem'] },
@@ -67,7 +68,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   ];
   
   return (
-    <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black p-6 h-fit">
+    <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black p-6 h-full flex flex-col">
       <div className="space-y-8">
         {/* Execuções Section */}
         <div>
@@ -173,13 +174,22 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
             )
             }
             {
-              isModalOpen && selectedAction && selectedAction.option === 'Consultar Inbox' && (
+              isModalOpen && selectedAction && selectedAction.option === 'Consultar Item' && (
               <ConsultItem 
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 />
             )
             }
+                        {
+              isModalOpen && selectedAction && selectedAction.option === 'Alterar Nome' && (
+              <ChangeNickname 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                />
+            )
+            }
+            
       </div>
   );
 };
