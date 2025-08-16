@@ -70,6 +70,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
             <input
               type="text"
               name="discordId"
+              placeholder='Ex 123456789012345678'
               value={formData.discordId}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
@@ -114,6 +115,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
             <input
               type="text"
               name="quantity"
+              placeholder='Ex: 1'
               value={formData.quantity}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
@@ -130,6 +132,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
               value={formData.userMessage}
               onChange={handleInputChange}
               rows={3}
+              placeholder='Digite uma mensagem para o usuário'
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors resize-none"
               required
             />

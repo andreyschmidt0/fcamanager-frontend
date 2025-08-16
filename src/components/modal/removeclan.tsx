@@ -1,29 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { usePlayer } from '../../contexts/PlayerContext';
+import { useClan } from '../../contexts/ClanContext';
 
-interface ConsultInventory {
+interface removeclanProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
-  const { selectedPlayer } = usePlayer();
+const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
+  const { selectedClan } = useClan();
   const [formData, setFormData] = useState({
-    discordId: '',
-    loginAccount: '',
-    filter:''
+    clanid: '',
+    oidguild: ''
   });
 
   useEffect(() => {
-    if (selectedPlayer && isOpen) {
+    if (selectedClan && isOpen) {
       setFormData(prev => ({
         ...prev,
-        discordId: selectedPlayer.discordId || '',
-        loginAccount: selectedPlayer.nexonId || ''
+        clanid: selectedClan.clanid || '',
+        oidguild: selectedClan.oidguild || ''
       }));
     }
-  }, [selectedPlayer, isOpen]);
+  }, [selectedClan, isOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -36,7 +35,7 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica será implementada posteriormente
-    console.log('Consult Ban History Data:', formData);
+    console.log('Clan Data:', formData);
   };
 
   if (!isOpen) return null;
@@ -46,8 +45,8 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
       <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
-          <h2 className="absolute left-1/2 w-[80%] text-center -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            CONSULTAR INVENTÁRIO
+          <h2 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
+            REMOVER CLÃ
           </h2>
           <button
             onClick={onClose}
@@ -59,16 +58,14 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Discord ID */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Discord ID do usuário alvo
+              ID do Clã
             </label>
             <input
               type="text"
-              name="discordId"
-              placeholder='Ex 123456789012345678'
-              value={formData.discordId}
+              name="clanid"
+              value={formData.clanid}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
@@ -77,27 +74,12 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Login da Conta
+              OID Guild
             </label>
             <input
               type="text"
-              name="loginAccount"
-              value={formData.loginAccount}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Filtro (0 expirados, 1 disponíveis)
-            </label>
-            <input
-              type="text"
-              name="filter"
-              placeholder='Opcional'
-              value={formData.filter}
+              name="oidguild"
+              value={formData.oidguild}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
@@ -115,9 +97,9 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Consultar Inventário
+              Remover Clã
             </button>
           </div>
         </form>
@@ -126,4 +108,4 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
   );
 };
 
-export default ConsultInventory;
+export default removeclan;

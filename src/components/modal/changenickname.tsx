@@ -69,6 +69,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
               name="discordId"
               value={formData.discordId}
               onChange={handleInputChange}
+              placeholder='Ex 123456789012345678'
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />

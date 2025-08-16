@@ -67,6 +67,7 @@ const ConsultInbox: React.FC<ConsultInboxProps> = ({ isOpen, onClose }) => {
               type="text"
               name="discordId"
               value={formData.discordId}
+              placeholder='Ex 123456789012345678'
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required

@@ -6,6 +6,7 @@ export interface Clan {
     Lider: string;
     nm_clan: string;
     qt_membros: number;
+    oidguild: string;
 }
 
 const listClans = async (nickname: string = '', page: number = 1): Promise<Clan[]> => {

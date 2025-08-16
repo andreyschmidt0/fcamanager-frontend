@@ -1,8 +1,7 @@
-// ConfirmationModal.tsx
 import React from 'react';
-// Import UI components (e.g., from Material-UI, Ant Design, or a custom design system)
-    // types.ts
-    interface ConfirmationModalProps {
+
+
+interface ConfirmationModalProps {
         isOpen: boolean;
         onConfirm: () => void;
         onCancel: () => void;
@@ -22,10 +21,9 @@ import React from 'react';
         confirmActionText = 'Confirm',
         cancelActionText = 'Cancel',
       }) => {
-        if (!isOpen) return null; // Don't render if not open
+        if (!isOpen) return null;
   
         return (
-          // Modal structure (e.g., a Dialog component from a UI library)
           <div className='fixed z-50 inset-0 bg-black bg-opacity-50 flex justify-center items-center'>
             <h2>{title}</h2>
             {description && <p>{description}</p>}

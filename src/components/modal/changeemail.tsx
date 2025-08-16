@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 
-interface ConsultInventory {
+interface ChangeEmailProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
+const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    filter:''
+    newemail:''
   });
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
           <h2 className="absolute left-1/2 w-[80%] text-center -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            CONSULTAR INVENTÁRIO
+            ALTERAR NICKNAME
           </h2>
           <button
             onClick={onClose}
@@ -67,9 +67,9 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
             <input
               type="text"
               name="discordId"
-              placeholder='Ex 123456789012345678'
               value={formData.discordId}
               onChange={handleInputChange}
+              placeholder='Ex 123456789012345678'
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
@@ -91,13 +91,13 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Filtro (0 expirados, 1 disponíveis)
+              Novo Email
             </label>
             <input
               type="text"
-              name="filter"
-              placeholder='Opcional'
-              value={formData.filter}
+              name="newemail"
+              placeholder='novo@email.com'
+              value={formData.newemail}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
@@ -117,7 +117,7 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
               type="submit"
               className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Consultar Inventário
+              Alterar Nickname
             </button>
           </div>
         </form>
@@ -126,4 +126,4 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
   );
 };
 
-export default ConsultInventory;
+export default ChangeEmail;

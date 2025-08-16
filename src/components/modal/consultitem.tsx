@@ -84,6 +84,7 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
             <input
               type="text"
               name="loginAccount"
+              placeholder='Opcional'
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required

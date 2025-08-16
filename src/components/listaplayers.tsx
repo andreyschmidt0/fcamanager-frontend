@@ -4,6 +4,7 @@ import { X, Search, Copy, User as UserIcon, Hash } from 'lucide-react';
 import listUsers, { User, listUsersByDiscordId } from '../api/listusers';
 import listClans, { Clan as ApiClan } from '../api/listclans';
 import { usePlayer } from '../contexts/PlayerContext';
+import { useClan } from '../contexts/ClanContext';
 
 export interface Player {
   id: string;
@@ -26,7 +27,6 @@ export interface Clan {
 interface PlayersListProps {
   activeTab: 'execucoes' | 'pendentes';
 }
-
 
 
 const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {

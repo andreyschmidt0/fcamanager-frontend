@@ -9,6 +9,9 @@ import ConsultInventory from './modal/consultinventory';
 import ConsultInbox from './modal/consultinbox';
 import ConsultItem from './modal/consultitem';
 import ChangeNickname from './modal/changenickname';
+import ChangeEmail from './modal/changeemail';
+import RemoveExp from './modal/removeexp';
+import RemoveClan from './modal/removeclan';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -24,8 +27,22 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      
+      if (containerRef.current && !containerRef.current.contains(target)) {
         setOpenDropdown(null);
+        return;
+      }
+      
+      if (openDropdown) {
+        const activeDropdown = document.querySelector(`[data-dropdown="${openDropdown}"]`);
+        
+        if (activeDropdown && !activeDropdown.contains(target)) {
+          const activeButton = document.querySelector(`[data-button="${openDropdown}"]`);
+          if (!activeButton || !activeButton.contains(target)) {
+            setOpenDropdown(null);
+          }
+        }
       }
     };
 
@@ -33,7 +50,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [openDropdown]);
 
   const toggleDropdown = (buttonName: string) => {
     setOpenDropdown(openDropdown === buttonName ? null : buttonName);
@@ -45,16 +62,15 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     setOpenDropdown(null);
   };
   
-  // Filtrar opções de ban baseado no status do player selecionado
   const getBanOptions = () => {
     if (!selectedPlayer) {
       return ['Banir Player', 'Desbanir Player'];
     }
     
     if (selectedPlayer.banStatus === 'Sim') {
-      return ['Desbanir Player']; // Player banido - só mostrar opção de desbanir
+      return ['Desbanir Player'];
     } else {
-      return ['Banir Player']; // Player não banido - só mostrar opção de banir
+      return ['Banir Player'];
     }
   };
 
@@ -62,9 +78,9 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox'] },
     { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item', 'Enviar Mensagem'] },
     { name: 'BANIR', options: getBanOptions() },
-    { name: 'EXCLUIR', options: ['Excluir Conta', 'Excluir Item', 'Excluir Personagem'] },
+    { name: 'EXCLUIR', options: ['Excluir Conta', 'Excluir Item', 'Remover Clã', 'Remover Exp'] },
     { name: 'TRANSFERIR', options: ['Transferir Cash', 'Transferir Item', 'Transferir Personagem'] },
-    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Level', 'Alterar Rank'] }
+    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Level', 'Alterar Rank', 'Alterar Email'] }
   ];
   
   return (
@@ -88,6 +104,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
               <div key={button.name} className="relative">
                 <button 
                   onClick={() => toggleDropdown(button.name)}
+                  data-button={button.name}
                   className="w-full bg-[#1d1e24] rounded-lg h-[80px] hover:bg-[#525252] transition-colors"
                 >
                   <span className="text-xl text-white font-medium flex justify-center items-center h-full gap-2">
@@ -100,7 +117,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
                 </button>
                 
                 {openDropdown === button.name && (
-                  <div className="absolute top-full left-0 mt-2 w-full bg-[#1d1e24] rounded-lg shadow-lg z-10 min-w-[200px]">
+                  <div 
+                    data-dropdown={button.name}
+                    className="absolute top-full left-0 mt-2 w-full bg-[#1d1e24] rounded-lg shadow-lg z-10 min-w-[200px]"
+                  >
                     {button.options.map((option) => (
                       <button
                         key={option}
@@ -189,7 +209,30 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
                 />
             )
             }
-            
+           {
+              isModalOpen && selectedAction && selectedAction.option === 'Alterar Email' && (
+              <ChangeEmail 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                />
+            )
+            }
+                       {
+              isModalOpen && selectedAction && selectedAction.option === 'Remover Exp' && (
+              <RemoveExp 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                />
+            )
+            }
+            {
+              isModalOpen && selectedAction && selectedAction.option === 'Remover Clã' && (
+              <RemoveClan 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                />
+            )
+            }
       </div>
   );
 };
