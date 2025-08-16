@@ -26,7 +26,7 @@ const RecentActivities: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#111216] rounded-lg border border-black">
+    <div className="bg-[#111216] rounded-lg border border-black h-screen">
       {/* Header */}
       <div className="p-4 border-b border-black">
         <div className="flex items-center justify-between">
@@ -67,7 +67,7 @@ const RecentActivities: React.FC = () => {
       </div>
 
       {/* Activities List */}
-      <div className="p-4 max-h-[600px] overflow-y-auto">
+      <div className="p-4 max-h-screen overflow-y-auto">
         <div className="space-y-3">
           {activities.map((activity) => (
             <div 

@@ -59,7 +59,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   };
 
   const actionButtons = [
-    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário'] },
+    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox'] },
     { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item', 'Enviar Mensagem'] },
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Excluir Conta', 'Excluir Item', 'Excluir Personagem'] },
@@ -68,7 +68,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   ];
   
   return (
-    <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black p-6 h-full flex flex-col">
+    <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black p-6 h-screen">
       <div className="space-y-8">
         {/* Execuções Section */}
         <div>

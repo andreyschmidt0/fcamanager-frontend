@@ -64,7 +64,7 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Disponivel na Loja
+              Disponivel na Loja (0/1)
             </label>
             <select
               name="availableItems"
@@ -79,7 +79,7 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
             
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Periodo em Dias
+              Periodo em Dias (ex.999)
             </label>
             <input
               type="text"
@@ -92,7 +92,7 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
 
                     <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Tipo de Venda
+              Tipo de Venda (0/1/3)
             </label>
             <select
               name="selltype"
