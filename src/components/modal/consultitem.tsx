@@ -100,9 +100,9 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
             >
-              <option value="0">0 - Não sei</option>
-              <option value="1">1 - Não sei</option>
-              <option value="3">3 - Não sei</option>   
+              <option value="0">0 - GP</option>
+              <option value="1">1 - Cash</option>
+              <option value="3">3 - GP Com PasseVIP</option>   
             </select>
           </div>
 
