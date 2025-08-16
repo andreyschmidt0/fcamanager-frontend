@@ -6,6 +6,8 @@ import { usePlayer } from '../contexts/PlayerContext';
 import ConsultBanHistory from './modal/consultbanhistory';
 import SendItem from './modal/senditem';
 import ConsultInventory from './modal/consultinventory';
+import ConsultInbox from './modal/consultinbox';
+import ConsultItem from './modal/consultitem';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -56,7 +58,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   };
 
   const actionButtons = [
-    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário'] },
+    { name: 'CONSULTAR', options: ['Consultar Inbox', 'Consultar Histórico de Ban', 'Consultar Inventário'] },
     { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item', 'Enviar Mensagem'] },
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Excluir Conta', 'Excluir Item', 'Excluir Personagem'] },
@@ -162,7 +164,22 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
                 onClose={() => setIsModalOpen(false)}
                 />
             )}
-
+            {
+              isModalOpen && selectedAction && selectedAction.option === 'Consultar Inbox' && (
+              <ConsultInbox 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                />
+            )
+            }
+            {
+              isModalOpen && selectedAction && selectedAction.option === 'Consultar Inbox' && (
+              <ConsultItem 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                />
+            )
+            }
       </div>
   );
 };
