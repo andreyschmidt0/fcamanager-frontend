@@ -7,7 +7,6 @@ import { ClanProvider } from '../contexts/ClanContext';
 import '../index.css';
 import '../fonts.css';
 import Header from '../components/layout/header';
-import Footer from '../components/layout/footer';
 
 const MainPage = () => {
   const [activeTab, setActiveTab] = useState<'execucoes' | 'pendentes'>('execucoes');
@@ -36,7 +35,6 @@ const MainPage = () => {
               </div>
             </div>
           </main>
-          <Footer/>
         </div>
       </ClanProvider>
     </PlayerProvider>

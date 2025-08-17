@@ -153,7 +153,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
   return (
     <>
-      <div className="bg-[#111216] rounded-lg border border-black h-screen">
+      <div className="bg-[#111216] rounded-lg border border-black h-screen flex flex-col">
         {/* Header */}
         <div className="p-4">
           <h2 className="text-lg font-neofara font-medium">
@@ -240,7 +240,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
         {/* Players List */}
         {viewMode === 'players' && (
-          <div className="p-4 h-[445px]">
+          <div className="p-4 flex-1 overflow-hidden">
             <div className="space-y-2 h-full overflow-y-auto custom-scrollbar">
               {!hasSearched && !loading && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
@@ -295,7 +295,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
         {/* Clans List */}
         {viewMode === 'clans' && (
-          <div className="p-4 h-[445px]">
+          <div className="p-4 flex-1 overflow-hidden">
             <div className="space-y-2 h-full overflow-y-auto custom-scrollbar">
               {!hasSearched && !loading && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
