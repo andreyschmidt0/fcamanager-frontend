@@ -81,9 +81,9 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Consultar Inbox
+              Remover Exp
             </button>
           </div>
         </form>

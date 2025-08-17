@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import ConfirmationModal from './confirm/confirmmodal';
 
 interface BanModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
     blockMac: 'N',
     deleteClans: 'N'
   });
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -37,12 +39,25 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica será implementada posteriormente
+    setShowConfirmation(true); // Mostra confirmação em vez de executar
+  };
+
+  const handleConfirmAction = () => {
+    // Lógica original aqui
+    console.log('Data:', formData);
+    setShowConfirmation(false);
+    onClose();
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
   };
 
   if (!isOpen) return null;
+
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -183,6 +198,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
               Cancelar
             </button>
             <button
+
               type="submit"
               className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
             >
@@ -191,6 +207,15 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
+        <ConfirmationModal
+          isOpen={showConfirmation}
+          onConfirm={handleConfirmAction}
+          onCancel={handleCancelConfirmation}
+          title="Confirmar Ação"
+          description={`Tem certeza que deseja banir o jogador ${formData.loginAccount} com o ID Discord ${formData.discordId}? Esta ação não pode ser desfeita.`}
+          confirmActionText="Sim, Banir"
+          cancelActionText="Cancelar"
+        />
     </div>
   );
 };

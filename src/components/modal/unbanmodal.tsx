@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import ConfirmationModal from './confirm/confirmmodal';
 
 interface UnbanModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
     unbanScope: 'P',
     clearMacBlock: 'N'
   });
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -37,7 +39,18 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica será implementada posteriormente
+    setShowConfirmation(true); // Mostra confirmação em vez de executar
+  };
+
+  const handleConfirmAction = () => {
+    // Lógica original aqui
+    console.log('Data:', formData);
+    setShowConfirmation(false);
+    onClose();
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
   };
 
   if (!isOpen) return null;
@@ -155,6 +168,15 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
+        <ConfirmationModal
+          isOpen={showConfirmation}
+          onConfirm={handleConfirmAction}
+          onCancel={handleCancelConfirmation}
+          title="Confirmar Ação"
+          description={`Tem certeza que deseja desbanir o jogador ${formData.loginAccount} com o ID Discord ${formData.discordId}`}
+          confirmActionText="Sim, Desbanir"
+          cancelActionText="Cancelar"
+        />
     </div>
   );
 };

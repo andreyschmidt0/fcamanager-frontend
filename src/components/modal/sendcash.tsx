@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import ConfirmationModal from './confirm/confirmmodal';
 
 interface SendCashProps {
   isOpen: boolean;
@@ -33,9 +34,22 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
     }));
   };
 
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica será implementada posteriormente
+    setShowConfirmation(true); // Mostra confirmação em vez de executar
+  };
+
+  const handleConfirmAction = () => {
+    // Lógica original aqui
+    console.log('Data:', formData);
+    setShowConfirmation(false);
+    onClose();
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
   };
 
   if (!isOpen) return null;
@@ -122,6 +136,15 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
+    <ConfirmationModal
+          isOpen={showConfirmation}
+          onConfirm={handleConfirmAction}
+          onCancel={handleCancelConfirmation}
+          title="Confirmar Ação"
+          description={`Tem certeza que deseja enviar ${formData.cash} de Cash para o jogador ${formData.loginAccount} com o Discord ID ${formData.discordId}?`}
+          confirmActionText="Sim, Enviar"
+          cancelActionText="Cancelar"
+        />
     </div>
   );
 };

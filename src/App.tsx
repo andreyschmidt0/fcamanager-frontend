@@ -3,7 +3,7 @@ import LoginPage from './login/page';
 import MainPage from './main/page';
 import './index.css';
 import LoadingSpinner from './components/loading/loading';
-import ConfirmModal from './components/modal/confirmmodal';
+import ConfirmModal from './components/modal/confirm/confirmmodal';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import ConfirmationModal from './confirm/confirmmodal';
 
 interface ChangeEmailProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
     loginAccount: '',
     newemail:''
   });
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -35,7 +37,18 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica será implementada posteriormente
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmAction = () => {
+    // Lógica da ação será implementada posteriormente
+    console.log('Change Email Data:', formData);
+    setShowConfirmation(false);
+    onClose();
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
   };
 
   if (!isOpen) return null;
@@ -116,11 +129,22 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
               type="submit"
               className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Alterar Nickname
+              Alterar Email
             </button>
           </div>
         </form>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelConfirmation}
+        title="Confirmar Alteração"
+        description={`Tem certeza que deseja alterar o email para: ${formData.newemail}? Esta ação será registrada no sistema.`}
+        confirmActionText="Sim, Alterar"
+        cancelActionText="Cancelar"
+      />
     </div>
   );
 };

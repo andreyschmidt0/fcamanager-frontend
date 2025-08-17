@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useClan } from '../../contexts/ClanContext';
+import ConfirmationModal from './confirm/confirmmodal';
 
 interface removeclanProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     oidGuild: ''
   });
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     if (selectedClan && isOpen) {
@@ -32,7 +34,18 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica será implementada posteriormente
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmAction = () => {
+    // Lógica da ação será implementada posteriormente
+    console.log('Clan Data:', formData);
+    setShowConfirmation(false);
+    onClose();
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
   };
 
   if (!isOpen) return null;
@@ -87,6 +100,17 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelConfirmation}
+        title="Confirmar Ação"
+        description={`Tem certeza que deseja remover o clã com ID: ${formData.oidGuild}? Esta ação não pode ser desfeita.`}
+        confirmActionText="Sim, Remover"
+        cancelActionText="Cancelar"
+      />
     </div>
   );
 };

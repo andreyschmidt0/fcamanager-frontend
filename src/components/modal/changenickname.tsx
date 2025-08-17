@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import ConfirmationModal from './confirm/confirmmodal';
 
 interface ChangeNicknameProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
     loginAccount: '',
     filter:''
   });
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -35,7 +37,18 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica será implementada posteriormente
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmAction = () => {
+    // Lógica da ação será implementada posteriormente
+    console.log('Change Nickname Data:', formData);
+    setShowConfirmation(false);
+    onClose();
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
   };
 
   if (!isOpen) return null;
@@ -120,6 +133,17 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelConfirmation}
+        title="Confirmar Alteração"
+        description={`Tem certeza que deseja alterar o nickname para: ${formData.filter}? Esta ação será registrada no sistema.`}
+        confirmActionText="Sim, Alterar"
+        cancelActionText="Cancelar"
+      />
     </div>
   );
 };
