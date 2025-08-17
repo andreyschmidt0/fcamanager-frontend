@@ -14,11 +14,11 @@ const MainPage = () => {
   return (
     <PlayerProvider>
       <ClanProvider>
-        <div className="min-h-screen bg-[#1d1e24] text-white">
+        <div className="h-screen bg-[#1d1e24] text-white flex flex-col">
           <Header />
           {/* Main Content Grid */}
-          <main className="p-6">
-            <div className="grid grid-cols-12 gap-6">
+          <main className="flex-1 p-6">
+            <div className="grid grid-cols-12 gap-6 h-full">
               {/* Sidebar - Execuções e Atividades Pendentes */}
               <div className="col-span-5">
                 <SidebarMenu activeTab={activeTab} setActiveTab={setActiveTab} />

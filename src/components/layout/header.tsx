@@ -1,5 +1,4 @@
 import { Bell, Menu } from 'lucide-react';
-import React from 'react';
 
 const Header = () => {
     return (

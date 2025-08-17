@@ -153,7 +153,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
   return (
     <>
-      <div className="bg-[#111216] rounded-lg border border-black h-screen flex flex-col">
+      <div className="bg-[#111216] rounded-lg border border-black h-full flex flex-col">
         {/* Header */}
         <div className="p-4">
           <h2 className="text-lg font-neofara font-medium">

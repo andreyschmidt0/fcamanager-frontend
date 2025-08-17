@@ -26,7 +26,7 @@ const RecentActivities: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#111216] rounded-lg border border-black h-screen">
+    <div className="bg-[#111216] rounded-lg border border-black h-full">
       {/* Header */}
       <div className="p-4 border-b border-black">
         <div className="flex items-center justify-between">

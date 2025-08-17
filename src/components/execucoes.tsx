@@ -85,7 +85,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   ];
   
   return (
-    <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black p-6 h-screen">
+    <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black p-6 h-full">
       <div className="space-y-8">
         {/* Execuções Section */}
         <div>
