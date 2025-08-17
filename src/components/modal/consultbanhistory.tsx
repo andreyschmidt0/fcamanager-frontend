@@ -35,7 +35,6 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica será implementada posteriormente
-    console.log('Consult Ban History Data:', formData);
   };
 
   if (!isOpen) return null;

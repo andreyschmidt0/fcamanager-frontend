@@ -9,9 +9,9 @@ interface ConsultBanHistoryProps {
 const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     itemname: '',
-    availableItems: '0',
+    availableItems: '',
     daysperiod: '',
-    selltype: '0'
+    selltype: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -25,7 +25,6 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica será implementada posteriormente
-    console.log('Consult Ban History Data:', formData);
   };
 
   if (!isOpen) return null;
@@ -72,6 +71,7 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
             >
+              <option value="">Selecione uma opção (opcional)</option>
               <option value="0">0 - Não está Disponivel na Loja</option>
               <option value="1">1 - Está Disponivel na Loja</option>
             </select>
@@ -101,6 +101,7 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
             >
+              <option value="">Selecione uma opção (opcional)</option>
               <option value="0">0 - GP</option>
               <option value="1">1 - Cash</option>
               <option value="3">3 - GP Com PasseVIP</option>   

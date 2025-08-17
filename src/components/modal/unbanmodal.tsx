@@ -38,7 +38,6 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica será implementada posteriormente
-    console.log('Unban Data:', formData);
   };
 
   if (!isOpen) return null;

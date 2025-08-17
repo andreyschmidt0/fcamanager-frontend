@@ -1,8 +1,12 @@
 import React, { createContext, useContext, useState } from 'react';
 
 export interface Clan {
-    clanid: string;
-    oidguild: string;
+  name: string;
+  leader: string;
+  leaderDiscordId: string;
+  memberCount: number;
+  oidGuild: number;
+  oidUser_Lider: number;
 }
 
 interface ClanContextType {

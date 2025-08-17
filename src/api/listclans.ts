@@ -1,22 +1,22 @@
 import axios from 'axios';
 
-export interface Clan {
+export interface Clans {
     DiscordID_Lider: string;
     oidUser_Lider: number;
     Lider: string;
     nm_clan: string;
     qt_membros: number;
-    oidguild: string;
+    oidGuild: number;
 }
 
-const listClans = async (nickname: string = '', page: number = 1): Promise<Clan[]> => {
+const listClans = async (clanname: string = '', page: number = 1): Promise<Clans[]> => {
     try {
         const params = new URLSearchParams({
             page: page.toString()
         });
         
-        if (nickname.trim()) {
-            params.append('nickname', nickname.trim());
+        if (clanname.trim()) {
+            params.append('clanname', clanname.trim());
         }
         
         const response = await axios.get(`https://game-stats-e908.onrender.com/api/clans?${params}`);

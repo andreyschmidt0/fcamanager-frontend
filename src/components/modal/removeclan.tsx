@@ -10,16 +10,14 @@ interface removeclanProps {
 const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
   const { selectedClan } = useClan();
   const [formData, setFormData] = useState({
-    clanid: '',
-    oidguild: ''
+    oidGuild: ''
   });
 
   useEffect(() => {
     if (selectedClan && isOpen) {
       setFormData(prev => ({
         ...prev,
-        clanid: selectedClan.clanid || '',
-        oidguild: selectedClan.oidguild || ''
+        oidGuild: selectedClan.oidGuild?.toString() || ''
       }));
     }
   }, [selectedClan, isOpen]);
@@ -35,7 +33,6 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica será implementada posteriormente
-    console.log('Clan Data:', formData);
   };
 
   if (!isOpen) return null;
@@ -64,22 +61,8 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
             </label>
             <input
               type="text"
-              name="clanid"
-              value={formData.clanid}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              OID Guild
-            </label>
-            <input
-              type="text"
-              name="oidguild"
-              value={formData.oidguild}
+              name="oidGuild"
+              value={formData.oidGuild}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required

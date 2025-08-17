@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../index.css';
 import { X, Search, Copy, User as UserIcon, Hash } from 'lucide-react';
 import listUsers, { User, listUsersByDiscordId } from '../api/listusers';
-import listClans, { Clan as ApiClan } from '../api/listclans';
+import listClans, { Clans as ApiClan, Clans } from '../api/listclans';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useClan } from '../contexts/ClanContext';
 
@@ -17,12 +17,14 @@ export interface Player {
 }
 
 export interface Clan {
-  id: string;
   name: string;
   leader: string;
   leaderDiscordId: string;
   memberCount: number;
+  oidGuild: number;
+  oidUser_Lider: number;
 }
+
 
 interface PlayersListProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -31,7 +33,7 @@ interface PlayersListProps {
 
 const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const { selectedPlayer, setSelectedPlayer } = usePlayer();
-  const [selectedClan, setSelectedClan] = useState<Clan | null>(null);
+  const { selectedClan, setSelectedClan } = useClan();
   const [viewMode, setViewMode] = useState<'players' | 'clans'>('players');
   const [searchMode, setSearchMode] = useState<'nickname' | 'discordid'>('nickname');
   const [search, setSearch] = useState<string>('');
@@ -89,8 +91,8 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   };
 
   // Função para buscar clans
-  const searchClans = async (nickname: string) => {
-    if (!nickname.trim()) {
+  const searchClans = async (clanname: string) => {
+    if (!clanname.trim()) {
       setClans([]);
       setHasSearched(false);
       return;
@@ -98,13 +100,14 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
     setLoading(true);
     try {
-      const apiClans: ApiClan[] = await listClans(nickname);
-      const mappedClans: Clan[] = apiClans.map((clan: ApiClan) => ({
-        id: clan.nm_clan,
+      const apiClans: Clans[] = await listClans(clanname);
+      const mappedClans: Clan[] = apiClans.map((clan: Clans) => ({
         name: clan.nm_clan,
         leader: clan.Lider,
         leaderDiscordId: clan.DiscordID_Lider,
-        memberCount: clan.qt_membros
+        memberCount: clan.qt_membros,
+        oidGuild: clan.oidGuild,
+        oidUser_Lider: clan.oidUser_Lider
       }));
       setClans(mappedClans);
       setHasSearched(true);
@@ -312,8 +315,12 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               
               {clans.map((clan) => (
                 <div 
-                  key={clan.id} 
-                  className="bg-[#1d1e24] rounded-lg p-3 hover:bg-[#525252] transition-colors cursor-pointer"
+                  key={clan.oidGuild} 
+                  className={`rounded-lg p-3 transition-colors cursor-pointer ${
+                    selectedClan?.oidGuild === clan.oidGuild 
+                      ? 'bg-green-600/20 border border-green-500/50' 
+                      : 'bg-[#1d1e24] hover:bg-[#525252]'
+                  }`}
                   onClick={() => {
                     setSelectedClan(clan);
                     setSelectedPlayer(null);
