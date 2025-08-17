@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import LoadingSpinner from './loading';
+import LoadingSpinner from '../components/loading/loading';
 
 interface LoadingContextType {
   isLoading: boolean;

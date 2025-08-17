@@ -5,6 +5,7 @@ import listUsers, { User, listUsersByDiscordId } from '../api/listusers';
 import listClans, { Clans as ApiClan, Clans } from '../api/listclans';
 import { usePlayer } from '../contexts/PlayerContext';
 import { useClan } from '../contexts/ClanContext';
+import PlayerInfo from './modal/playerinfo/playerinfo';
 
 export interface Player {
   id: string;
@@ -42,6 +43,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string>('');
+  const [showPlayerInfo, setShowPlayerInfo] = useState<boolean>(false);
 
   const copyToClipboard = (discordId: string) => {
     navigator.clipboard.writeText(discordId).then(() => {
@@ -407,7 +409,10 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
             
             {/* Action buttons */}
             <div className="space-y-2">
-              <button className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold text-sm h-8 px-3 rounded transition-colors flex items-center justify-center">
+              <button 
+                onClick={() => setShowPlayerInfo(true)}
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold text-sm h-8 px-3 rounded transition-colors flex items-center justify-center"
+              >
                 Ver Informações
               </button>
             </div>
@@ -459,6 +464,19 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Player Info Modal */}
+      {selectedPlayer && showPlayerInfo && (
+        <PlayerInfo
+          isOpen={showPlayerInfo}
+          onClose={() => setShowPlayerInfo(false)}
+          discordId={selectedPlayer.discordId}
+          loginAccount={selectedPlayer.nexonId}
+          clanName={selectedPlayer.clan}
+          cash="0" // Valor padrão, pode ser buscado da API
+          banhistory={[]} // Array vazio, pode ser buscado da API
+        />
       )}
     </>
   );

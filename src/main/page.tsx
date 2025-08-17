@@ -15,6 +15,8 @@ const MainPage = () => {
   return (
     <PlayerProvider>
       <ClanProvider>
+        
+        {/* Main container with flex layout */}
         <div className="h-screen bg-[#1d1e24] text-white flex flex-col overflow-hidden">
           <Header />
           

@@ -4,6 +4,7 @@ import MainPage from './main/page';
 import './index.css';
 import LoadingSpinner from './components/loading/loading';
 import ConfirmModal from './components/modal/confirm/confirmmodal';
+import { ActivityLogProvider } from './contexts/ActivityLogContext';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,7 +21,7 @@ function App() {
   };
 
   return (
-    <>
+    <ActivityLogProvider>
       {showLoading && (
         <LoadingSpinner 
           size="lg" 
@@ -35,7 +36,7 @@ function App() {
       {isAuthenticated && !showLoading ? (
         <MainPage />
       ) : null}
-    </>
+    </ActivityLogProvider>
   );
 }
 
