@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 
-interface ChangeEmailProps {
+interface SendCashProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
+const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    newemail:''
+    cash:'',
   });
 
   useEffect(() => {
@@ -20,7 +20,7 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
       setFormData(prev => ({
         ...prev,
         discordId: selectedPlayer.discordId || '',
-        loginAccount: selectedPlayer.nexonId || ''
+        loginAccount: selectedPlayer.nexonId || '',
       }));
     }
   }, [selectedPlayer, isOpen]);
@@ -45,8 +45,8 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
       <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
-          <h2 className="absolute left-1/2 w-[80%] text-center -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            ALTERAR EMAIL
+          <h2 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
+            ENVIAR CASH
           </h2>
           <button
             onClick={onClose}
@@ -66,17 +66,18 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
             <input
               type="text"
               name="discordId"
+              placeholder='Ex 123456789012345678'
               value={formData.discordId}
               onChange={handleInputChange}
-              placeholder='Ex 123456789012345678'
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
           </div>
 
+          {/* Login da Conta */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Login da Conta
+              Login da conta
             </label>
             <input
               type="text"
@@ -88,15 +89,15 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
+          {/* Duração do Ban */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Novo Email
+              Quantidade de Cash
             </label>
             <input
               type="text"
-              name="newemail"
-              placeholder='novo@email.com'
-              value={formData.newemail}
+              name="cash"
+              value={formData.cash}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
@@ -114,9 +115,9 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Alterar Nickname
+              Enviar Item
             </button>
           </div>
         </form>
@@ -125,4 +126,4 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export default ChangeEmail;
+export default SendCash;

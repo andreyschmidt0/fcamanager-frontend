@@ -12,6 +12,7 @@ import ChangeNickname from './modal/changenickname';
 import ChangeEmail from './modal/changeemail';
 import RemoveExp from './modal/removeexp';
 import RemoveClan from './modal/removeclan';
+import SendCash from './modal/sendcash';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -76,15 +77,15 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
 
   const actionButtons = [
     { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox'] },
-    { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item', 'Enviar Mensagem'] },
+    { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item'] },
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Excluir Conta', 'Excluir Item', 'Remover Clã', 'Remover Exp'] },
-    { name: 'TRANSFERIR', options: ['Transferir Cash', 'Transferir Item', 'Transferir Personagem'] },
-    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Level', 'Alterar Rank', 'Alterar Email'] }
+    { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
+    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email'] }
   ];
   
   return (
-    <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black p-6 h-screen">
+    <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black p-6 h-full">
       <div className="space-y-8">
         {/* Execuções Section */}
         <div>
@@ -228,6 +229,14 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
             {
               isModalOpen && selectedAction && selectedAction.option === 'Remover Clã' && (
               <RemoveClan 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                />
+            )
+            }
+                        {
+              isModalOpen && selectedAction && selectedAction.option === 'Enviar Cash' && (
+              <SendCash 
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 />
