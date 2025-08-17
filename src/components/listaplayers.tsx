@@ -153,9 +153,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
   return (
     <>
-      <div className="bg-[#111216] rounded-lg border border-black h-full flex flex-col">
+      <div className="bg-[#111216] rounded-lg border border-black h-full flex flex-col" style={{ maxHeight: '100%', overflow: 'hidden' }}>
         {/* Header */}
-        <div className="p-4">
+        <div className="p-4" style={{ flexShrink: 0 }}>
           <h2 className="text-lg font-neofara font-medium">
             LISTAR PLAYERS/ CLANS
           </h2>
@@ -163,7 +163,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
         {/* Search Mode Toggle - Only for Players */}
         {viewMode === 'players' && (
-          <div className="px-4 pb-2">
+          <div className="px-4 pb-2" style={{ flexShrink: 0 }}>
             <div className="flex gap-2">
               <button 
                 onClick={() => setSearchMode('nickname')}
@@ -192,7 +192,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
         )}
 
         {/* Search Bar */}
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-2" style={{ flexShrink: 0 }}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input 
@@ -215,7 +215,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
         </div>
 
         {/* Toggle Buttons */}
-        <div className="p-4 flex gap-2">
+        <div className="p-4 flex gap-2" style={{ flexShrink: 0 }}>
           <button 
             onClick={() => setViewMode('players')}
             className={`flex-1 py-2 px-4 rounded-lg text-lg font-medium transition-colors font-neofara ${
@@ -240,9 +240,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
         {/* Players List */}
         {viewMode === 'players' && (
-          <div className="p-4 flex-1 overflow-hidden">
-            <div className="space-y-2 h-full overflow-y-auto custom-scrollbar">
-              {!hasSearched && !loading && (
+          <div style={{ flex: '1 1 0', minHeight: 0, padding: '0 16px 16px 16px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden' }} className="custom-scrollbar">
+              {!hasSearched && !loading && players.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <Search size={48} className="mb-4" />
                   <p className="text-lg">Digite um nickname para buscar</p>
@@ -258,46 +258,48 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                 </div>
               )}
               
-              {players.map((player) => (
-                <div 
-                  key={player.id} 
-                  className={`rounded-lg p-3 transition-colors cursor-pointer ${
-                    selectedPlayer?.id === player.id 
-                      ? 'bg-green-600/20 border border-green-500/50' 
-                      : 'bg-[#1d1e24] hover:bg-[#525252]'
-                  }`}
-                  onClick={() => {
-                    setSelectedPlayer(player);
-                    setSelectedClan(null);
-                  }}
-                >
-                  <div className="flex items-center gap-4">
-                    {/* Avatar */}
-                    <div className="w-10 h-10 bg-[#111216] rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-white">
-                        {player.name.substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
+              <div className="space-y-2">
+                {players.map((player) => (
+                  <div 
+                    key={player.id} 
+                    className={`rounded-lg p-3 transition-colors cursor-pointer ${
+                      selectedPlayer?.id === player.id 
+                        ? 'bg-green-600/20 border border-green-500/50' 
+                        : 'bg-[#1d1e24] hover:bg-[#525252]'
+                    }`}
+                    onClick={() => {
+                      setSelectedPlayer(player);
+                      setSelectedClan(null);
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      {/* Avatar */}
+                      <div className="w-10 h-10 bg-[#111216] rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-white">
+                          {player.name.substring(0, 2).toUpperCase()}
+                        </span>
+                      </div>
 
-                    {/* Player Info */}
-                    <div className="flex-1 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-white">{player.name}</p>
-                        <p className="text-xs text-gray-400 font-medium">{player.clan}</p>
+                      {/* Player Info */}
+                      <div className="flex-1 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-white">{player.name}</p>
+                          <p className="text-xs text-gray-400 font-medium">{player.clan}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}
 
         {/* Clans List */}
         {viewMode === 'clans' && (
-          <div className="p-4 flex-1 overflow-hidden">
-            <div className="space-y-2 h-full overflow-y-auto custom-scrollbar">
-              {!hasSearched && !loading && (
+          <div style={{ flex: '1 1 0', minHeight: 0, padding: '0 16px 16px 16px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden' }} className="custom-scrollbar">
+              {!hasSearched && !loading && clans.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <Search size={48} className="mb-4" />
                   <p className="text-lg">Digite um nickname para buscar</p>
@@ -313,42 +315,44 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                 </div>
               )}
               
-              {clans.map((clan) => (
-                <div 
-                  key={clan.oidGuild} 
-                  className={`rounded-lg p-3 transition-colors cursor-pointer ${
-                    selectedClan?.oidGuild === clan.oidGuild 
-                      ? 'bg-green-600/20 border border-green-500/50' 
-                      : 'bg-[#1d1e24] hover:bg-[#525252]'
-                  }`}
-                  onClick={() => {
-                    setSelectedClan(clan);
-                    setSelectedPlayer(null);
-                  }}
-                >
-                  <div className="flex items-center gap-4">
-                    {/* Clan Avatar */}
-                    <div className="w-10 h-10 bg-[#111216] rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-white">
-                        {clan.name.substring(1, 3).toUpperCase()}
-                      </span>
-                    </div>
+              <div className="space-y-2">
+                {clans.map((clan) => (
+                  <div 
+                    key={clan.oidGuild} 
+                    className={`rounded-lg p-3 transition-colors cursor-pointer ${
+                      selectedClan?.oidGuild === clan.oidGuild 
+                        ? 'bg-green-600/20 border border-green-500/50' 
+                        : 'bg-[#1d1e24] hover:bg-[#525252]'
+                    }`}
+                    onClick={() => {
+                      setSelectedClan(clan);
+                      setSelectedPlayer(null);
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      {/* Clan Avatar */}
+                      <div className="w-10 h-10 bg-[#111216] rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-white">
+                          {clan.name.substring(1, 3).toUpperCase()}
+                        </span>
+                      </div>
 
-                    {/* Clan Info */}
-                    <div className="flex-1 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-white">{clan.name}</p>
-                        <p className="text-xs text-gray-400 font-medium">
-                          {clan.memberCount} membro(s)
-                        </p>
-                        <p className="text-xs text-gray-500 font-medium">
-                          Líder: {clan.leader}
-                        </p>
+                      {/* Clan Info */}
+                      <div className="flex-1 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-white">{clan.name}</p>
+                          <p className="text-xs text-gray-400 font-medium">
+                            {clan.memberCount} membro(s)
+                          </p>
+                          <p className="text-xs text-gray-500 font-medium">
+                            Líder: {clan.leader}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}
