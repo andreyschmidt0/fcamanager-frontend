@@ -79,7 +79,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox'] },
     { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item'] },
     { name: 'BANIR', options: getBanOptions() },
-    { name: 'EXCLUIR', options: ['Excluir Conta', 'Excluir Item', 'Remover Clã', 'Remover Exp'] },
+    { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Exp'] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
     { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email'] }
   ];
@@ -130,7 +130,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
                             onClick={() => {
                               handleOptionClick(button.name, option)
                             }}
-                            className="block w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm md:text-md tracking-wide text-white hover:bg-[#525252] transition-colors first:rounded-t-lg last:rounded-b-lg"
+                            className="block w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-md sm:text-sm md:text-[16px] tracking-wide text-white hover:bg-[#525252] transition-colors first:rounded-t-lg last:rounded-b-lg"
                           >
                             {option} 
                           </button>
