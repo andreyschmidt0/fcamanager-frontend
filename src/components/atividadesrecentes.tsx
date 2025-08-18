@@ -101,7 +101,7 @@ const RecentActivities: React.FC = () => {
                       <p className="text-xs text-gray-400">{activity.details}</p>
                       <p className="text-xs sm:text-sm text-white">{activity.target}</p>
                       {activity.amount && (
-                        <p className="text-xs text-green-400">({activity.amount} cash)</p>
+                        <p className="text-xs text-green-400">({activity.amount} {activity.amountType})</p>
                       )}
                       {activity.period && (
                         <p className="text-xs text-red-400">({activity.period})</p>

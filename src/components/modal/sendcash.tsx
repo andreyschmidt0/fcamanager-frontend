@@ -16,7 +16,6 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
     discordId: '',
     loginAccount: '',
     cash:'',
-    justification: '',
   });
 
   useEffect(() => {

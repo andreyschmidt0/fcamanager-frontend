@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import { useActivityLog, createChangeEmailLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 
 interface ChangeEmailProps {
@@ -10,6 +11,7 @@ interface ChangeEmailProps {
 
 const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
+  const { addActivity } = useActivityLog();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -41,8 +43,18 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   };
 
   const handleConfirmAction = () => {
-    // Lógica da ação será implementada posteriormente
+    // Lógica original aqui (API call para alterar email)
     console.log('Change Email Data:', formData);
+
+    // Registrar atividade no log
+    const logData = createChangeEmailLog(
+      'GM-Admin', // Aqui você usaria o nome do admin logado
+      formData.loginAccount,
+      formData.newemail,
+      `Alterado via Discord ID: ${formData.discordId}`
+    );
+    addActivity(logData);
+
     setShowConfirmation(false);
     onClose();
   };

@@ -458,9 +458,6 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               <button className="w-full bg-green-600 hover:bg-green-700 text-white text-xs py-2 px-3 rounded transition-colors">
                 Ver Membros
               </button>
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 px-3 rounded transition-colors">
-                Solicitar Entrada
-              </button>
             </div>
           </div>
         </div>

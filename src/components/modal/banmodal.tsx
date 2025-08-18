@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import { useActivityLog, createBanLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 
 interface BanModalProps {
@@ -10,6 +11,7 @@ interface BanModalProps {
 
 const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
+  const { addActivity } = useActivityLog();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -46,8 +48,19 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleConfirmAction = () => {
-    // Lógica original aqui
+    // Lógica original aqui (API call para banir)
     console.log('Data:', formData);
+
+    // Registrar atividade no log
+    const banPeriod = formData.banDuration === '999' ? 'permanente' : `${formData.banDuration} dias`;
+    const logData = createBanLog(
+      'GM-Admin', // Aqui você usaria o nome do admin logado
+      formData.loginAccount,
+      banPeriod,
+      formData.banReason
+    );
+    addActivity(logData);
+
     setShowConfirmation(false);
     onClose();
   };

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import { useActivityLog, createSendExpLog } from '../../contexts/ActivityLogContext';
+import ConfirmationModal from './confirm/confirmmodal';
 
 interface RemoveExpProps {
   isOpen: boolean;
@@ -9,16 +11,17 @@ interface RemoveExpProps {
 
 const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const { addActivity } = useActivityLog();
   const [formData, setFormData] = useState({
-    discordId: '',
-    loginAccount: ''
+    loginAccount: '',
+    exp:''
   });
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
       setFormData(prev => ({
         ...prev,
-        discordId: selectedPlayer.discordId || '',
         loginAccount: selectedPlayer.nexonId || ''
       }));
     }
@@ -34,8 +37,30 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica será implementada posteriormente
+    setShowConfirmation(true); // Mostra confirmação em vez de executar
   };
+
+  
+    const handleConfirmAction = () => {
+      // Lógica original aqui (API call para enviar cash)
+      console.log('Data:', formData);
+  
+      // Registrar atividade no log
+      const expAmount = parseInt(formData.exp);
+      const logData = createSendExpLog(
+        'GM-Admin', // Aqui você usaria o nome do admin logado
+        formData.loginAccount,
+        expAmount,
+      );
+      addActivity(logData);
+  
+      setShowConfirmation(false);
+      onClose();
+    };
+  
+    const handleCancelConfirmation = () => {
+      setShowConfirmation(false);
+    };
 
   if (!isOpen) return null;
 
@@ -70,6 +95,21 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
+                    <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Quantidade de EXP
+            </label>
+            <input
+              type="text"
+              name="exp"
+              value={formData.exp}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+              required
+            />
+          </div>
+
+
           {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button
@@ -88,6 +128,15 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
+          <ConfirmationModal
+          isOpen={showConfirmation}
+          onConfirm={handleConfirmAction}
+          onCancel={handleCancelConfirmation}
+          title="Confirmar Ação"
+          description={`Tem certeza que deseja enviar ${formData.exp} de EXP para o jogador ${formData.loginAccount}?`}
+          confirmActionText="Sim, Enviar"
+          cancelActionText="Cancelar"
+        />
     </div>
   );
 };

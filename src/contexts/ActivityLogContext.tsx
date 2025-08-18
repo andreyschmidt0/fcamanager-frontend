@@ -8,8 +8,9 @@ export interface ActivityLog {
   target: string;
   details: string;
   justification?: string;
-  amount?: number; // Para transferências de cash
+  amount?: number; // Para transferências de cash/exp/etc
   period?: string; // Para banimentos (duração)
+  amountType?: 'cash' | 'exp' | 'item'; // Tipo do amount
 }
 
 interface ActivityLogContextType {
@@ -99,6 +100,7 @@ export const createSendCashLog = (adminName: string, target: string, amount: num
   details: `Enviou ${amount} cash para`,
   justification,
   amount,
+  amountType: 'cash' as const,
 });
 
 export const createBanLog = (adminName: string, target: string, period: string, justification?: string) => ({
@@ -131,5 +133,55 @@ export const createAlterLog = (adminName: string, target: string, details: strin
   action: 'Alterar' as const,
   target,
   details: `Alterou ${details}`,
+  justification,
+});
+
+export const createSendExpLog = (adminName: string, target: string, amount: number) => ({
+  adminName,
+  action: 'Enviar' as const,
+  target,
+  details: `Enviou ${amount} exp para`,
+  amount,
+  amountType: 'exp' as const,
+});
+
+export const createSendItemLog = (adminName: string, target: string, quantity: number) => ({
+  adminName,
+  action: 'Enviar' as const,
+  target,
+  details: `Enviou ${quantity} itens para`,
+  amount: quantity,
+  amountType: 'item' as const,
+});
+
+export const createUnbanLog = (adminName: string, target: string, justification?: string) => ({
+  adminName,
+  action: 'Alterar' as const,
+  target,
+  details: `Desbaniu o jogador`,
+  justification,
+});
+
+export const createChangeNicknameLog = (adminName: string, target: string, newNickname: string, justification?: string) => ({
+  adminName,
+  action: 'Alterar' as const,
+  target,
+  details: `Alterou nickname para ${newNickname}`,
+  justification,
+});
+
+export const createChangeEmailLog = (adminName: string, target: string, newEmail: string, justification?: string) => ({
+  adminName,
+  action: 'Alterar' as const,
+  target,
+  details: `Alterou email para ${newEmail}`,
+  justification,
+});
+
+export const createRemoveClanLog = (adminName: string, target: string, justification?: string) => ({
+  adminName,
+  action: 'Alterar' as const,
+  target,
+  details: `Removeu do clan`,
   justification,
 });

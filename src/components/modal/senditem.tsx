@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
-import { useActivityLog } from '../../contexts/ActivityLogContext';
+import { useActivityLog, createSendItemLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
+
 
 interface SendItemProps {
   isOpen: boolean;
@@ -47,8 +48,18 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   };
 
   const handleConfirmAction = () => {
-    // Lógica original aqui
+    // Lógica original aqui (API call para enviar cash)
     console.log('Data:', formData);
+
+    // Registrar atividade no log
+    const quantity = parseInt(formData.quantity);
+    const logData = createSendItemLog(
+      'GM-Admin', // Aqui você usaria o nome do admin logado
+      formData.loginAccount,
+      quantity,
+    );
+    addActivity(logData);
+
     setShowConfirmation(false);
     onClose();
   };
@@ -178,7 +189,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
           description={`Tem certeza que deseja enviar ${formData.productId} para o jogador ${formData.loginAccount} com o ID Discord ${formData.discordId}?`}
-          confirmActionText="Sim, Banir"
+          confirmActionText="Sim, Enviar"
           cancelActionText="Cancelar"
         />
     </div>

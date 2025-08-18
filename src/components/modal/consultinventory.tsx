@@ -90,17 +90,18 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Filtro (0 expirados, 1 disponíveis)
+              Filtros (0 Expirados, 1 Disponíveis)
             </label>
-            <input
-              type="text"
+            <select
               name="filter"
-              placeholder='Opcional'
               value={formData.filter}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
+            >
+              <option value="">Selecione uma opção (opcional)</option>
+              <option value="0">0 - Expirados</option>
+              <option value="1">1 - Disponiveis</option>
+            </select>
           </div>
 
           {/* Buttons */}

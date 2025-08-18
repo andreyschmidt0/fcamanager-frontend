@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import { useActivityLog, createUnbanLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 
 interface UnbanModalProps {
@@ -10,6 +11,7 @@ interface UnbanModalProps {
 
 const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
+  const { addActivity } = useActivityLog();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -43,8 +45,17 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleConfirmAction = () => {
-    // Lógica original aqui
+    // Lógica original aqui (API call para desbanir)
     console.log('Data:', formData);
+
+    // Registrar atividade no log
+    const logData = createUnbanLog(
+      'GM-Admin', // Aqui você usaria o nome do admin logado
+      formData.loginAccount,
+      formData.unbanReason
+    );
+    addActivity(logData);
+
     setShowConfirmation(false);
     onClose();
   };
