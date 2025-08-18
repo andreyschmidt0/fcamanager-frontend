@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
+import { useActivityLog } from '../../contexts/ActivityLogContext';
+import ConfirmationModal from './confirm/confirmmodal';
 
 interface SendItemProps {
   isOpen: boolean;
@@ -9,6 +11,7 @@ interface SendItemProps {
 
 const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
+  const { addActivity } = useActivityLog();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -17,6 +20,8 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
     quantity: '',
     userMessage: '',
   });
+
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -38,8 +43,20 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica será implementada posteriormente
+    setShowConfirmation(true); // Mostra confirmação em vez de executar
   };
+
+  const handleConfirmAction = () => {
+    // Lógica original aqui
+    console.log('Data:', formData);
+    setShowConfirmation(false);
+    onClose();
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
+  };
+
 
   if (!isOpen) return null;
 
@@ -155,6 +172,15 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
+        <ConfirmationModal
+          isOpen={showConfirmation}
+          onConfirm={handleConfirmAction}
+          onCancel={handleCancelConfirmation}
+          title="Confirmar Ação"
+          description={`Tem certeza que deseja enviar ${formData.productId} para o jogador ${formData.loginAccount} com o ID Discord ${formData.discordId}?`}
+          confirmActionText="Sim, Banir"
+          cancelActionText="Cancelar"
+        />
     </div>
   );
 };
