@@ -1,21 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import '../index.css';
-import { X, Search, Copy, User as UserIcon, Hash } from 'lucide-react';
-import listUsers, { User, listUsersByDiscordId } from '../api/listusers';
+import { X, Search, Copy } from 'lucide-react';
 import listClans, { Clans as ApiClan, Clans } from '../api/listclans';
-import { usePlayer } from '../contexts/PlayerContext';
+import { usePlayer, Player } from '../contexts/PlayerContext';
 import { useClan } from '../contexts/ClanContext';
 import PlayerInfo from './modal/playerinfo/playerinfo';
 
-export interface Player {
-  id: string;
-  name: string;
-  clan: string;
-  discordId: string;
-  nexonId: string;
-  banStatus: string;
-  banEndDate: string | null;
-}
 
 export interface Clan {
   name: string;
@@ -36,7 +26,6 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const { selectedPlayer, setSelectedPlayer } = usePlayer();
   const { selectedClan, setSelectedClan } = useClan();
   const [viewMode, setViewMode] = useState<'players' | 'clans'>('players');
-  const [searchMode, setSearchMode] = useState<'nickname' | 'discordid'>('nickname');
   const [search, setSearch] = useState<string>('');
   const [players, setPlayers] = useState<Player[]>([]);
   const [clans, setClans] = useState<Clan[]>([]);
@@ -64,23 +53,29 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
     setLoading(true);
     try {
-      let users: User[] = [];
+      const response = await fetch(`http://localhost:3000/api/users/search?nickname=${encodeURIComponent(searchTerm)}`);
       
-      if (searchMode === 'nickname') {
-        users = await listUsers(searchTerm);
-      } else {
-        users = await listUsersByDiscordId(searchTerm);
+      if (!response.ok) {
+        throw new Error('Erro na requisição');
       }
       
-      const mappedPlayers: Player[] = users.map((user: User) => ({
-        id: `${user.strDiscordID}-${user.strNexonID}`, // Unique ID combining Discord + Nexon
+      const users = await response.json();
+      
+      const mappedPlayers: Player[] = users.map((user: any) => ({
+        id: `${user.strDiscordID}-${user.strLNexonID}`,
         name: user.NickName,
-        clan: user.clanName || 'Sem Clan',
-        discordId: user.strDiscordID,
-        nexonId: user.strNexonID,
-        banStatus: user.BanVigente,
-        banEndDate: user.DataFimBan
+        clan: 'N/A', // Campo obrigatório do contexto
+        discordId: user.strDiscordID || '0',
+        nexonId: user.strLNexonID,
+        banStatus: user.Status === 'Banido' ? 'Sim' : 'Não',
+        banEndDate: null, // Campo obrigatório do contexto
+        email: user.strEmail,
+        lastMacAddress: user.strLastMacAddress || '',
+        lastLoginIP: user.strLastLoginIP || '',
+        createDate: user.CreateDate,
+        userType: user.UserType
       }));
+      
       setPlayers(mappedPlayers);
       setHasSearched(true);
     } catch (error) {
@@ -133,7 +128,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [search, viewMode, searchMode]);
+  }, [search, viewMode]);
 
   // Limpar resultados ao trocar de modo
   useEffect(() => {
@@ -151,7 +146,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
         searchClans(search);
       }
     }
-  }, [viewMode, searchMode]);
+  }, [viewMode]);
 
   return (
     <>
@@ -163,35 +158,6 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
           </h2>
         </div>    
 
-        {/* Search Mode Toggle - Only for Players */}
-        {viewMode === 'players' && (
-          <div className="px-4 pb-2" style={{ flexShrink: 0 }}>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setSearchMode('nickname')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  searchMode === 'nickname' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
-                }`}
-              >
-                <UserIcon size={16} />
-                Nickname
-              </button>
-              <button 
-                onClick={() => setSearchMode('discordid')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  searchMode === 'discordid' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
-                }`}
-              >
-                <Hash size={16} />
-                Discord ID
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Search Bar */}
         <div className="px-4 pb-2" style={{ flexShrink: 0 }}>
@@ -203,7 +169,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               type="search" 
               placeholder={
                 viewMode === 'players' 
-                  ? (searchMode === 'nickname' ? "Digite o nickname do player..." : "Digite o Discord ID...")
+                  ? "Digite o nickname do player..."
                   : "Digite o nickname do clan..."
               } 
               className="w-full bg-[#1d1e24] rounded-lg p-3 pl-10 text-white placeholder-gray-400 border border-gray-600 focus:border-green-500 focus:outline-none transition-colors" 
@@ -267,6 +233,8 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                     className={`rounded-lg p-3 transition-colors cursor-pointer ${
                       selectedPlayer?.id === player.id 
                         ? 'bg-green-600/20 border border-green-500/50' 
+                        : player.banStatus === 'Sim'
+                        ? 'bg-red-900/30 border border-red-500/50 hover:bg-red-800/40'
                         : 'bg-[#1d1e24] hover:bg-[#525252]'
                     }`}
                     onClick={() => {
@@ -285,8 +253,13 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                       {/* Player Info */}
                       <div className="flex-1 flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-white">{player.name}</p>
-                          <p className="text-xs text-gray-400 font-medium">{player.clan}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-white">{player.name}</p>
+                            {player.banStatus === 'Sim' && (
+                              <span className="text-red-400 text-xs font-bold">🚫 BANIDO</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400 font-medium">Discord: {player.discordId}</p>
                         </div>
                       </div>
                     </div>
@@ -373,17 +346,30 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
             </button>
             
             {/* Player details */}
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center">
-                <p className="text-sm font-bold text-white">
-                  {selectedPlayer.name.substring(0, 2).toUpperCase()}
-                </p>
+            <div className="mb-3">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center">
+                  <p className="text-sm font-bold text-white">
+                    {selectedPlayer.name.substring(0, 2).toUpperCase()}
+                  </p>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-white font-medium text-sm">{selectedPlayer.name}</h3>
+                    {selectedPlayer.banStatus === 'Sim' && (
+                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded font-bold">BANIDO</span>
+                    )}
+                  </div>
+                  <p className="text-gray-300 text-xs">Tipo: {selectedPlayer.userType === 1 ? 'GM' : 'Jogador'}</p>
+                  <p className="text-gray-300 text-xs">Status: <span className={selectedPlayer.banStatus === 'Sim' ? 'text-red-400' : 'text-green-400'}>{selectedPlayer.banStatus === 'Sim' ? 'Banido' : 'Ativo'}</span></p>
+                  <p className="text-gray-300 text-xs">Criado: {new Date(selectedPlayer.createDate).toLocaleDateString()}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-white font-medium text-sm">{selectedPlayer.name}</h3>
-                <p className="text-gray-300 text-xs">{selectedPlayer.clan}</p>
+              
+              <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2">
-                  <p className="text-gray-300 text-xs">Discord: {selectedPlayer.discordId}</p>
+                  <span className="text-gray-400">Discord:</span>
+                  <span className="text-gray-300">{selectedPlayer.discordId}</span>
                   <button
                     onClick={() => copyToClipboard(selectedPlayer.discordId)}
                     className="text-gray-400 hover:text-white transition-colors"
@@ -392,18 +378,73 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                     <Copy size={12} />
                   </button>
                   {copiedId === selectedPlayer.discordId && (
-                    <span className="text-green-400 text-xs">Copied!</span>
+                    <span className="text-green-400">Copied!</span>
                   )}
                 </div>
-                <p className="text-gray-300 text-xs">Nexon: {selectedPlayer.nexonId}</p>
-                {selectedPlayer.banStatus === 'Sim' && (
-                  <div className="mt-2 p-2 bg-red-500/20 border border-red-500/50 rounded">
-                    <p className="text-red-400 text-xs font-semibold">🚫 PLAYER BANIDO</p>
-                    {selectedPlayer.banEndDate && (
-                      <p className="text-red-300 text-xs">Até: {new Date(selectedPlayer.banEndDate).toLocaleDateString()}</p>
-                    )}
-                  </div>
-                )}
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Nexon ID:</span>
+                  <span className="text-gray-300">{selectedPlayer.nexonId}</span>
+                  <button
+                    onClick={() => copyToClipboard(selectedPlayer.nexonId)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    title="Copy Nexon ID"
+                  >
+                    <Copy size={12} />
+                  </button>
+                  {copiedId === selectedPlayer.nexonId && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Email:</span>
+                  <span className="text-gray-300">{selectedPlayer.email}</span>
+                  <button
+                    onClick={() => copyToClipboard(selectedPlayer.email)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    title="Copy Email"
+                  >
+                    <Copy size={12} />
+                  </button>
+                  {copiedId === selectedPlayer.email && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">MAC:</span>
+                  <span className="text-gray-300">{selectedPlayer.lastMacAddress || 'N/A'}</span>
+                  {selectedPlayer.lastMacAddress && (
+                    <button
+                      onClick={() => copyToClipboard(selectedPlayer.lastMacAddress)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      title="Copy MAC Address"
+                    >
+                      <Copy size={12} />
+                    </button>
+                  )}
+                  {copiedId === selectedPlayer.lastMacAddress && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">IP:</span>
+                  <span className="text-gray-300">{selectedPlayer.lastLoginIP || 'N/A'}</span>
+                  {selectedPlayer.lastLoginIP && (
+                    <button
+                      onClick={() => copyToClipboard(selectedPlayer.lastLoginIP)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      title="Copy IP Address"
+                    >
+                      <Copy size={12} />
+                    </button>
+                  )}
+                  {copiedId === selectedPlayer.lastLoginIP && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -470,9 +511,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
           onClose={() => setShowPlayerInfo(false)}
           discordId={selectedPlayer.discordId}
           loginAccount={selectedPlayer.nexonId}
-          clanName={selectedPlayer.clan}
-          cash="0" // Valor padrão, pode ser buscado da API
-          banhistory={[]} // Array vazio, pode ser buscado da API
+          clanName="N/A"
+          cash="0"
+          banhistory={[]}
         />
       )}
     </>

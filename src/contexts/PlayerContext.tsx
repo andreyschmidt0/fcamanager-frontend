@@ -8,6 +8,11 @@ export interface Player {
   nexonId: string;
   banStatus: string;
   banEndDate: string | null;
+  email: string;
+  lastMacAddress: string;
+  lastLoginIP: string;
+  createDate: string;
+  userType: number;
 }
 
 interface PlayerContextType {
