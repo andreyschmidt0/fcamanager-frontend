@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import { useActivityLog, createSendExpLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
+import { useAuth } from '../../hooks/useAuth';
 
 interface RemoveExpProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const { addActivity } = useActivityLog();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     loginAccount: '',
     exp:''
@@ -47,8 +49,9 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   
       // Registrar atividade no log
       const expAmount = parseInt(formData.exp);
+      const adminName = user?.profile?.nickname || user?.username || 'Admin';
       const logData = createSendExpLog(
-        'GM-Admin', // Aqui você usaria o nome do admin logado
+        adminName,
         formData.loginAccount,
         expAmount,
       );

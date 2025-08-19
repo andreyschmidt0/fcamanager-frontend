@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import { useActivityLog, createSendItemLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
+import { useAuth } from '../../hooks/useAuth';
 
 
 interface SendItemProps {
@@ -13,6 +14,7 @@ interface SendItemProps {
 const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { addActivity } = useActivityLog();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -53,8 +55,9 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
 
     // Registrar atividade no log
     const quantity = parseInt(formData.quantity);
+    const adminName = user?.profile?.nickname || user?.username || 'Admin';
     const logData = createSendItemLog(
-      'GM-Admin', // Aqui você usaria o nome do admin logado
+      adminName,
       formData.loginAccount,
       quantity,
     );

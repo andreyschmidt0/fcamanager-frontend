@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import { useActivityLog, createChangeEmailLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ChangeEmailProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface ChangeEmailProps {
 const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { addActivity } = useActivityLog();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -47,8 +49,9 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
     console.log('Change Email Data:', formData);
 
     // Registrar atividade no log
+    const adminName = user?.profile?.nickname || user?.username || 'Admin';
     const logData = createChangeEmailLog(
-      'GM-Admin', // Aqui você usaria o nome do admin logado
+      adminName,
       formData.loginAccount,
       formData.newemail,
       `Alterado via Discord ID: ${formData.discordId}`

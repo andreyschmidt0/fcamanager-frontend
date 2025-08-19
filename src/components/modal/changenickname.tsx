@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import { useActivityLog, createChangeNicknameLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ChangeNicknameProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface ChangeNicknameProps {
 const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { addActivity } = useActivityLog();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -47,8 +49,9 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
     console.log('Change Nickname Data:', formData);
 
     // Registrar atividade no log
+    const adminName = user?.profile?.nickname || user?.username || 'Admin';
     const logData = createChangeNicknameLog(
-      'GM-Admin', // Aqui você usaria o nome do admin logado
+      adminName,
       formData.loginAccount,
       formData.filter,
       `Alterado via Discord ID: ${formData.discordId}`

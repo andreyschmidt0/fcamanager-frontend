@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useActivityLog, ActivityLog } from '../contexts/ActivityLogContext';
 
+
 const RecentActivities: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('Esta semana');
   const [showDropdown, setShowDropdown] = useState(false);

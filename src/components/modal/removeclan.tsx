@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useClan } from '../../contexts/ClanContext';
 import { useActivityLog, createRemoveClanLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
+import { useAuth } from '../../hooks/useAuth';
 
 interface removeclanProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface removeclanProps {
 const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
   const { selectedClan } = useClan();
   const { addActivity } = useActivityLog();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     oidGuild: ''
   });
@@ -44,8 +46,9 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
     console.log('Clan Data:', formData);
 
     // Registrar atividade no log
+    const adminName = user?.profile?.nickname || user?.username || 'Admin';
     const logData = createRemoveClanLog(
-      'GM-Admin', // Aqui você usaria o nome do admin logado
+      adminName,
       `Clã ID: ${formData.oidGuild}`,
       `Remoção do clã com ID ${formData.oidGuild}`
     );

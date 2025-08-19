@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useActivityLog, createSendCashLog } from '../../contexts/ActivityLogContext';
+import { useAuth } from '../../hooks/useAuth';
 
 interface SendCashProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface SendCashProps {
 const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { addActivity } = useActivityLog();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -49,8 +51,9 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
 
     // Registrar atividade no log
     const cashAmount = parseInt(formData.cash);
+    const adminName = user?.profile?.nickname || user?.username || 'Admin';
     const logData = createSendCashLog(
-      'GM-Admin', // Aqui você usaria o nome do admin logado
+      adminName,
       formData.loginAccount,
       cashAmount,
     );

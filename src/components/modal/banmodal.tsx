@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import { useActivityLog, createBanLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
+import { useAuth } from '../../hooks/useAuth';
 
 interface BanModalProps {
   isOpen: boolean;
@@ -41,7 +42,6 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setShowConfirmation(true); // Mostra confirmação em vez de executar
@@ -50,11 +50,12 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
   const handleConfirmAction = () => {
     // Lógica original aqui (API call para banir)
     console.log('Data:', formData);
-
+    
+    const { user } = useAuth();
     // Registrar atividade no log
     const banPeriod = formData.banDuration === '999' ? 'permanente' : `${formData.banDuration} dias`;
     const logData = createBanLog(
-      'GM-Admin', // Aqui você usaria o nome do admin logado
+      user?.profile?.nickname || 'Admin',
       formData.loginAccount,
       banPeriod,
       formData.banReason

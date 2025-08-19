@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import '../index.css';
 import '../fonts.css';
 import { getAuthService, isRunningInTauri } from '../services/tauri-auth';
-import { DatabaseSecurity } from '../services/database';
 
 interface LoginPageProps {
   onLoginSuccess?: (user: any) => void;
@@ -31,8 +30,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         password: password
       });
 
-      // Log da tentativa de acesso
-      DatabaseSecurity.logAccessAttempt(login, result.success);
+
 
       if (result.success && result.user) {
         onLoginSuccess?.(result.user);
@@ -42,7 +40,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     } catch (error) {
       console.error('Erro durante login:', error);
       setError('Erro interno. Tente novamente.');
-      DatabaseSecurity.logAccessAttempt(login, false);
     } finally {
       setIsLoading(false);
     }
