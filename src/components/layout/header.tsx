@@ -1,16 +1,14 @@
 import { Bell, Menu, ChevronDown, LogOut } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 
 const Header = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    // Implementar lógica de logout aqui
-    console.log('Logout clicked');
-    // Exemplo: limpar localStorage, redirecionar, etc.
-    localStorage.clear();
-    window.location.href = '/login';
+    logout();
   };
 
   // Fechar dropdown quando clicar fora
@@ -49,9 +47,13 @@ const Header = () => {
               className="flex items-center gap-3 hover:bg-gray-800 rounded-lg px-3 py-2 transition-colors"
             >
               <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium">GN</span>
+                <span className="text-sm font-medium">
+                  {user?.profile.nickname ? user.profile.nickname.substring(0, 2).toUpperCase() : 'GM'}
+                </span>
               </div>
-              <span className="text-sm">GM-Nicki</span>
+              <span className="text-sm">
+                GM-{user?.profile.nickname || 'Admin'}
+              </span>
               <ChevronDown 
                 size={16} 
                 className={`transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`}

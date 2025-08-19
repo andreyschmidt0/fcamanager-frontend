@@ -1,8 +1,18 @@
-import { MockUser, findUserByCredentials, isValidCredentials } from '../mock/users';
+import apiService from './api.service';
 
 export interface AuthResult {
     success: boolean;
-    user?: MockUser;
+    user?: {
+        id: number;
+        username: string;
+        profile: {
+            nickname: string;
+            email: string;
+        };
+        role: string;
+        lastLogin: Date;
+        password: string;
+    };
     error?: string;
     token?: string;
 }
@@ -64,10 +74,13 @@ class InputValidator {
 
 class AuthService {
     private static instance: AuthService;
-    private currentUser: MockUser | null = null;
+    private currentUser: any = null;
     private sessionToken: string | null = null;
 
-    private constructor() {}
+    private constructor() {
+        // Restaurar sessão do localStorage se existir
+        this.restoreSession();
+    }
 
     static getInstance(): AuthService {
         if (!AuthService.instance) {
@@ -76,14 +89,42 @@ class AuthService {
         return AuthService.instance;
     }
 
-    private generateSecureToken(): string {
-        // Gera um token simples para o mock (em produção, use JWT ou similar)
-        return btoa(Date.now() + Math.random().toString()).replace(/[^a-zA-Z0-9]/g, '');
+    private restoreSession(): void {
+        const token = localStorage.getItem('authToken');
+        const userData = localStorage.getItem('currentUser');
+        
+        if (token && userData) {
+            try {
+                this.sessionToken = token;
+                const backendUser = JSON.parse(userData);
+                // Converter formato do backend para o formato esperado
+                this.currentUser = {
+                    id: backendUser.id,
+                    username: backendUser.username,
+                    profile: {
+                        nickname: backendUser.nickname,
+                        email: backendUser.email
+                    },
+                    role: backendUser.role,
+                    lastLogin: new Date(),
+                    password: '[PROTECTED]'
+                };
+            } catch (error) {
+                console.error('Erro ao restaurar sessão:', error);
+                this.clearSession();
+            }
+        }
+    }
+
+    private clearSession(): void {
+        this.currentUser = null;
+        this.sessionToken = null;
+        apiService.logout();
     }
 
     async login(credentials: LoginCredentials): Promise<AuthResult> {
         try {
-            // Validação de entrada
+            // Validação de entrada básica
             const validation = InputValidator.validateCredentials(credentials);
             if (!validation.isValid) {
                 return {
@@ -92,68 +133,39 @@ class AuthService {
                 };
             }
 
-            // Sanitização adicional
-            const sanitizedUsername = InputValidator.sanitizeString(credentials.username);
-            const sanitizedPassword = credentials.password; // Password não deve ser sanitizado da mesma forma
+            console.log('🔄 Fazendo login no backend...', { username: credentials.username });
 
-            // Verificação de credenciais usando prepared statement simulado
-            const user = this.authenticateUser(sanitizedUsername, sanitizedPassword);
-
-            if (!user) {
-                return {
-                    success: false,
-                    error: 'Credenciais inválidas'
-                };
+            // Fazer login via API backend real
+            const result = await apiService.loginCompatible(credentials);
+            
+            if (result.success && result.user && result.token) {
+                this.currentUser = result.user;
+                this.sessionToken = result.token;
+                
+                console.log('✅ Login realizado com sucesso:', {
+                    username: result.user.username,
+                    nickname: result.user.profile.nickname,
+                    role: result.user.role
+                });
             }
 
-            // Gera token de sessão
-            const token = this.generateSecureToken();
-            
-            // Atualiza último login
-            user.lastLogin = new Date();
-            
-            // Define usuário atual
-            this.currentUser = user;
-            this.sessionToken = token;
-
-            return {
-                success: true,
-                user: {
-                    ...user,
-                    password: '[PROTECTED]' // Nunca retorna a senha
-                } as MockUser,
-                token
-            };
+            return result;
 
         } catch (error) {
-            console.error('Erro durante autenticação:', error);
+            console.error('❌ Erro durante autenticação:', error);
             return {
                 success: false,
-                error: 'Erro interno do servidor'
+                error: error instanceof Error ? error.message : 'Erro interno do servidor'
             };
         }
-    }
-
-    private authenticateUser(username: string, password: string): MockUser | null {
-        // Simula prepared statement - previne SQL injection
-        // Em uma aplicação real, isso seria feito no backend com prepared statements reais
-        
-        // Validação adicional para prevenir ataques
-        if (username.includes('\'') || username.includes('"') || 
-            username.includes(';') || username.includes('--')) {
-            console.warn('Tentativa de SQL injection detectada:', username);
-            return null;
-        }
-
-        return findUserByCredentials(username, password);
     }
 
     logout(): void {
-        this.currentUser = null;
-        this.sessionToken = null;
+        console.log('🚪 Realizando logout...');
+        this.clearSession();
     }
 
-    getCurrentUser(): MockUser | null {
+    getCurrentUser(): any {
         return this.currentUser;
     }
 
@@ -167,6 +179,28 @@ class AuthService {
 
     validateSession(token: string): boolean {
         return this.sessionToken === token && this.isAuthenticated();
+    }
+
+    // Método adicional para testar conexão com backend
+    async testBackendConnection(): Promise<boolean> {
+        try {
+            const isConnected = await apiService.testConnection();
+            console.log('🌐 Conexão com backend:', isConnected ? '✅ OK' : '❌ FALHA');
+            return isConnected;
+        } catch (error) {
+            console.error('❌ Erro ao testar conexão:', error);
+            return false;
+        }
+    }
+
+    // Método para verificar se o token ainda é válido
+    async verifyToken(): Promise<boolean> {
+        try {
+            return await apiService.verifyToken();
+        } catch {
+            this.clearSession();
+            return false;
+        }
     }
 }
 

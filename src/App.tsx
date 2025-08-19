@@ -11,12 +11,14 @@ function App() {
   const [showLoading, setShowLoading] = useState(false);
 
   // Função para lidar com o login bem-sucedido
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (user: any) => {
     setShowLoading(true);
     // Simula um carregamento após o login bem-sucedido
     setTimeout(() => {
       setIsAuthenticated(true);
       setShowLoading(false);
+      // Força a atualização do estado do usuário no localStorage
+      window.dispatchEvent(new Event('user-updated'));
     }, 1500); // 1.5 segundos de loading, ajuste conforme necessário
   };
 
