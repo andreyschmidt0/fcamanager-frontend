@@ -10,10 +10,8 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
 
-  // Função para lidar com o login bem-sucedido
   const handleLoginSuccess = (user: any) => {
     setShowLoading(true);
-    // Simula um carregamento após o login bem-sucedido
     setTimeout(() => {
       setIsAuthenticated(true);
       setShowLoading(false);
@@ -31,7 +29,7 @@ function App() {
           fullScreen={true}
         />
       )}
-
+  
       {!isAuthenticated && !showLoading ? (
         <LoginPage onLoginSuccess={handleLoginSuccess} />
       ) : null}
