@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useActivityLog, ActivityLog } from '../contexts/ActivityLogContext';
 import { useAuth } from '../hooks/useAuth';
@@ -23,6 +23,37 @@ const RecentActivities: React.FC = () => {
   
   const [isXMagnata, setIsXMagnata] = useState(false);
   
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fecha dropdowns ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+        setShowGMDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Garante que só um dropdown fique aberto por vez
+  const handleTogglePeriodDropdown = () => {
+    setShowDropdown((prev) => {
+      if (!prev) setShowGMDropdown(false);
+      return !prev;
+    });
+  };
+  const handleToggleGMDropdown = () => {
+    setShowGMDropdown((prev) => {
+      if (!prev) setShowDropdown(false);
+      return !prev;
+    });
+  };
+
   // Buscar GMs quando usuário é Magnata
   useEffect(() => {
     if (user?.profile?.nickname === 'Magnata') {
@@ -79,21 +110,25 @@ const RecentActivities: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#111216] rounded-lg border border-black h-full flex flex-col" style={{ maxHeight: '100%', overflow: 'hidden' }}>
+    <div
+      className="bg-[#111216] rounded-lg border border-black h-full flex flex-col"
+      style={{ maxHeight: '100%', overflow: 'hidden' }}
+      ref={dropdownRef}
+    >
       {/* Header */}
       <div className="p-4 border-b border-black" style={{ flexShrink: 0 }}>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-neofara font-medium">
             ÚLTIMAS ATIVIDADES
           </h2>
-          
           <div className="flex items-center gap-3">
+
             {/* GM Selector - Only for xMagnata */}
             {isXMagnata && (
-              <div className="relative">
-                <button 
-                  onClick={() => setShowGMDropdown(!showGMDropdown)}
-                  className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors border border-black"
+              <div className="relative rounded-lg">
+                <button
+                  onClick={handleToggleGMDropdown}
+                  className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
                 >
                   <span className="hidden sm:inline">
                     {selectedGM || 'Selecionar um GM'}
@@ -101,9 +136,11 @@ const RecentActivities: React.FC = () => {
                   <span className="sm:hidden">
                     {selectedGM ? selectedGM.substring(0, 8) + '...' : 'GM'}
                   </span>
-                  <ChevronDown size={16} className={`transition-transform ${showGMDropdown ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform ${showGMDropdown ? 'rotate-180' : ''}`}
+                  />
                 </button>
-                
                 {showGMDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-[#1d1e24] rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
                     <button
@@ -111,7 +148,7 @@ const RecentActivities: React.FC = () => {
                         setSelectedGM('');
                         setShowGMDropdown(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors rounded-t-lg text-gray-400"
+                      className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors text-gray-400"
                     >
                       Todos os GMs
                     </button>
@@ -122,7 +159,7 @@ const RecentActivities: React.FC = () => {
                           setSelectedGM(gm.NickName);
                           setShowGMDropdown(false);
                         }}
-                        className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors last:rounded-b-lg"
+                        className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors"
                       >
                         {gm.NickName}
                       </button>
@@ -134,19 +171,25 @@ const RecentActivities: React.FC = () => {
 
             {/* Period Selector */}
             <div className="relative">
-              <button 
-                onClick={() => setShowDropdown(!showDropdown)}
+              <button
+                onClick={handleTogglePeriodDropdown}
                 className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
               >
                 <span className="hidden sm:inline">{selectedPeriod}</span>
                 <span className="sm:hidden">
-                  {selectedPeriod === 'Esta semana' ? 'Semana' : 
-                   selectedPeriod === 'Este mês' ? 'Mês' : 
-                   selectedPeriod === 'Este ano' ? 'Ano' : 'Hoje'}
+                  {selectedPeriod === 'Esta semana'
+                    ? 'Semana'
+                    : selectedPeriod === 'Este mês'
+                    ? 'Mês'
+                    : selectedPeriod === 'Este ano'
+                    ? 'Ano'
+                    : 'Hoje'}
                 </span>
-                <ChevronDown size={16} className={`transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${showDropdown ? 'rotate-180' : ''}`}
+                />
               </button>
-              
               {showDropdown && (
                 <div className="absolute right-0 mt-2 w-32 sm:w-40 bg-[#1d1e24] rounded-lg shadow-lg z-10">
                   {periods.map((period) => (
@@ -166,7 +209,6 @@ const RecentActivities: React.FC = () => {
             </div>
           </div>
         </div>
-        
         <p className="text-xs text-gray-400 mt-1">Todas as Ações</p>
       </div>
 

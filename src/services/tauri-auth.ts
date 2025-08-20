@@ -123,15 +123,19 @@ class TauriAuthService {
     }
 
     getSessionToken(): string | null {
-        return this.authService.getSessionToken();
+        // return this.authService.getSessionToken();
+        return this.authService.getAccessToken();
     }
 
     isAuthenticated(): boolean {
         return this.authService.isAuthenticated();
     }
 
-    validateSession(token: string): boolean {
-        return this.authService.validateSession(token);
+    // validateSession(token: string): boolean {
+    //     return this.authService.validateSession(token);
+    // }
+    isTokenExpired(): boolean {
+        return this.authService.isTokenExpired();
     }
 }
 

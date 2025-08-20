@@ -16,7 +16,7 @@ const api = axios.create({
 
 // Interceptor para adicionar token automaticamente
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -29,8 +29,10 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Token expirado ou inválido
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('currentUser');
+      localStorage.removeItem('tokenExpiryTime');
       // Opcional: redirecionar para login
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
@@ -44,14 +46,20 @@ api.interceptors.response.use(
 export interface BackendUser {
   id: number;
   username: string;
-  nickname: string;
-  email: string;
+  profile: {
+    nickname: string;
+    email: string;
+    discordId: string;
+  };
   role: 'admin' | 'user';
 }
 
 // Interface para resposta de login
 export interface LoginResponse {
-  token: string;
+  success: boolean;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: string;
   user: BackendUser;
 }
 
@@ -70,13 +78,16 @@ export interface AuthResult {
     profile: {
       nickname: string;
       email: string;
+      discordId: string;
     };
     role: string;
     lastLogin: Date;
     password: string; // Sempre '[PROTECTED]'
   };
   error?: string;
-  token?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: string;
 }
 
 class ApiService {
@@ -84,11 +95,6 @@ class ApiService {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
       const response = await api.post<LoginResponse>('/auth/login', credentials);
-      
-      // Salvar token e usuário no localStorage
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('currentUser', JSON.stringify(response.data.user));
-      
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -106,19 +112,22 @@ class ApiService {
       
       // Converter resposta do backend para o formato esperado pelo frontend
       return {
-        success: true,
+        success: response.success,
         user: {
           id: response.user.id,
           username: response.user.username,
           profile: {
-            nickname: response.user.nickname,
-            email: response.user.email
+            nickname: response.user.profile.nickname,
+            email: response.user.profile.email,
+            discordId: response.user.profile.discordId
           },
           role: response.user.role,
           lastLogin: new Date(),
           password: '[PROTECTED]'
         },
-        token: response.token
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        expiresIn: response.expiresIn
       };
     } catch (error) {
       return {
@@ -148,22 +157,59 @@ class ApiService {
     }
   }
 
+  // Configurar token de autorização
+  setAuthToken(token: string): void {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Remover token de autorização
+  removeAuthToken(): void {
+    delete api.defaults.headers.common['Authorization'];
+  }
+
+  // Refresh token
+  async refreshToken(refreshToken: string): Promise<{success: boolean; accessToken?: string; refreshToken?: string; error?: string}> {
+    try {
+      const response = await api.post('/auth/refresh', { refreshToken });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return {
+          success: false,
+          error: error.response?.data?.error || 'Erro ao renovar token'
+        };
+      }
+      return {
+        success: false,
+        error: 'Erro inesperado ao renovar token'
+      };
+    }
+  }
+
   // Logout
   logout(): void {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('tokenExpiryTime');
+    this.removeAuthToken();
   }
 
   // Verificar se está autenticado
   isAuthenticated(): boolean {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     const user = localStorage.getItem('currentUser');
     return !!(token && user);
   }
 
-  // Obter token atual
-  getToken(): string | null {
-    return localStorage.getItem('authToken');
+  // Obter access token atual
+  getAccessToken(): string | null {
+    return localStorage.getItem('accessToken');
+  }
+
+  // Obter refresh token atual
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
   }
 
   // Obter usuário do localStorage

@@ -8,13 +8,16 @@ export interface AuthResult {
         profile: {
             nickname: string;
             email: string;
+            discordId: string;
         };
         role: string;
         lastLogin: Date;
         password: string;
     };
     error?: string;
-    token?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: string;
 }
 
 export interface LoginCredentials {
@@ -75,7 +78,9 @@ class InputValidator {
 class AuthService {
     private static instance: AuthService;
     private currentUser: any = null;
-    private sessionToken: string | null = null;
+    private accessToken: string | null = null;
+    private refreshToken: string | null = null;
+    private tokenExpiryTime: number | null = null;
 
     private constructor() {
         // Restaurar sessão do localStorage se existir
@@ -90,20 +95,25 @@ class AuthService {
     }
 
     private restoreSession(): void {
-        const token = localStorage.getItem('authToken');
+        const accessToken = localStorage.getItem('accessToken');
+        const refreshToken = localStorage.getItem('refreshToken');
         const userData = localStorage.getItem('currentUser');
+        const expiryTime = localStorage.getItem('tokenExpiryTime');
         
-        if (token && userData) {
+        if (accessToken && refreshToken && userData) {
             try {
-                this.sessionToken = token;
+                this.accessToken = accessToken;
+                this.refreshToken = refreshToken;
+                this.tokenExpiryTime = expiryTime ? parseInt(expiryTime) : null;
                 const backendUser = JSON.parse(userData);
                 // Converter formato do backend para o formato esperado
                 this.currentUser = {
                     id: backendUser.id,
                     username: backendUser.username,
                     profile: {
-                        nickname: backendUser.nickname,
-                        email: backendUser.email
+                        nickname: backendUser.profile?.nickname || backendUser.nickname,
+                        email: backendUser.profile?.email || backendUser.email,
+                        discordId: backendUser.profile?.discordId || backendUser.discordId
                     },
                     role: backendUser.role,
                     lastLogin: new Date(),
@@ -118,7 +128,13 @@ class AuthService {
 
     private clearSession(): void {
         this.currentUser = null;
-        this.sessionToken = null;
+        this.accessToken = null;
+        this.refreshToken = null;
+        this.tokenExpiryTime = null;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('tokenExpiryTime');
         apiService.logout();
     }
 
@@ -138,9 +154,24 @@ class AuthService {
             // Fazer login via API backend real
             const result = await apiService.loginCompatible(credentials);
             
-            if (result.success && result.user && result.token) {
+            if (result.success && result.user && result.accessToken) {
                 this.currentUser = result.user;
-                this.sessionToken = result.token;
+                this.accessToken = result.accessToken;
+                this.refreshToken = result.refreshToken || null;
+                
+                // Calcular tempo de expiração (15 minutos)
+                this.tokenExpiryTime = Date.now() + (15 * 60 * 1000);
+                
+                // Salvar no localStorage
+                localStorage.setItem('accessToken', result.accessToken);
+                if (result.refreshToken) {
+                    localStorage.setItem('refreshToken', result.refreshToken);
+                }
+                localStorage.setItem('currentUser', JSON.stringify(result.user));
+                localStorage.setItem('tokenExpiryTime', this.tokenExpiryTime.toString());
+                
+                // Configurar header de autorização
+                apiService.setAuthToken(result.accessToken);
                 
                 console.log('✅ Login realizado com sucesso:', {
                     username: result.user.username,
@@ -169,16 +200,63 @@ class AuthService {
         return this.currentUser;
     }
 
-    getSessionToken(): string | null {
-        return this.sessionToken;
+    getAccessToken(): string | null {
+        return this.accessToken;
+    }
+
+    getRefreshToken(): string | null {
+        return this.refreshToken;
     }
 
     isAuthenticated(): boolean {
-        return this.currentUser !== null && this.sessionToken !== null;
+        return this.currentUser !== null && this.accessToken !== null;
     }
 
-    validateSession(token: string): boolean {
-        return this.sessionToken === token && this.isAuthenticated();
+    isTokenExpired(): boolean {
+        if (!this.tokenExpiryTime) return true;
+        return Date.now() >= this.tokenExpiryTime;
+    }
+
+    async refreshAccessToken(): Promise<boolean> {
+        if (!this.refreshToken) return false;
+        
+        try {
+            const result = await apiService.refreshToken(this.refreshToken);
+            
+            if (result.success && result.accessToken) {
+                this.accessToken = result.accessToken;
+                this.refreshToken = result.refreshToken || this.refreshToken;
+                this.tokenExpiryTime = Date.now() + (15 * 60 * 1000);
+                
+                // Atualizar localStorage
+                localStorage.setItem('accessToken', result.accessToken);
+                if (result.refreshToken) {
+                    localStorage.setItem('refreshToken', result.refreshToken);
+                }
+                localStorage.setItem('tokenExpiryTime', this.tokenExpiryTime.toString());
+                
+                // Configurar header de autorização
+                apiService.setAuthToken(result.accessToken);
+                
+                return true;
+            }
+        } catch (error) {
+            console.error('Erro ao renovar token:', error);
+            this.clearSession();
+        }
+        
+        return false;
+    }
+
+    async ensureValidToken(): Promise<boolean> {
+        if (!this.isAuthenticated()) return false;
+        
+        if (this.isTokenExpired()) {
+            console.log('🔄 Token expirado, renovando...');
+            return await this.refreshAccessToken();
+        }
+        
+        return true;
     }
 
     // Método adicional para testar conexão com backend

@@ -19,9 +19,23 @@ export const useAuth = () => {
   const authService = AuthService.getInstance();
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-    setIsLoading(false);
+    const initAuth = async () => {
+      // Verificar se o token é válido e renovar se necessário
+      const isValid = await authService.ensureValidToken();
+      
+      if (isValid) {
+        const currentUser = authService.getCurrentUser();
+        setUser(currentUser);
+      } else {
+        // Token inválido ou expirado, fazer logout
+        authService.logout();
+        setUser(null);
+      }
+      
+      setIsLoading(false);
+    };
+
+    initAuth();
 
     // Escutar por atualizações do usuário
     const handleUserUpdate = () => {
