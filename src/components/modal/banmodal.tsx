@@ -13,6 +13,7 @@ interface BanModalProps {
 const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { addActivity } = useActivityLog();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -51,7 +52,6 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
     // Lógica original aqui (API call para banir)
     console.log('Data:', formData);
     
-    const { user } = useAuth();
     // Registrar atividade no log
     const banPeriod = formData.banDuration === '999' ? 'permanente' : `${formData.banDuration} dias`;
     const logData = createBanLog(

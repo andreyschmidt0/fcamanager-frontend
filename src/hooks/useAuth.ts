@@ -6,6 +6,7 @@ interface AuthUser {
   username: string;
   profile: {
     nickname: string;
+    discordId: string;
     email: string;
   };
   role: string;

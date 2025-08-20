@@ -1,15 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useActivityLog, ActivityLog } from '../contexts/ActivityLogContext';
+import { useAuth } from '../hooks/useAuth';
 
+
+interface GMUser {
+  NickName: string;
+  strDiscordID: string;
+  strLNexonID: string;
+}
 
 const RecentActivities: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('Esta semana');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedGM, setSelectedGM] = useState<string>('');
+  const [showGMDropdown, setShowGMDropdown] = useState(false);
+  const [gmUsers, setGMUsers] = useState<GMUser[]>([]);
   const { getActivitiesByPeriod } = useActivityLog();
+  const { user } = useAuth();
 
   const periods = ['Hoje', 'Esta semana', 'Este mês', 'Este ano'];
-  const activities = getActivitiesByPeriod(selectedPeriod);
+  
+  const [isXMagnata, setIsXMagnata] = useState(false);
+  
+  // Buscar GMs quando usuário é Magnata
+  useEffect(() => {
+    if (user?.profile?.nickname === 'Magnata') {
+      fetchGMUsers();
+    }
+  }, [user?.profile?.nickname]);
+
+  const fetchGMUsers = async () => {
+    try {
+      // Primeiro buscar o Discord ID do usuário logado
+      const profileResponse = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
+      if (!profileResponse.ok) {
+        setIsXMagnata(false);
+        return;
+      }
+      
+      const profileData = await profileResponse.json();
+      const discordId = profileData.strDiscordID;
+      
+      // Agora tentar buscar GMs usando o Discord ID
+      const response = await fetch(`http://localhost:3000/api/users/gms?discordId=${encodeURIComponent(discordId)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.isAuthorized) {
+          setIsXMagnata(true);
+          setGMUsers(data.gmUsers);
+        }
+      } else {
+        setIsXMagnata(false);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar GMs:', error);
+      setIsXMagnata(false);
+    }
+  };
+
+  // Filtrar atividades por GM selecionado
+  const allActivities = getActivitiesByPeriod(selectedPeriod);
+  const activities = selectedGM 
+    ? allActivities.filter(activity => activity.adminName === selectedGM)
+    : allActivities;
 
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();
@@ -33,37 +87,83 @@ const RecentActivities: React.FC = () => {
             ÚLTIMAS ATIVIDADES
           </h2>
           
-          {/* Period Selector */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
-            >
-              <span className="hidden sm:inline">{selectedPeriod}</span>
-              <span className="sm:hidden">
-                {selectedPeriod === 'Esta semana' ? 'Semana' : 
-                 selectedPeriod === 'Este mês' ? 'Mês' : 
-                 selectedPeriod === 'Este ano' ? 'Ano' : 'Hoje'}
-              </span>
-              <ChevronDown size={16} className={`transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-32 sm:w-40 bg-[#1d1e24] rounded-lg shadow-lg z-10">
-                {periods.map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => {
-                      setSelectedPeriod(period);
-                      setShowDropdown(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
-                  >
-                    {period}
-                  </button>
-                ))}
+          <div className="flex items-center gap-3">
+            {/* GM Selector - Only for xMagnata */}
+            {isXMagnata && (
+              <div className="relative">
+                <button 
+                  onClick={() => setShowGMDropdown(!showGMDropdown)}
+                  className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors border border-black"
+                >
+                  <span className="hidden sm:inline">
+                    {selectedGM || 'Selecionar um GM'}
+                  </span>
+                  <span className="sm:hidden">
+                    {selectedGM ? selectedGM.substring(0, 8) + '...' : 'GM'}
+                  </span>
+                  <ChevronDown size={16} className={`transition-transform ${showGMDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {showGMDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-[#1d1e24] rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                    <button
+                      onClick={() => {
+                        setSelectedGM('');
+                        setShowGMDropdown(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors rounded-t-lg text-gray-400"
+                    >
+                      Todos os GMs
+                    </button>
+                    {gmUsers.map((gm) => (
+                      <button
+                        key={gm.strLNexonID}
+                        onClick={() => {
+                          setSelectedGM(gm.NickName);
+                          setShowGMDropdown(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors last:rounded-b-lg"
+                      >
+                        {gm.NickName}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Period Selector */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
+              >
+                <span className="hidden sm:inline">{selectedPeriod}</span>
+                <span className="sm:hidden">
+                  {selectedPeriod === 'Esta semana' ? 'Semana' : 
+                   selectedPeriod === 'Este mês' ? 'Mês' : 
+                   selectedPeriod === 'Este ano' ? 'Ano' : 'Hoje'}
+                </span>
+                <ChevronDown size={16} className={`transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-32 sm:w-40 bg-[#1d1e24] rounded-lg shadow-lg z-10">
+                  {periods.map((period) => (
+                    <button
+                      key={period}
+                      onClick={() => {
+                        setSelectedPeriod(period);
+                        setShowDropdown(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                    >
+                      {period}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         

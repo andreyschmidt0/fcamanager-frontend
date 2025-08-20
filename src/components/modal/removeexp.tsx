@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
-import { useActivityLog, createSendExpLog } from '../../contexts/ActivityLogContext';
+import { useActivityLog, createRemoveExpLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -50,7 +50,7 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       // Registrar atividade no log
       const expAmount = parseInt(formData.exp);
       const adminName = user?.profile?.nickname || user?.username || 'Admin';
-      const logData = createSendExpLog(
+      const logData = createRemoveExpLog(
         adminName,
         formData.loginAccount,
         expAmount,

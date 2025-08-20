@@ -136,20 +136,21 @@ export const createAlterLog = (adminName: string, target: string, details: strin
   justification,
 });
 
-export const createSendExpLog = (adminName: string, target: string, amount: number) => ({
+export const createRemoveExpLog = (adminName: string, target: string, amount: number) => ({
   adminName,
   action: 'Enviar' as const,
   target,
-  details: `Enviou ${amount} exp para`,
+  details: `Removeu ${amount} de exp de`,
   amount,
   amountType: 'exp' as const,
 });
 
-export const createSendItemLog = (adminName: string, target: string, quantity: number) => ({
+export const createSendItemLog = (adminName: string, target: string, quantity: number, productId: number) => ({
   adminName,
   action: 'Enviar' as const,
   target,
-  details: `Enviou ${quantity} itens para`,
+  productId,
+  details: `Enviou ${quantity} ${productId} itens para`,
   amount: quantity,
   amountType: 'item' as const,
 });
@@ -182,6 +183,6 @@ export const createRemoveClanLog = (adminName: string, target: string, justifica
   adminName,
   action: 'Alterar' as const,
   target,
-  details: `Removeu do clan`,
+  details: `Removeu o clan`,
   justification,
 });
