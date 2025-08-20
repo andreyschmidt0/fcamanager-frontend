@@ -226,7 +226,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
-          description={`Tem certeza que deseja banir o jogador ${formData.loginAccount} com o ID Discord ${formData.discordId}? Esta ação não pode ser desfeita.`}
+          description={`Tem certeza que deseja banir o jogador: ${formData.loginAccount} com o ID Discord: ${formData.discordId}?`}
           confirmActionText="Sim, Banir"
           cancelActionText="Cancelar"
         />

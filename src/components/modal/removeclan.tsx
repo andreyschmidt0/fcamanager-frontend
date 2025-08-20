@@ -121,7 +121,7 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
         onConfirm={handleConfirmAction}
         onCancel={handleCancelConfirmation}
         title="Confirmar Ação"
-        description={`Tem certeza que deseja remover o clã com ID: ${formData.oidGuild}? Esta ação não pode ser desfeita.`}
+        description={`Tem certeza que deseja remover o clã com ID: ${formData.oidGuild}?`}
         confirmActionText="Sim, Remover"
         cancelActionText="Cancelar"
       />

@@ -136,7 +136,7 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
-          description={`Tem certeza que deseja enviar ${formData.exp} de EXP para o jogador ${formData.loginAccount}?`}
+          description={`Tem certeza que deseja enviar: ${formData.exp} de EXP para o jogador: ${formData.loginAccount}?`}
           confirmActionText="Sim, Enviar"
           cancelActionText="Cancelar"
         />

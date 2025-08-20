@@ -187,7 +187,7 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
-          description={`Tem certeza que deseja desbanir o jogador ${formData.loginAccount} com o ID Discord ${formData.discordId}`}
+          description={`Tem certeza que deseja desbanir o jogador: ${formData.loginAccount} com o ID Discord: ${formData.discordId}`}
           confirmActionText="Sim, Desbanir"
           cancelActionText="Cancelar"
         />

@@ -28,7 +28,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         {/* Header */}
         <div className="relative flex items-center h-16 border-b border-gray-600 px-6">
           <AlertTriangle className="text-yellow-500 mr-3" size={24} />
-          <h2 className="text-xl font-bold text-white font-neofara">
+          <h2 className="text-xl font-bold text-white font-neofara tracking-wider">
             {title}
           </h2>
           <button
@@ -42,7 +42,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         {/* Content */}
         <div className="p-6">
           {description && (
-            <p className="text-gray-300 text-sm mb-6">
+            <p className="text-white text-md mb-6">
               {description}
             </p>
           )}

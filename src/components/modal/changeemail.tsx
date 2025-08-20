@@ -156,7 +156,7 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
         onConfirm={handleConfirmAction}
         onCancel={handleCancelConfirmation}
         title="Confirmar Alteração"
-        description={`Tem certeza que deseja alterar o email para: ${formData.newemail}? Esta ação será registrada no sistema.`}
+        description={`Tem certeza que deseja alterar o email para: ${formData.newemail}?`}
         confirmActionText="Sim, Alterar"
         cancelActionText="Cancelar"
       />

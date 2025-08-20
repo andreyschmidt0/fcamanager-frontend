@@ -115,9 +115,10 @@ interface PlayerProfileProps {
   isOpen: boolean;
   onClose: () => void;
   nickname: string;
+  isBanned?: boolean;
 }
 
-const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname }) => {
+const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname, isBanned = false }) => {
   const [playerData, setPlayerData] = useState<PlayerProfileData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -151,9 +152,9 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname
   if (!isOpen) return null;
 
   const StatCard: React.FC<{ title: string; value: number | string; highlight?: boolean }> = ({ title, value, highlight = false }) => (
-    <div className={`bg-[#1d1e24] rounded-lg p-3 ${highlight ? 'border border-green-500/50' : ''}`}>
-      <p className="text-xs text-gray-400 mb-1">{title}</p>
-      <p className={`text-sm font-bold ${highlight ? 'text-green-400' : 'text-white'}`}>
+    <div className="bg-[#1d1e24] rounded-lg p-3">
+      <p className="text-sm text-gray-400 mb-1">{title}</p>
+      <p className="text-base font-bold text-white">
         {typeof value === 'number' ? value.toLocaleString() : value || 'N/A'}
       </p>
     </div>
@@ -165,11 +166,18 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#111216] rounded-lg border border-gray-600 w-full h-full max-w-7xl max-h-[95vh] flex flex-col">
+      <div className="bg-[#111216] rounded-lg border-2 border-black w-full h-full max-w-[90vw] max-h-[95vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-600">
           <div>
-            <h2 className="text-2xl font-bold text-white">{nickname}</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-white">{nickname}</h2>
+              {isBanned && (
+                <span className="bg-red-500 text-white text-sm px-3 py-1 rounded-full font-bold animate-pulse">
+                  🚫 BANIDO
+                </span>
+              )}
+            </div>
             <p className="text-gray-400">Perfil Completo do Jogador</p>
           </div>
           <button 

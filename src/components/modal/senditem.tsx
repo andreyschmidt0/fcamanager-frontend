@@ -191,7 +191,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
-          description={`Tem certeza que deseja enviar ${formData.productId} para o jogador ${formData.loginAccount} com o ID Discord ${formData.discordId}?`}
+          description={`Tem certeza que deseja enviar: ${formData.productId} para o jogador: ${formData.loginAccount} com o ID Discord: ${formData.discordId}?`}
           confirmActionText="Sim, Enviar"
           cancelActionText="Cancelar"
         />

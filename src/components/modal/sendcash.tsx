@@ -156,7 +156,7 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
-          description={`Tem certeza que deseja enviar ${formData.cash} de Cash para o jogador ${formData.loginAccount} com o Discord ID ${formData.discordId}?`}
+          description={`Tem certeza que deseja enviar: ${formData.cash} de Cash para o jogador: ${formData.loginAccount} com o Discord ID: ${formData.discordId}?`}
           confirmActionText="Sim, Enviar"
           cancelActionText="Cancelar"
         />

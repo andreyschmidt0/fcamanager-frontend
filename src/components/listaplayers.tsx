@@ -583,6 +583,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
           isOpen={showPlayerProfile}
           onClose={() => setShowPlayerProfile(false)}
           nickname={selectedPlayer.name}
+          isBanned={selectedPlayer.banStatus === 'Sim'}
         />
       )}
     </>

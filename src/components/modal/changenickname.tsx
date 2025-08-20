@@ -155,7 +155,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
         onConfirm={handleConfirmAction}
         onCancel={handleCancelConfirmation}
         title="Confirmar Alteração"
-        description={`Tem certeza que deseja alterar o nickname para: ${formData.filter}? Esta ação será registrada no sistema.`}
+        description={`Tem certeza que deseja alterar o nickname para: ${formData.filter}?`}
         confirmActionText="Sim, Alterar"
         cancelActionText="Cancelar"
       />
