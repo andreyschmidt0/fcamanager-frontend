@@ -1,21 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import '../index.css';
 import { X, Search, Copy } from 'lucide-react';
-import listClans, { Clans as ApiClan, Clans } from '../api/listclans';
 import { usePlayer, Player } from '../contexts/PlayerContext';
-import { useClan } from '../contexts/ClanContext';
+import { useClan, Clan } from '../contexts/ClanContext';
 import PlayerInfo from './modal/playerinfo/playerinfo';
-
-
-export interface Clan {
-  name: string;
-  leader: string;
-  leaderDiscordId: string;
-  memberCount: number;
-  oidGuild: number;
-  oidUser_Lider: number;
-}
-
+import PlayerProfile from './modal/playerprofile/PlayerProfile';
 
 interface PlayersListProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -33,6 +22,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string>('');
   const [showPlayerInfo, setShowPlayerInfo] = useState<boolean>(false);
+  const [showPlayerProfile, setShowPlayerProfile] = useState<boolean>(false);
 
   const copyToClipboard = (discordId: string) => {
     navigator.clipboard.writeText(discordId).then(() => {
@@ -97,15 +87,24 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
     setLoading(true);
     try {
-      const apiClans: Clans[] = await listClans(clanname);
-      const mappedClans: Clan[] = apiClans.map((clan: Clans) => ({
-        name: clan.nm_clan,
-        leader: clan.Lider,
-        leaderDiscordId: clan.DiscordID_Lider,
-        memberCount: clan.qt_membros,
+      const response = await fetch(`http://localhost:3000/api/users/clans/search?clanName=${encodeURIComponent(clanname)}`);
+      
+      if (!response.ok) {
+        throw new Error('Erro na requisição');
+      }
+      
+      const clans = await response.json();
+      
+      const mappedClans: Clan[] = clans.map((clan: any) => ({
+        strName: clan.strName,
         oidGuild: clan.oidGuild,
-        oidUser_Lider: clan.oidUser_Lider
+        dn_strCharacterName_master: clan.dn_strCharacterName_master,
+        oidUser_master: clan.oidUser_master,
+        dateCreated: clan.dateCreated,
+        dn_n4TotalRegularMember: clan.dn_n4TotalRegularMember,
+        master_strDiscordID: clan.master_strDiscordID || '0'
       }));
+      
       setClans(mappedClans);
       setHasSearched(true);
     } catch (error) {
@@ -125,7 +124,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
       } else {
         searchClans(search);
       }
-    }, 500);
+    }, 800);
 
     return () => clearTimeout(timeout);
   }, [search, viewMode]);
@@ -308,19 +307,19 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                       {/* Clan Avatar */}
                       <div className="w-10 h-10 bg-[#111216] rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-bold text-white">
-                          {clan.name.substring(1, 3).toUpperCase()}
+                          {clan.strName.substring(1, 3).toUpperCase()}
                         </span>
                       </div>
 
                       {/* Clan Info */}
                       <div className="flex-1 flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-white">{clan.name}</p>
+                          <p className="text-sm font-medium text-white">{clan.strName}</p>
                           <p className="text-xs text-gray-400 font-medium">
-                            {clan.memberCount} membro(s)
+                            {clan.dn_n4TotalRegularMember} membro(s)
                           </p>
                           <p className="text-xs text-gray-500 font-medium">
-                            Líder: {clan.leader}
+                            Líder: {clan.dn_strCharacterName_master}
                           </p>
                         </div>
                       </div>
@@ -451,7 +450,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
             {/* Action buttons */}
             <div className="space-y-2">
               <button 
-                onClick={() => setShowPlayerInfo(true)}
+                onClick={() => setShowPlayerProfile(true)}
                 className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold text-sm h-8 px-3 rounded transition-colors flex items-center justify-center"
               >
                 Ver Informações
@@ -474,23 +473,84 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
             </button>
             
             {/* Clan details */}
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold text-white">
-                  {selectedClan.name.substring(1, 3).toUpperCase()}
-                </span>
+            <div className="mb-3">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center">
+                  <span className="text-sm font-bold text-white">
+                    {selectedClan.strName.substring(1, 3).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-white font-medium text-sm">{selectedClan.strName}</h3>
+                  <p className="text-blue-400 text-xs">
+                    {selectedClan.dn_n4TotalRegularMember} membros
+                  </p>
+                  <p className="text-gray-300 text-xs">Criado: {new Date(selectedClan.dateCreated).toLocaleDateString()}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-white font-medium text-sm">{selectedClan.name}</h3>
-                <p className="text-blue-400 text-xs">
-                  {selectedClan.memberCount} membros
-                </p>
-                <p className="text-gray-400 text-xs">
-                  Líder: {selectedClan.leader}
-                </p>
-                <p className="text-gray-500 text-xs">
-                  Discord: {selectedClan.leaderDiscordId}
-                </p>
+              
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">ID do Clã:</span>
+                  <span className="text-gray-300">{selectedClan.oidGuild}</span>
+                  <button
+                    onClick={() => copyToClipboard(selectedClan.oidGuild.toString())}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    title="Copy Clan ID"
+                  >
+                    <Copy size={12} />
+                  </button>
+                  {copiedId === selectedClan.oidGuild.toString() && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Líder:</span>
+                  <span className="text-gray-300">{selectedClan.dn_strCharacterName_master}</span>
+                  <button
+                    onClick={() => copyToClipboard(selectedClan.dn_strCharacterName_master)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    title="Copy Leader Name"
+                  >
+                    <Copy size={12} />
+                  </button>
+                  {copiedId === selectedClan.dn_strCharacterName_master && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Discord do Líder:</span>
+                  <span className="text-gray-300">{selectedClan.master_strDiscordID || 'N/A'}</span>
+                  {selectedClan.master_strDiscordID && selectedClan.master_strDiscordID !== '0' && (
+                    <button
+                      onClick={() => copyToClipboard(selectedClan.master_strDiscordID)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      title="Copy Leader Discord ID"
+                    >
+                      <Copy size={12} />
+                    </button>
+                  )}
+                  {copiedId === selectedClan.master_strDiscordID && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">OID do Líder:</span>
+                  <span className="text-gray-300">{selectedClan.oidUser_master}</span>
+                  <button
+                    onClick={() => copyToClipboard(selectedClan.oidUser_master.toString())}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    title="Copy Leader OID"
+                  >
+                    <Copy size={12} />
+                  </button>
+                  {copiedId === selectedClan.oidUser_master.toString() && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -514,6 +574,15 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
           clanName="N/A"
           cash="0"
           banhistory={[]}
+        />
+      )}
+
+      {/* Player Profile Modal */}
+      {selectedPlayer && showPlayerProfile && (
+        <PlayerProfile
+          isOpen={showPlayerProfile}
+          onClose={() => setShowPlayerProfile(false)}
+          nickname={selectedPlayer.name}
         />
       )}
     </>
