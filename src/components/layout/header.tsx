@@ -1,15 +1,19 @@
-import { Bell, Menu, ChevronDown, LogOut } from 'lucide-react';
+import { Bell, Menu, ChevronDown, LogOut, Shield } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useGMManagement } from '../../hooks/useGMManagement';
+import GMManagement from '../modal/gmmanagement/GMManagement';
 
 const Header = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
+  const { isGMManagementOpen, openGMManagement, closeGMManagement } = useGMManagement();
 
   const handleLogout = () => {
     logout();
   };
+
 
   // Fechar dropdown quando clicar fora
   useEffect(() => {
@@ -27,7 +31,8 @@ const Header = () => {
       <div className="relative flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-6">
           <button className="text-white hover:text-gray-300 transition-colors">
-            <Menu size={24} />
+            <Menu size={24}
+/>
           </button>
         </div>
         
@@ -61,10 +66,26 @@ const Header = () => {
             </button>
             
             {showProfileDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-[#1d1e24] rounded-lg shadow-lg border border-gray-600 z-50">
+              <div className="absolute right-0 mt-2 w-64 bg-[#1d1e24] rounded-lg shadow-lg border border-gray-600 z-50">
+                {/* Mostrar botão GM Management apenas para o xMagnata */}
+                {user?.profile?.nickname === 'Magnata' && (
+                  <button
+                    onClick={() => {
+                      openGMManagement();
+                      setShowProfileDropdown(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-left text-white hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <Shield size={16} />
+                    <span>Gerenciar GMs</span>
+                  </button>
+                )}
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                  onClick={() => {
+                    handleLogout();
+                    setShowProfileDropdown(false);
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-left text-white hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <LogOut size={16} />
                   <span>Sair</span>
@@ -74,6 +95,12 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* GM Management Modal */}
+      <GMManagement 
+        isOpen={isGMManagementOpen} 
+        onClose={closeGMManagement} 
+      />
     </header>
   );
 };

@@ -10,6 +10,7 @@ interface AuthUser {
     email: string;
   };
   role: string;
+  permissions: string[];
 }
 
 export const useAuth = () => {
