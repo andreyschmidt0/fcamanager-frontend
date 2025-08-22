@@ -59,16 +59,14 @@ class RealAuthService {
         };
       }
 
-      console.log('🔄 Tentando login no backend...', { username: credentials.username });
-
       // Fazer login via API
       const result = await apiService.loginCompatible(credentials);
       
-      if (result.success && result.user && result.token) {
+      if (result.success && result.user && result.accessToken) {
         this.currentUser = result.user;
-        this.sessionToken = result.token;
+        this.sessionToken = result.accessToken;
         
-        console.log('✅ Login realizado com sucesso:', {
+          ( {
           username: result.user.username,
           nickname: result.user.profile.nickname,
           role: result.user.role
@@ -76,8 +74,7 @@ class RealAuthService {
       }
 
       return result;
-    } catch (error) {
-      console.error('❌ Erro durante login:', error);
+    } catch (error) {;
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -86,7 +83,6 @@ class RealAuthService {
   }
 
   logout(): void {
-    console.log('🚪 Realizando logout...');
     apiService.logout();
     this.clearSession();
   }
@@ -111,10 +107,8 @@ class RealAuthService {
   async testBackendConnection(): Promise<boolean> {
     try {
       const isConnected = await apiService.testConnection();
-      console.log('🌐 Conexão com backend:', isConnected ? '✅ OK' : '❌ FALHA');
       return isConnected;
     } catch (error) {
-      console.error('❌ Erro ao testar conexão:', error);
       return false;
     }
   }

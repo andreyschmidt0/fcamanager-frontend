@@ -179,10 +179,10 @@ export const createChangeEmailLog = (adminName: string, target: string, newEmail
   justification,
 });
 
-export const createRemoveClanLog = (adminName: string, target: string, justification?: string) => ({
+export const createRemoveClanLog = (adminName: string, target: string, details: string, justification?: string) => ({
   adminName,
-  action: 'Alterar' as const,
+  action: 'Excluir' as const,
   target,
-  details: `Removeu o clan`,
+  details: `Removeu clã:`,
   justification,
 });

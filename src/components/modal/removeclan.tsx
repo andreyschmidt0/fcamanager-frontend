@@ -49,8 +49,9 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
     const adminName = user?.profile?.nickname || user?.username || 'Admin';
     const logData = createRemoveClanLog(
       adminName,
-      `Clã ID: ${formData.oidGuild}`,
-      `Remoção do clã com ID ${formData.oidGuild}`
+      selectedClan?.strName || `ID: ${formData.oidGuild}`,
+      `Remoção do clã ${selectedClan?.strName || formData.oidGuild}`,
+      `Clã removido - ID: ${formData.oidGuild}`
     );
     addActivity(logData);
 

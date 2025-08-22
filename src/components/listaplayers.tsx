@@ -15,6 +15,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const { selectedPlayer, setSelectedPlayer } = usePlayer();
   const { selectedClan, setSelectedClan } = useClan();
   const [viewMode, setViewMode] = useState<'players' | 'clans'>('players');
+  const [searchType, setSearchType] = useState<'nickname' | 'discordId'>('nickname');
   const [search, setSearch] = useState<string>('');
   const [players, setPlayers] = useState<Player[]>([]);
   const [clans, setClans] = useState<Clan[]>([]);
@@ -43,13 +44,30 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/api/users/search?nickname=${encodeURIComponent(searchTerm)}`);
+      // Construir URL baseada no tipo de pesquisa
+      const searchParam = searchType === 'nickname' 
+        ? `nickname=${encodeURIComponent(searchTerm)}`
+        : `discordId=${encodeURIComponent(searchTerm)}`;
+      
+      const response = await fetch(`http://localhost:3000/api/users/search?${searchParam}`);
       
       if (!response.ok) {
-        throw new Error('Erro na requisição');
+        if (response.status === 500) {
+          throw new Error('Erro no servidor - Verifique se o banco de dados está conectado');
+        } else if (response.status === 400) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Parâmetros inválidos');
+        } else {
+          throw new Error(`Erro ${response.status} - ${response.statusText}`);
+        }
       }
       
       const users = await response.json();
+      
+      // Verificar se a resposta é um array válido
+      if (!Array.isArray(users)) {
+        throw new Error('Resposta inválida do servidor');
+      }
       
       const mappedPlayers: Player[] = users.map((user: any) => ({
         id: `${user.strDiscordID}-${user.strLNexonID}`,
@@ -72,6 +90,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
       console.error('Erro ao buscar players:', error);
       setPlayers([]);
       setHasSearched(true);
+      
+      // Mostrar erro para o usuário (você pode implementar um estado de erro se desejar)
+      alert(`Erro ao buscar players: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }
@@ -127,7 +148,15 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
     }, 800);
 
     return () => clearTimeout(timeout);
-  }, [search, viewMode]);
+  }, [search, viewMode, searchType]);
+
+  // Limpar pesquisa ao trocar tipo de busca
+  useEffect(() => {
+    setSearch('');
+    setPlayers([]);
+    setHasSearched(false);
+    setSelectedPlayer(null);
+  }, [searchType]);
 
   // Limpar resultados ao trocar de modo
   useEffect(() => {
@@ -156,6 +185,34 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
             LISTAR PLAYERS/ CLANS
           </h2>
         </div>    
+        
+            {/* Search Type Toggle - Only show for players mode */}
+            {viewMode === 'players' && (
+              <div className="px-4 pb-6" style={{ flexShrink: 0 }}>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setSearchType('nickname')}
+                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                      searchType === 'nickname' 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                    }`}
+                  >
+                    NICKNAME
+                  </button>
+                  <button 
+                    onClick={() => setSearchType('discordId')}
+                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                      searchType === 'discordId' 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                    }`}
+                  >
+                    DISCORD ID
+                  </button>
+                </div>
+              </div>
+            )}
 
 
         {/* Search Bar */}
@@ -168,7 +225,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               type="search" 
               placeholder={
                 viewMode === 'players' 
-                  ? "Digite o nickname do player..."
+                  ? searchType === 'nickname'
+                    ? "Digite o nickname do player..."
+                    : "Digite o Discord ID do player..."
                   : "Digite o nickname do clan..."
               } 
               className="w-full bg-[#1d1e24] rounded-lg p-3 pl-10 text-white placeholder-gray-400 border border-gray-600 focus:border-green-500 focus:outline-none transition-colors" 
@@ -180,6 +239,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
             )}
           </div>
         </div>
+
 
         {/* Toggle Buttons */}
         <div className="p-4 flex gap-2" style={{ flexShrink: 0 }}>
@@ -212,7 +272,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               {!hasSearched && !loading && players.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <Search size={48} className="mb-4" />
-                  <p className="text-lg">Digite um nickname para buscar</p>
+                  <p className="text-lg">
+                    {searchType === 'nickname' ? 'Digite um nickname para buscar' : 'Digite um Discord ID para buscar'}
+                  </p>
                   <p className="text-sm">Os resultados aparecerão aqui</p>
                 </div>
               )}
@@ -221,7 +283,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <X size={48} className="mb-4" />
                   <p className="text-lg">Nenhum player encontrado</p>
-                  <p className="text-sm">Tente buscar por outro nickname</p>
+                  <p className="text-sm">
+                    {searchType === 'nickname' ? 'Tente buscar por outro nickname' : 'Tente buscar por outro Discord ID'}
+                  </p>
                 </div>
               )}
               

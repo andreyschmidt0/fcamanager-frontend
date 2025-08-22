@@ -224,7 +224,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname
               <section>
                 <SectionTitle title="💰 Recursos" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard title="Gears" value={playerData.Money} highlight />
+                  <StatCard title="Money" value={playerData.Money} highlight />
                   <StatCard title="EXP" value={playerData.EXP} highlight />
                   <StatCard title="NX Usado" value={playerData.UsedNX} />
                   <StatCard title="Marca de Batalha" value={playerData.nr_MarcaBatalha} />

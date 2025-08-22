@@ -149,7 +149,6 @@ class AuthService {
                 };
             }
 
-            console.log('🔄 Fazendo login no backend...', { username: credentials.username });
 
             // Fazer login via API backend real
             const result = await apiService.loginCompatible(credentials);
@@ -173,7 +172,7 @@ class AuthService {
                 // Configurar header de autorização
                 apiService.setAuthToken(result.accessToken);
                 
-                console.log('✅ Login realizado com sucesso:', {
+                    ( {
                     username: result.user.username,
                     nickname: result.user.profile.nickname,
                     role: result.user.role
@@ -192,7 +191,6 @@ class AuthService {
     }
 
     logout(): void {
-        console.log('🚪 Realizando logout...');
         this.clearSession();
     }
 
@@ -252,7 +250,6 @@ class AuthService {
         if (!this.isAuthenticated()) return false;
         
         if (this.isTokenExpired()) {
-            console.log('🔄 Token expirado, renovando...');
             return await this.refreshAccessToken();
         }
         
@@ -263,10 +260,8 @@ class AuthService {
     async testBackendConnection(): Promise<boolean> {
         try {
             const isConnected = await apiService.testConnection();
-            console.log('🌐 Conexão com backend:', isConnected ? '✅ OK' : '❌ FALHA');
             return isConnected;
         } catch (error) {
-            console.error('❌ Erro ao testar conexão:', error);
             return false;
         }
     }
