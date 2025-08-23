@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Shield, UserCheck, UserX, Eye, EyeOff, Settings, Plus, Search, Filter } from 'lucide-react';
+import { X, Shield, UserCheck, UserX, Eye, EyeOff, Settings, Search, Filter } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 
 interface GM {
@@ -28,6 +28,7 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [showInactive, setShowInactive] = useState(false);
+  const [currentUserDiscordId, setCurrentUserDiscordId] = useState<string>('');
 
   // Definir apenas 2 níveis: Master e Usuário
   const roles = {
@@ -62,6 +63,7 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       const discordId = await getAdminDiscordId();
+      setCurrentUserDiscordId(discordId); // Armazenar o Discord ID do usuário logado
       
       // Usar a nova API de GM Management
       const response = await fetch(`http://localhost:3000/api/gm-management/list`);
@@ -213,7 +215,7 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#111216] rounded-lg shadow-2xl w-[1200px] h-[800px] overflow-hidden flex flex-col">
+      <div className="bg-[#111216] rounded-lg shadow-2xl w-[1200px] h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600 px-6">
           <div className="flex items-center gap-3">
@@ -271,19 +273,14 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
               <span className="text-sm">Mostrar Inativos</span>
             </label>
 
-            {/* Add GM Button */}
-            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-              <Plus size={20} />
-              Adicionar GM
-            </button>
           </div>
 
           {/* Stats */}
           <div className="flex gap-6 text-sm">
-            <span className="text-gray-300">Total: <span className="text-white font-medium">{gms.length}</span></span>
-            <span className="text-gray-300">Ativos: <span className="text-green-400 font-medium">{gms.filter(gm => gm.is_active).length}</span></span>
-            <span className="text-gray-300">Masters: <span className="text-red-400 font-medium">{gms.filter(gm => gm.role === 'MASTER').length}</span></span>
-            <span className="text-gray-300">Usuários: <span className="text-blue-400 font-medium">{gms.filter(gm => gm.role === 'USER').length}</span></span>
+            <span className="text-gray-300 text-lg">Total: <span className="text-white text-md">{gms.length}</span></span>
+            <span className="text-gray-300 text-lg">Ativos: <span className="text-white text-md">{gms.filter(gm => gm.is_active).length}</span></span>
+            <span className="text-gray-300 text-lg">Masters: <span className="text-white text-md">{gms.filter(gm => gm.role === 'MASTER').length}</span></span>
+            <span className="text-gray-300 text-lg">Usuários: <span className="text-white text-md">{gms.filter(gm => gm.role === 'USER').length}</span></span>
           </div>
         </div>
 
@@ -323,9 +320,7 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
                       <div>
                         <div className="flex items-center gap-3">
                           <h3 className="text-white font-medium text-lg">{gm.nickname}</h3>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${roles[gm.role].color} text-white`}>
-                            {roles[gm.role].name}
-                          </span>
+   
                           {!gm.is_active && (
                             <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white">
                               INATIVO
@@ -353,17 +348,20 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
                         <Settings size={16} />
                       </button>
                       
-                      <button
-                        onClick={() => handleToggleStatus(gm)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          gm.is_active
-                            ? 'bg-red-600 hover:bg-red-700 text-white'
-                            : 'bg-green-600 hover:bg-green-700 text-white'
-                        }`}
-                        title={gm.is_active ? 'Desativar' : 'Ativar'}
-                      >
-                        {gm.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
+                      {/* Esconder botão de ativar/desativar se for o próprio usuário e for MASTER */}
+                      {!(gm.discord_id === currentUserDiscordId && gm.role === 'MASTER') && (
+                        <button
+                          onClick={() => handleToggleStatus(gm)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            gm.is_active
+                              ? 'bg-red-600 hover:bg-red-700 text-white'
+                              : 'bg-green-600 hover:bg-green-700 text-white'
+                          }`}
+                          title={gm.is_active ? 'Desativar' : 'Ativar'}
+                        >
+                          {gm.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -416,17 +414,18 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
                     value={selectedGM.role}
                     onChange={(e) => handleUpdateRole(selectedGM, e.target.value as keyof typeof roles)}
                     className="w-full bg-[#1d1e24] text-white rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none"
-                    disabled={selectedGM.nexon_id === 'xMagnata'} // Não permitir alterar o master principal
+                    disabled={selectedGM.discord_id === currentUserDiscordId && selectedGM.role === 'MASTER'}
                   >
                     {Object.entries(roles).map(([key, role]) => (
                       <option key={key} value={key}>{role.name} - {role.description}</option>
                     ))}
                   </select>
-                  {selectedGM.nexon_id === 'xMagnata' && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      Master principal não pode ter o nível alterado
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-400 mt-1">
+                    {selectedGM.discord_id === currentUserDiscordId && selectedGM.role === 'MASTER' 
+                      ? 'Masters não podem alterar seu próprio nível de acesso'
+                      : 'Apenas Masters podem alterar níveis de acesso'
+                    }
+                  </p>
                 </div>
 
                 {/* Role Description */}

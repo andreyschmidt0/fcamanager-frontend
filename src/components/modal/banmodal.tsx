@@ -4,6 +4,7 @@ import { usePlayer } from '../../contexts/PlayerContext';
 import { useActivityLog, createBanLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
+import apiService from '../../services/api.service';
 
 interface BanModalProps {
   isOpen: boolean;
@@ -48,23 +49,41 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
     setShowConfirmation(true); // Mostra confirmação em vez de executar
   };
 
-  const handleConfirmAction = () => {
-    // Lógica original aqui (API call para banir)
-    console.log('Data:', formData);
-    
-    // Registrar atividade no log
-    const banPeriod = formData.banDuration === '999' ? 'permanente' : `${formData.banDuration} dias`;
-    const logData = createBanLog(
-      user?.profile?.nickname || 'Admin',
-      formData.loginAccount,
-      banPeriod,
-      formData.banReason
-    );
-    addActivity(logData);
+const handleConfirmAction = async () => {
+  // Lógica original aqui (API call para banir)
+  console.log('Data:', formData);
 
-    setShowConfirmation(false);
-    onClose();
-  };
+  // Registrar atividade no log local
+  const banPeriod = formData.banDuration === '999' ? 'permanente' : `${formData.banDuration} dias`;
+  const adminName = user?.profile?.nickname || 'Admin';
+
+  const logData = createBanLog(
+    adminName,
+    formData.loginAccount,
+    banPeriod,
+    formData.banReason
+  );
+  addActivity(logData);
+
+  // Registra a atividade no banco de dados via API
+  try {
+    const dbLogData = {
+      adminDiscordId: user?.profile.discordId || 'system',
+      adminNickname: adminName,
+      targetDiscordId: formData.discordId,
+      targetNickname: formData.loginAccount,
+      action: 'ban', // Define a ação para o log
+      details: `Baniu o jogador por ${banPeriod}`,
+      notes: formData.banReason,
+    };
+    await apiService.createLog(dbLogData);
+  } catch (error) {
+    console.error('Falha ao salvar log de banimento no banco de dados:', error);
+  }
+
+  setShowConfirmation(false);
+  onClose();
+};
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);

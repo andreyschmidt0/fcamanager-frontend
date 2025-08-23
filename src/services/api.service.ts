@@ -1,5 +1,23 @@
 import axios, { AxiosError } from 'axios';
 
+export interface PlayerProfileData {
+  strDiscordId: string;
+  strEmail: string;
+  strNexonId: string;
+  strNickname: string;
+}
+
+export interface LogPayload {
+  adminDiscordId: string;
+  adminNickname: string;
+  targetDiscordId: string;
+  targetNickname: string;
+  action: string;
+  details: string;
+  notes?: string;
+}
+
+
 // Configuração da API
 const API_BASE = import.meta.env.PROD 
   ? 'https://fca-manager-api.onrender.com/api'  // Para produção
@@ -157,16 +175,17 @@ class ApiService {
     }
   }
 
+  
   // Configurar token de autorização
   setAuthToken(token: string): void {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
-
+  
   // Remover token de autorização
   removeAuthToken(): void {
     delete api.defaults.headers.common['Authorization'];
   }
-
+  
   // Refresh token
   async refreshToken(refreshToken: string): Promise<{success: boolean; accessToken?: string; refreshToken?: string; error?: string}> {
     try {
@@ -185,7 +204,7 @@ class ApiService {
       };
     }
   }
-
+  
   // Logout
   logout(): void {
     localStorage.removeItem('accessToken');
@@ -194,19 +213,19 @@ class ApiService {
     localStorage.removeItem('tokenExpiryTime');
     this.removeAuthToken();
   }
-
+  
   // Verificar se está autenticado
   isAuthenticated(): boolean {
     const token = localStorage.getItem('accessToken');
     const user = localStorage.getItem('currentUser');
     return !!(token && user);
   }
-
+  
   // Obter access token atual
   getAccessToken(): string | null {
     return localStorage.getItem('accessToken');
   }
-
+  
   // Obter refresh token atual
   getRefreshToken(): string | null {
     return localStorage.getItem('refreshToken');
@@ -221,7 +240,7 @@ class ApiService {
       return null;
     }
   }
-
+  
   // Testar conexão com o backend
   async testConnection(): Promise<boolean> {
     try {
@@ -229,6 +248,28 @@ class ApiService {
       return response.data.status === 'OK';
     } catch {
       return false;
+    }
+  }
+
+  async getPlayerProfileByDiscordId(discordId: string): Promise<PlayerProfileData | null> {
+    try {
+      const response = await api.get(`/users/profile/${encodeURIComponent(discordId)}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar perfil do jogador:', error);
+      return null;
+    }
+  }
+
+  async createLog(logData: LogPayload): Promise<void> {
+    try {
+      await api.post('/logs/create', logData);
+      console.log('Log salvo com sucesso no banco de dados.');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Erro ao registrar log:', error.response?.data?.error || 'Erro desconhecido');
+      }
+      throw new Error('Falha ao registrar log no backend.');
     }
   }
 }

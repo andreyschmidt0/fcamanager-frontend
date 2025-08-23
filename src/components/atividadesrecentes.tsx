@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useActivityLog, ActivityLog } from '../contexts/ActivityLogContext';
 import { useAuth } from '../hooks/useAuth';
+import { useGMRole } from '../hooks/useGMRole';
 
 
 interface GMUser {
@@ -18,10 +19,9 @@ const RecentActivities: React.FC = () => {
   const [gmUsers, setGMUsers] = useState<GMUser[]>([]);
   const { getActivitiesByPeriod } = useActivityLog();
   const { user } = useAuth();
+  const { isMaster, loading } = useGMRole();
 
   const periods = ['Hoje', 'Esta semana', 'Este mês', 'Este ano'];
-  
-  const [isXMagnata, setIsXMagnata] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -54,19 +54,18 @@ const RecentActivities: React.FC = () => {
     });
   };
 
-  // Buscar GMs quando usuário é Magnata
+  // Buscar GMs quando usuário é Master
   useEffect(() => {
-    if (user?.profile?.nickname === 'Magnata') {
+    if (isMaster && !loading) {
       fetchGMUsers();
     }
-  }, [user?.profile?.nickname]);
+  }, [isMaster, loading]);
 
   const fetchGMUsers = async () => {
     try {
       // Primeiro buscar o Discord ID do usuário logado
       const profileResponse = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
       if (!profileResponse.ok) {
-        setIsXMagnata(false);
         return;
       }
       
@@ -78,15 +77,11 @@ const RecentActivities: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         if (data.isAuthorized) {
-          setIsXMagnata(true);
-          setGMUsers(data.gmUsers);
+          setGMUsers(data.gms || data.gmUsers);
         }
-      } else {
-        setIsXMagnata(false);
       }
     } catch (error) {
       console.error('Erro ao buscar GMs:', error);
-      setIsXMagnata(false);
     }
   };
 
@@ -123,8 +118,8 @@ const RecentActivities: React.FC = () => {
           </h2>
           <div className="flex items-center gap-3">
 
-            {/* GM Selector - Only for xMagnata */}
-            {isXMagnata && (
+            {/* GM Selector - Only for Masters */}
+            {isMaster && !loading && (
               <div className="relative rounded-lg">
                 <button
                   onClick={handleToggleGMDropdown}

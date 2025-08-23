@@ -70,7 +70,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
       }
       
       const mappedPlayers: Player[] = users.map((user: any) => ({
-        id: `${user.strDiscordID}-${user.strLNexonID}`,
+        id: `${user.strDiscordID}`,
         name: user.NickName,
         clan: 'N/A', // Campo obrigatório do contexto
         discordId: user.strDiscordID || '0',

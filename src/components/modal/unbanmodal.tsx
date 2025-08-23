@@ -4,6 +4,7 @@ import { usePlayer } from '../../contexts/PlayerContext';
 import { useActivityLog, createUnbanLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
+import apiService from '../../services/api.service';
 
 interface UnbanModalProps {
   isOpen: boolean;
@@ -12,7 +13,6 @@ interface UnbanModalProps {
 
 const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
-  const { addActivity } = useActivityLog();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
@@ -43,21 +43,30 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setShowConfirmation(true); // Mostra confirmação em vez de executar
+    setShowConfirmation(true);
   };
 
-  const handleConfirmAction = () => {
-    // Lógica original aqui (API call para desbanir)
+  const handleConfirmAction = async () => {
+    // Lógica original (API call para desbanir)
     console.log('Data:', formData);
 
-    // Registrar atividade no log
     const adminName = user?.profile?.nickname || user?.username || 'Admin';
-    const logData = createUnbanLog(
-      adminName,
-      formData.loginAccount,
-      formData.unbanReason
-    );
-    addActivity(logData);
+
+    // Registra a atividade no banco de dados via API
+    try {
+      const dbLogData = {
+        adminDiscordId: user?.profile.discordId || 'system',
+        adminNickname: adminName,
+        targetDiscordId: formData.discordId,
+        targetNickname: selectedPlayer?.name || formData.loginAccount,
+        action: 'unban',
+        details: 'Desbaniu o jogador',
+        notes: formData.unbanReason,
+      };
+      await apiService.createLog(dbLogData);
+    } catch (error) {
+      console.error('Falha ao salvar log no banco de dados:', error);
+    }
 
     setShowConfirmation(false);
     onClose();
@@ -182,15 +191,15 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
-        <ConfirmationModal
-          isOpen={showConfirmation}
-          onConfirm={handleConfirmAction}
-          onCancel={handleCancelConfirmation}
-          title="Confirmar Ação"
-          description={`Tem certeza que deseja desbanir o jogador: ${formData.loginAccount} com o ID Discord: ${formData.discordId}`}
-          confirmActionText="Sim, Desbanir"
-          cancelActionText="Cancelar"
-        />
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelConfirmation}
+        title="Confirmar Ação"
+        description={`Tem certeza que deseja desbanir o jogador: ${formData.loginAccount} com o ID Discord: ${formData.discordId}`}
+        confirmActionText="Sim, Desbanir"
+        cancelActionText="Cancelar"
+      />
     </div>
   );
 };

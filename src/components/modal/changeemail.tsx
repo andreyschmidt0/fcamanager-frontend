@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
-import { useActivityLog, createChangeEmailLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
+import apiService from '../../services/api.service';
+import { Player } from '../../contexts/PlayerContext';
 
 interface ChangeEmailProps {
   isOpen: boolean;
@@ -12,7 +13,6 @@ interface ChangeEmailProps {
 
 const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
-  const { addActivity } = useActivityLog();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
@@ -44,23 +44,36 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
     setShowConfirmation(true);
   };
 
-  const handleConfirmAction = () => {
-    // Lógica original aqui (API call para alterar email)
-    console.log('Change Email Data:', formData);
+const handleConfirmAction = async () => {
 
-    // Registrar atividade no log
-    const adminName = user?.profile?.nickname || user?.username || 'Admin';
-    const logData = createChangeEmailLog(
-      adminName,
-      formData.loginAccount,
-      formData.newemail,
-      `Alterado via Discord ID: ${formData.discordId}`
-    );
-    addActivity(logData);
+  const adminName = user?.profile?.nickname || user?.username || 'Admin';
 
-    setShowConfirmation(false);
-    onClose();
-  };
+  try {
+    // 1. Busque o perfil do jogador para obter o email antigo
+    const playerProfile = await apiService.getPlayerProfileByDiscordId(formData.discordId);
+    const oldEmail = playerProfile?.strEmail || 'Não encontrado';
+
+    // 2. Preencha o old_value e new_value no log
+    const dbLogData = {
+      adminDiscordId: user?.profile.discordId || 'system',
+      adminNickname: adminName,
+      targetDiscordId: formData.discordId,
+      targetNickname: selectedPlayer?.name || formData.loginAccount,
+      action: 'change_email',
+      old_value: oldEmail, // Valor antigo
+      new_value: formData.newemail, // Novo valor
+      notes: `Alterado via Discord ID: ${formData.discordId}`
+    };
+
+    // 3. Chame o método de log
+    await apiService.createLog(dbLogData);
+  } catch (error) {
+    console.error('Falha ao salvar log no banco de dados:', error);
+  }
+
+  setShowConfirmation(false);
+  onClose();
+};
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);

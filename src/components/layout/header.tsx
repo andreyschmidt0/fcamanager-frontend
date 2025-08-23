@@ -1,6 +1,7 @@
 import { Bell, Menu, ChevronDown, LogOut, Shield } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useGMRole } from '../../hooks/useGMRole';
 import { useGMManagement } from '../../hooks/useGMManagement';
 import GMManagement from '../modal/gmmanagement/GMManagement';
 
@@ -8,6 +9,7 @@ const Header = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
+  const { isMaster, loading } = useGMRole();
   const { isGMManagementOpen, openGMManagement, closeGMManagement } = useGMManagement();
 
   const handleLogout = () => {
@@ -67,8 +69,8 @@ const Header = () => {
             
             {showProfileDropdown && (
               <div className="absolute right-0 mt-2 w-64 bg-[#1d1e24] rounded-lg shadow-lg border border-gray-600 z-50">
-                {/* Mostrar botão GM Management apenas para o xMagnata */}
-                {user?.profile?.nickname === 'Magnata' && (
+                {/* Mostrar botão GM Management apenas para Masters */}
+                {isMaster && !loading && (
                   <button
                     onClick={() => {
                       openGMManagement();
