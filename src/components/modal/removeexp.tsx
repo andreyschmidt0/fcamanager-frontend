@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
-import { useActivityLog, createRemoveExpLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
+import apiService from '../../services/api.service';
 
 interface RemoveExpProps {
   isOpen: boolean;
@@ -13,21 +13,54 @@ interface RemoveExpProps {
 const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const { addActivity } = useActivityLog();
   const { user } = useAuth();
+  const [currentExp, setCurrentExp] = useState<number>(0);
+  const [isLoadingExp, setIsLoadingExp] = useState(false);
   const [formData, setFormData] = useState({
+    discordId: '',
     loginAccount: '',
     exp:''
   });
+
+  const fetchCurrentExp = async (playerNickname: string) => {
+    setIsLoadingExp(true);
+    try {
+      const playerProfile = await apiService.getPlayerProfile(playerNickname);
+      if (playerProfile?.EXP) {
+        const exp = parseInt(playerProfile.EXP) || 0;
+        setCurrentExp(exp);
+      } else {
+        setCurrentExp(0);
+      }
+    } catch (error) {
+      console.warn('Erro ao buscar EXP do jogador:', error);
+      setCurrentExp(0);
+    } finally {
+      setIsLoadingExp(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
       setFormData(prev => ({
         ...prev,
+        discordId: selectedPlayer.discordId || '',
         loginAccount: selectedPlayer.nexonId || ''
       }));
+      
+      // Buscar EXP atual quando o modal abrir
+      const playerNickname = selectedPlayer.name || selectedPlayer.nexonId;
+      if (playerNickname) {
+        fetchCurrentExp(playerNickname);
+      }
     }
   }, [selectedPlayer, isOpen]);
+
+  // Calcular EXP resultante em tempo real
+  const calculateResultingExp = () => {
+    const expToRemove = parseInt(formData.exp) || 0;
+    return Math.max(0, currentExp - expToRemove);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -42,24 +75,36 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
     setShowConfirmation(true); // Mostra confirmação em vez de executar
   };
 
+const handleConfirmAction = async () => {
+  console.log('Data:', formData);
   
-    const handleConfirmAction = () => {
-      // Lógica original aqui (API call para enviar cash)
-      console.log('Data:', formData);
-  
-      // Registrar atividade no log
-      const expAmount = parseInt(formData.exp);
-      const adminName = user?.profile?.nickname || user?.username || 'Admin';
-      const logData = createRemoveExpLog(
-        adminName,
-        formData.loginAccount,
-        expAmount,
-      );
-      addActivity(logData);
-  
-      setShowConfirmation(false);
-      onClose();
+  const adminName = user?.profile?.nickname || user?.username || 'Admin';
+  const expAmount = parseInt(formData.exp);
+  const newExp = calculateResultingExp(); // Usar o cálculo já disponível
+
+  try {
+    // Registra a atividade no banco de dados via API
+    const dbLogData = {
+      adminDiscordId: user?.profile?.discordId || 'system',
+      adminNickname: adminName,
+      targetDiscordId: formData.discordId,
+      targetNickname: selectedPlayer?.name || formData.loginAccount || 'Jogador',
+      action: 'remove_exp',
+      old_value: currentExp.toString(),
+      new_value: newExp.toString(),
+      details: `Removeu ${expAmount} EXP (${currentExp} → ${newExp})`,
+      notes: `Remoção de EXP via login: ${formData.loginAccount}`
     };
+
+    console.log('Enviando dados do log:', dbLogData);
+    await apiService.createLog(dbLogData);
+  } catch (error) {
+    console.error('Falha ao salvar log de remoção de EXP no banco de dados:', error);
+  }
+
+  setShowConfirmation(false);
+  onClose();
+};
   
     const handleCancelConfirmation = () => {
       setShowConfirmation(false);
@@ -98,7 +143,8 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
-                    <div>
+
+          <div>
             <label className="block text-sm font-medium text-white mb-2">
               Quantidade de EXP
             </label>
@@ -112,6 +158,29 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
+          {/* Informações de EXP */}
+          <div className="bg-[#1a1b1f] rounded-lg p-4 border border-gray-600">
+            <h3 className="text-sm font-medium text-white mb-3">Informações de EXP</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">EXP Atual</label>
+                <div className="text-lg font-semibold text-blue-400">
+                  {isLoadingExp ? 'Carregando...' : currentExp.toLocaleString()}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">EXP Calculado</label>
+                <div className="text-lg font-semibold text-green-400">
+                  {calculateResultingExp().toLocaleString()}
+                </div>
+              </div>
+            </div>
+            {formData.exp && parseInt(formData.exp) > currentExp && (
+              <div className="mt-2 text-xs text-red-400">
+                ⚠️ A quantidade a ser removida é maior que o EXP atual
+              </div>
+            )}
+          </div>
 
           {/* Buttons */}
           <div className="flex gap-3 pt-4">

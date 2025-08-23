@@ -4,6 +4,7 @@ import { usePlayer } from '../../contexts/PlayerContext';
 import { useActivityLog, createSendItemLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
+import apiService from '../../services/api.service';
 
 
 interface SendItemProps {
@@ -18,8 +19,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    banDuration: '',
-    productId: Number(''),
+    productId: '',
     quantity: '',
     userMessage: '',
   });
@@ -49,25 +49,36 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
     setShowConfirmation(true); // Mostra confirmação em vez de executar
   };
 
-  const handleConfirmAction = () => {
-    // Lógica original aqui (API call para enviar cash)
-    console.log('Data:', formData);
+const handleConfirmAction = async () => {
+  console.log('Data:', formData);
+  
+  const adminName = user?.profile?.nickname || user?.username || 'Admin';
+  const quantity = parseInt(formData.quantity);
+  const itemDescription = `${quantity}x ${formData.productId}`;
 
-    // Registrar atividade no log
-    const quantity = parseInt(formData.quantity);
-    const adminName = user?.profile?.nickname || user?.username || 'Admin';
-    const logData = createSendItemLog(
-      adminName,
-      formData.loginAccount,
-      quantity,
-      formData.productId
-      
-    );
-    addActivity(logData);
+  try {
+    // Registra a atividade no banco de dados via API
+    const dbLogData = {
+      adminDiscordId: user?.profile?.discordId || 'system',
+      adminNickname: adminName,
+      targetDiscordId: formData.discordId,
+      targetNickname: selectedPlayer?.name || formData.loginAccount || 'Jogador',
+      action: 'send_item',
+      old_value: null,
+      new_value: itemDescription,
+      details: `Enviou ${itemDescription}`,
+      notes: formData.userMessage || `Envio de item via login: ${formData.loginAccount}`
+    };
 
-    setShowConfirmation(false);
-    onClose();
-  };
+    console.log('Enviando dados do log:', dbLogData);
+    await apiService.createLog(dbLogData);
+  } catch (error) {
+    console.error('Falha ao salvar log de envio de item no banco de dados:', error);
+  }
+
+  setShowConfirmation(false);
+  onClose();
+};
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);
@@ -125,7 +136,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
-          {/* Duração do Ban */}
+          {/* ID do Produto */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
               ID do Produto

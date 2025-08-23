@@ -4,6 +4,7 @@ import { usePlayer } from '../../contexts/PlayerContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useActivityLog, createSendCashLog } from '../../contexts/ActivityLogContext';
 import { useAuth } from '../../hooks/useAuth';
+import apiService from '../../services/api.service';
 
 interface SendCashProps {
   isOpen: boolean;
@@ -14,11 +15,31 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { addActivity } = useActivityLog();
   const { user } = useAuth();
+  const [currentMoney, setCurrentMoney] = useState<number>(0);
+  const [isLoadingMoney, setIsLoadingMoney] = useState(false);
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
     cash:'',
   });
+
+  const fetchCurrentMoney = async (playerNickname: string) => {
+    setIsLoadingMoney(true);
+    try {
+      const playerProfile = await apiService.getPlayerProfile(playerNickname);
+      if (playerProfile?.Money) {
+        const money = parseInt(playerProfile.Money) || 0;
+        setCurrentMoney(money);
+      } else {
+        setCurrentMoney(0);
+      }
+    } catch (error) {
+      console.warn('Erro ao buscar Cash do jogador:', error);
+      setCurrentMoney(0);
+    } finally {
+      setIsLoadingMoney(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -27,8 +48,20 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
         discordId: selectedPlayer.discordId || '',
         loginAccount: selectedPlayer.nexonId || '',
       }));
+      
+      // Buscar Cash atual quando o modal abrir
+      const playerNickname = selectedPlayer.name || selectedPlayer.nexonId;
+      if (playerNickname) {
+        fetchCurrentMoney(playerNickname);
+      }
     }
   }, [selectedPlayer, isOpen]);
+
+  // Calcular Cash resultante em tempo real
+  const calculateResultingMoney = () => {
+    const cashToSend = parseInt(formData.cash) || 0;
+    return currentMoney + cashToSend; // SOMAR para sendcash
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -45,23 +78,36 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
     setShowConfirmation(true); // Mostra confirmação em vez de executar
   };
 
-  const handleConfirmAction = () => {
-    // Lógica original aqui (API call para enviar cash)
-    console.log('Data:', formData);
+const handleConfirmAction = async () => {
+  console.log('Data:', formData);
+  
+  const adminName = user?.profile?.nickname || user?.username || 'Admin';
+  const cashAmount = parseInt(formData.cash);
+  const newMoney = calculateResultingMoney(); // Usar o cálculo já disponível
 
-    // Registrar atividade no log
-    const cashAmount = parseInt(formData.cash);
-    const adminName = user?.profile?.nickname || user?.username || 'Admin';
-    const logData = createSendCashLog(
-      adminName,
-      formData.loginAccount,
-      cashAmount,
-    );
-    addActivity(logData);
+  try {
+    // Registra a atividade no banco de dados via API
+    const dbLogData = {
+      adminDiscordId: user?.profile?.discordId || 'system',
+      adminNickname: adminName,
+      targetDiscordId: formData.discordId,
+      targetNickname: selectedPlayer?.name || formData.loginAccount || 'Jogador',
+      action: 'send_cash',
+      old_value: currentMoney.toString(),
+      new_value: newMoney.toString(),
+      details: `Enviou ${cashAmount} Cash (${currentMoney} → ${newMoney})`,
+      notes: `Envio de Cash via login: ${formData.loginAccount}`
+    };
 
-    setShowConfirmation(false);
-    onClose();
-  };
+    console.log('Enviando dados do log:', dbLogData);
+    await apiService.createLog(dbLogData);
+  } catch (error) {
+    console.error('Falha ao salvar log de envio de Cash no banco de dados:', error);
+  }
+
+  setShowConfirmation(false);
+  onClose();
+};
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);
@@ -118,6 +164,7 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
+
           {/* Quantidade de Cash */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
@@ -133,6 +180,24 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
+          {/* Informações de Cash */}
+          <div className="bg-[#1a1b1f] rounded-lg p-4 border border-gray-600">
+            <h3 className="text-sm font-medium text-white mb-3">Informações de Cash</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Cash Atual</label>
+                <div className="text-lg font-semibold text-blue-400">
+                  {isLoadingMoney ? 'Carregando...' : currentMoney.toLocaleString()}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Cash Calculado</label>
+                <div className="text-lg font-semibold text-green-400">
+                  {calculateResultingMoney().toLocaleString()}
+                </div>
+              </div>
+            </div>
+          </div>
           {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button

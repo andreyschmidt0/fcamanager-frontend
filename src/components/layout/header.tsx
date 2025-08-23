@@ -59,7 +59,7 @@ const Header = () => {
                 </span>
               </div>
               <span className="text-sm">
-                GM-{user?.profile.nickname || 'Admin'}
+              {user?.profile.nickname || 'Admin'}
               </span>
               <ChevronDown 
                 size={16} 

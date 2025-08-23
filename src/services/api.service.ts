@@ -282,6 +282,21 @@ class ApiService {
       throw new Error('Falha ao registrar log no backend.');
     }
   }
+
+  async getLogs(period?: string, gmNickname?: string, limit?: number): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      if (period) params.append('period', period);
+      if (gmNickname) params.append('gmNickname', gmNickname);
+      if (limit) params.append('limit', limit.toString());
+      
+      const response = await api.get(`/logs?${params.toString()}`);
+      return response.data.logs || [];
+    } catch (error) {
+      console.error('Erro ao buscar logs:', error);
+      return [];
+    }
+  }
 }
 
 // Exportar instância única

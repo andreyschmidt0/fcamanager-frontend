@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useClan } from '../../contexts/ClanContext';
-import { useActivityLog, createRemoveClanLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
+import apiService from '../../services/api.service';
 
 interface removeclanProps {
   isOpen: boolean;
@@ -12,12 +12,13 @@ interface removeclanProps {
 
 const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
   const { selectedClan } = useClan();
-  const { addActivity } = useActivityLog();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     oidGuild: ''
   });
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [fetchedClanName, setFetchedClanName] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     if (selectedClan && isOpen) {
@@ -25,8 +26,44 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
         ...prev,
         oidGuild: selectedClan.oidGuild?.toString() || ''
       }));
+      setFetchedClanName(''); // Limpar nome buscado pois temos o selectedClan
+      setErrorMessage(''); // Limpar mensagem de erro
     }
   }, [selectedClan, isOpen]);
+
+  // Função para buscar nome do clã por ID
+  const fetchClanNameById = async (clanId: string) => {
+    if (!clanId || clanId.trim() === '') {
+      setFetchedClanName('');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/users/clans/${clanId}`);
+      if (response.ok) {
+        const clan = await response.json();
+        setFetchedClanName(clan.strName || '');
+      } else if (response.status === 404) {
+        setFetchedClanName('');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar nome do clã:', error);
+      setFetchedClanName('');
+    }
+  };
+
+  // Buscar nome do clã quando o ID é digitado diretamente (sem selectedClan)
+  useEffect(() => {
+    if (!selectedClan && formData.oidGuild && formData.oidGuild.trim() !== '') {
+      const timeoutId = setTimeout(() => {
+        fetchClanNameById(formData.oidGuild);
+      }, 500); // Debounce de 500ms
+
+      return () => clearTimeout(timeoutId);
+    } else if (!selectedClan) {
+      setFetchedClanName('');
+    }
+  }, [formData.oidGuild, selectedClan]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -34,30 +71,80 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
       ...prev,
       [name]: value
     }));
+    // Limpar mensagem de erro quando usuário digitar
+    if (errorMessage) {
+      setErrorMessage('');
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar se temos um clã válido antes de mostrar confirmação
+    if (!selectedClan && (!fetchedClanName || fetchedClanName.trim() === '')) {
+      setErrorMessage('Por favor, insira um ID de clã válido.');
+      return;
+    }
+    
     setShowConfirmation(true);
   };
 
-  const handleConfirmAction = () => {
-    // Lógica original aqui (API call para remover clã)
-    console.log('Clan Data:', formData);
+const handleConfirmAction = async () => {
+  console.log('Data:', formData);
+  console.log('selectedClan no momento da exclusão:', selectedClan);
+  console.log('fetchedClanName:', fetchedClanName);
+  
+  // Validar se o clã existe antes de prosseguir
+  if (!selectedClan && (!fetchedClanName || fetchedClanName.trim() === '')) {
+    try {
+      const response = await fetch(`http://localhost:3000/api/users/clans/${formData.oidGuild}`);
+      if (!response.ok) {
+        setErrorMessage('Clã não encontrado. Verifique o ID informado.');
+        setShowConfirmation(false);
+        return;
+      }
+      const clan = await response.json();
+      if (!clan || !clan.strName) {
+        setErrorMessage('Clã não encontrado. Verifique o ID informado.');
+        setShowConfirmation(false);
+        return;
+      }
+    } catch (error) {
+      console.error('Erro ao validar clã:', error);
+      setErrorMessage('Erro ao validar clã. Tente novamente.');
+      setShowConfirmation(false);
+      return;
+    }
+  }
 
-    // Registrar atividade no log
-    const adminName = user?.profile?.nickname || user?.username || 'Admin';
-    const logData = createRemoveClanLog(
-      adminName,
-      selectedClan?.strName || `ID: ${formData.oidGuild}`,
-      `Remoção do clã ${selectedClan?.strName || formData.oidGuild}`,
-      `Clã removido - ID: ${formData.oidGuild}`
-    );
-    addActivity(logData);
+  const adminName = user?.profile?.nickname || user?.username || 'Admin';
+  
+  // Usar selectedClan primeiro, depois fetchedClanName, e por último fallback
+  const clanName = selectedClan?.strName || fetchedClanName || 'Clã desconhecido';
 
-    setShowConfirmation(false);
-    onClose();
-  };
+  try {
+    // Registra a atividade no banco de dados via API
+    const dbLogData = {
+      adminDiscordId: user?.profile?.discordId || 'system',
+      adminNickname: adminName,
+      targetDiscordId: selectedClan?.oidGuild?.toString() || formData.oidGuild,
+      targetNickname: clanName,
+      action: 'remove_clan',
+      old_value: `${formData.oidGuild}|${clanName}`, // ID|Nome do clã
+      new_value: 'Excluído',
+      details: `Removeu o clã ${clanName}`,
+      notes: `Clã removido via ID: ${formData.oidGuild}`
+    };
+
+    console.log('Enviando dados do log:', dbLogData);
+    await apiService.createLog(dbLogData);
+  } catch (error) {
+    console.error('Falha ao salvar log de remoção de clã no banco de dados:', error);
+  }
+
+  setShowConfirmation(false);
+  onClose();
+};
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);
@@ -95,6 +182,16 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
+            {fetchedClanName && (
+              <p className="mt-2 text-sm text-green-400">
+                Clã encontrado: {fetchedClanName}
+              </p>
+            )}
+            {errorMessage && (
+              <p className="mt-2 text-sm text-red-400">
+                {errorMessage}
+              </p>
+            )}
           </div>
 
           {/* Buttons */}

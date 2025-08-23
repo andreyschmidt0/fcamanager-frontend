@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { useActivityLog, ActivityLog } from '../contexts/ActivityLogContext';
 import { useAuth } from '../hooks/useAuth';
 import { useGMRole } from '../hooks/useGMRole';
+import apiService from '../services/api.service';
 
 
 interface GMUser {
@@ -17,6 +18,8 @@ const RecentActivities: React.FC = () => {
   const [selectedGM, setSelectedGM] = useState<string>('');
   const [showGMDropdown, setShowGMDropdown] = useState(false);
   const [gmUsers, setGMUsers] = useState<GMUser[]>([]);
+  const [databaseLogs, setDatabaseLogs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { getActivitiesByPeriod } = useActivityLog();
   const { user } = useAuth();
   const { isMaster, loading } = useGMRole();
@@ -61,6 +64,24 @@ const RecentActivities: React.FC = () => {
     }
   }, [isMaster, loading]);
 
+  // Buscar logs quando período ou GM mudar
+  useEffect(() => {
+    fetchLogs();
+  }, [selectedPeriod, selectedGM]);
+
+  const fetchLogs = async () => {
+    setIsLoading(true);
+    try {
+      const logs = await apiService.getLogs(selectedPeriod, selectedGM || undefined, 50);
+      setDatabaseLogs(logs);
+    } catch (error) {
+      console.error('Erro ao buscar logs:', error);
+      setDatabaseLogs([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const fetchGMUsers = async () => {
     try {
       // Primeiro buscar o Discord ID do usuário logado
@@ -85,11 +106,85 @@ const RecentActivities: React.FC = () => {
     }
   };
 
-  // Filtrar atividades por GM selecionado
-  const allActivities = getActivitiesByPeriod(selectedPeriod);
-  const activities = selectedGM 
-    ? allActivities.filter(activity => activity.adminName === selectedGM)
-    : allActivities;
+  // Converter logs do banco para o formato do componente
+  const convertLogToActivity = (log: any): ActivityLog => {
+    const getActionDetails = (action: string, log: any) => {
+      switch (action) {
+        case 'change_nickname':
+          return `Alterou nickname de`;
+        case 'change_email':
+          return `Alterou email de`;
+        case 'remove_clan':
+          // old_value está no formato "ID|Nome"
+          const clanInfo = log.old_value ? log.old_value.split('|') : ['', ''];
+          const clanId = clanInfo[0] || '';
+          const clanName = clanInfo[1] || log.target_nickname || 'Clã desconhecido';
+          return `Removeu clã ${clanId} ${clanName}`;
+        case 'remove_exp':
+          const oldExp = parseInt(log.old_value) || 0;
+          const newExp = parseInt(log.new_value) || 0;
+          const removedExp = oldExp - newExp;
+          return `Removeu ${removedExp} de EXP de`;
+        case 'send_cash':
+          const oldCash = parseInt(log.old_value) || 0;
+          const newCash = parseInt(log.new_value) || 0;
+          const sentCash = newCash - oldCash;
+          return `Enviou ${sentCash} de Cash para`;
+        case 'send_item':
+          const itemInfo = log.new_value; // Ex: "5x 1001"
+          return `Enviou ${itemInfo} para`;
+        case 'ban_user':
+          return `Baniu`;
+        case 'unban_user':
+          return `Desbaniu`;
+        default:
+          return `Ação em`;
+      }
+    };
+
+    const getAmount = (action: string, log: any) => {
+      switch (action) {
+        case 'send_cash':
+          const oldCash = parseInt(log.old_value) || 0;
+          const newCash = parseInt(log.new_value) || 0;
+          return newCash - oldCash;
+        case 'remove_exp':
+          const oldExp = parseInt(log.old_value) || 0;
+          const newExp = parseInt(log.new_value) || 0;
+          return oldExp - newExp;
+        case 'send_item':
+          // Extrair quantidade do formato "5x 1001"
+          const itemMatch = log.new_value?.match(/^(\d+)x/);
+          return itemMatch ? parseInt(itemMatch[1]) : undefined;
+        default:
+          return undefined;
+      }
+    };
+
+    const getAmountType = (action: string) => {
+      switch (action) {
+        case 'send_cash': return 'cash';
+        case 'remove_exp': return 'exp';
+        case 'send_item': return 'item';
+        default: return undefined;
+      }
+    };
+
+    return {
+      id: log.id.toString(),
+      timestamp: new Date(log.timestamp),
+      adminName: log.admin_nickname || 'Admin',
+      action: 'Alterar' as const,
+      target: log.target_nickname || 'Jogador',
+      details: getActionDetails(log.action, log),
+      justification: log.notes || undefined,
+      amount: getAmount(log.action, log),
+      amountType: getAmountType(log.action) as 'cash' | 'exp' | 'item' | undefined
+    };
+  };
+
+  // Usar logs do banco de dados
+  const activities = databaseLogs.map(convertLogToActivity);
 
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();
@@ -211,7 +306,12 @@ const RecentActivities: React.FC = () => {
       <div style={{ flex: '1 1 0', minHeight: 0, padding: '16px', overflow: 'hidden' }}>
         <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden' }} className="custom-scrollbar">
           <div className="space-y-3">
-            {activities.length === 0 ? (
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-2"></div>
+                <p className="text-sm">Carregando atividades...</p>
+              </div>
+            ) : activities.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-400">
                 <p className="text-sm">Nenhuma atividade registrada</p>
                 <p className="text-xs">para o período selecionado</p>
