@@ -8,9 +8,9 @@ export interface ActivityLog {
   target: string;
   details: string;
   justification?: string;
-  amount?: number; // Para transferências de cash/exp/etc
+  amount?: number | string; // Para transferências de cash/exp/etc ou período de ban
   period?: string; // Para banimentos (duração)
-  amountType?: 'cash' | 'exp' | 'item'; // Tipo do amount
+  amountType?: 'cash' | 'exp' | 'item' | 'ban'; // Tipo do amount
 }
 
 interface ActivityLogContextType {

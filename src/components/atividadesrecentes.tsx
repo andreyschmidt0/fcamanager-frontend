@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, RefreshCw } from 'lucide-react';
 import { useActivityLog, ActivityLog } from '../contexts/ActivityLogContext';
 import { useAuth } from '../hooks/useAuth';
 import { useGMRole } from '../hooks/useGMRole';
@@ -156,6 +156,16 @@ const RecentActivities: React.FC = () => {
           // Extrair quantidade do formato "5x 1001"
           const itemMatch = log.new_value?.match(/^(\d+)x/);
           return itemMatch ? parseInt(itemMatch[1]) : undefined;
+        case 'ban_user':
+          // Extrair período do banimento do details
+          const banDetails = log.details;
+          if (banDetails?.includes('permanente')) {
+            return 'Permanentemente';
+          } else if (banDetails?.includes('dias')) {
+            const dayMatch = banDetails.match(/(\d+)\s*dias?/i);
+            return dayMatch ? `${dayMatch[1]} dias` : undefined;
+          }
+          return undefined;
         default:
           return undefined;
       }
@@ -166,11 +176,12 @@ const RecentActivities: React.FC = () => {
         case 'send_cash': return 'cash';
         case 'remove_exp': return 'exp';
         case 'send_item': return 'item';
+        case 'ban_user': return 'ban';
         default: return undefined;
       }
     };
 
-    return {
+    const result = {
       id: log.id.toString(),
       timestamp: new Date(log.timestamp),
       adminName: log.admin_nickname || 'Admin',
@@ -179,8 +190,10 @@ const RecentActivities: React.FC = () => {
       details: getActionDetails(log.action, log),
       justification: log.notes || undefined,
       amount: getAmount(log.action, log),
-      amountType: getAmountType(log.action) as 'cash' | 'exp' | 'item' | undefined
+      amountType: getAmountType(log.action) as 'cash' | 'exp' | 'item' | 'ban' | undefined
     };
+    
+    return result;
   };
 
   // Usar logs do banco de dados
@@ -208,9 +221,19 @@ const RecentActivities: React.FC = () => {
       {/* Header */}
       <div className="p-4 border-b border-black" style={{ flexShrink: 0 }}>
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-neofara font-medium">
-            ÚLTIMAS ATIVIDADES
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-neofara font-medium">
+              ÚLTIMAS ATIVIDADES
+            </h2>
+            <button
+              onClick={fetchLogs}
+              disabled={isLoading}
+              className="p-1 hover:bg-gray-700 rounded transition-colors"
+              title="Atualizar atividades"
+            >
+              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
           <div className="flex items-center gap-3">
 
             {/* GM Selector - Only for Masters */}
@@ -339,7 +362,14 @@ const RecentActivities: React.FC = () => {
                       <p className="text-xs text-gray-400">{activity.details}</p>
                       <p className="text-xs sm:text-sm text-white">{activity.target}</p>
                       {activity.amount && (
-                        <p className="text-xs text-green-400">({activity.amount} {activity.amountType})</p>
+                        <p className={`text-xs ${
+                          activity.amountType === 'ban' ? 'text-red-400' : 
+                          activity.amountType === 'cash' ? 'text-green-400' :
+                          activity.amountType === 'exp' ? 'text-blue-400' :
+                          'text-yellow-400'
+                        }`}>
+                          ({activity.amount}{activity.amountType === 'ban' && activity.amount === 'Permanentemente' ? '' : activity.amountType === 'ban' ? '' : ` ${activity.amountType}`})
+                        </p>
                       )}
                       {activity.period && (
                         <p className="text-xs text-red-400">({activity.period})</p>

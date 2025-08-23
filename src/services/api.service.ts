@@ -274,7 +274,6 @@ class ApiService {
   async createLog(logData: LogPayload): Promise<void> {
     try {
       await api.post('/logs/create', logData);
-      console.log('Log salvo com sucesso no banco de dados.');
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error('Erro ao registrar log:', error.response?.data?.error || 'Erro desconhecido');
