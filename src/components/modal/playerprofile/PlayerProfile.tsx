@@ -116,24 +116,19 @@ interface PlayerProfileProps {
   onClose: () => void;
   nickname: string;
   isBanned?: boolean;
+  login?: string;
 }
 
-const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname, isBanned = false }) => {
+const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname, isBanned = false, login }) => {
   const [playerData, setPlayerData] = useState<PlayerProfileData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && nickname) {
-      fetchPlayerProfile();
-    }
-  }, [isOpen, nickname]);
-
-  const fetchPlayerProfile = async () => {
+  const fetchPlayerData = async (identifier: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(nickname)}`);
+      const response = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(identifier)}`);
       
       if (!response.ok) {
         throw new Error('Jogador não encontrado');
@@ -148,6 +143,21 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Esta é a parte importante. Você define qual parâmetro usar aqui.
+    let identifierToFetch = '';
+
+    if (nickname) {
+      identifierToFetch = nickname;
+    } else if (login) {
+      identifierToFetch = login;
+    }
+
+    if (isOpen && identifierToFetch) {
+      fetchPlayerData(identifierToFetch);
+    }
+  }, [isOpen, nickname, login]); // O useEffect reage a mudanças nessas props
 
   if (!isOpen) return null;
 

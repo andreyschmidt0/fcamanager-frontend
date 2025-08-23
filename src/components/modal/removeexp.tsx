@@ -16,27 +16,55 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   const [currentExp, setCurrentExp] = useState<number>(0);
   const [isLoadingExp, setIsLoadingExp] = useState(false);
+  const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    exp:''
+    exp:'',
+    oiduser:''
   });
 
-  const fetchCurrentExp = async (playerNickname: string) => {
-    setIsLoadingExp(true);
+  // Função para buscar jogador APENAS por strNexonID (login)
+  const fetchPlayerByLogin = async (login: string) => {
+    if (!login || login.trim() === '') {
+      setFetchedPlayerName('');
+      setCurrentExp(0);
+      return;
+    }
+
     try {
-      const playerProfile = await apiService.getPlayerProfile(playerNickname);
-      if (playerProfile?.EXP) {
-        const exp = parseInt(playerProfile.EXP) || 0;
-        setCurrentExp(exp);
-      } else {
+      // Usar a nova rota específica que busca APENAS por strNexonID
+      const response = await fetch(`http://localhost:3000/api/users/profile/login/${encodeURIComponent(login)}`);
+      
+      if (response.ok) {
+        const playerProfile = await response.json();
+        if (playerProfile?.NickName) {
+          setFetchedPlayerName(playerProfile.NickName);
+          // Atualizar o EXP atual também
+          if (playerProfile.EXP) {
+            const exp = parseInt(playerProfile.EXP) || 0;
+            setCurrentExp(exp);
+          }
+          setErrorMessage(''); // Limpar erro se existir
+        } else {
+          setFetchedPlayerName('');
+          setCurrentExp(0);
+        }
+      } else if (response.status === 404) {
+        setFetchedPlayerName('');
         setCurrentExp(0);
+        setErrorMessage('Jogador não encontrado com este strNexonID');
+      } else {
+        setFetchedPlayerName('');
+        setCurrentExp(0);
+        setErrorMessage('Erro ao buscar jogador');
       }
     } catch (error) {
-      console.warn('Erro ao buscar EXP do jogador:', error);
+      console.error('Erro ao buscar jogador por login:', error);
+      setFetchedPlayerName('');
       setCurrentExp(0);
-    } finally {
-      setIsLoadingExp(false);
+      setErrorMessage('Erro de conexão');
     }
   };
 
@@ -45,16 +73,30 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       setFormData(prev => ({
         ...prev,
         discordId: selectedPlayer.discordId || '',
-        loginAccount: selectedPlayer.nexonId || ''
+        loginAccount: selectedPlayer.nexonId || '' // Sempre usar nexonId (strNexonID)
       }));
       
-      // Buscar EXP atual quando o modal abrir
-      const playerNickname = selectedPlayer.name || selectedPlayer.nexonId;
-      if (playerNickname) {
-        fetchCurrentExp(playerNickname);
+      // Buscar jogador por strNexonID quando o modal abrir
+      if (selectedPlayer.nexonId) {
+        fetchPlayerByLogin(selectedPlayer.nexonId);
       }
+      setErrorMessage(''); // Limpar mensagem de erro
     }
   }, [selectedPlayer, isOpen]);
+
+  // Buscar jogador quando o login é digitado diretamente
+  useEffect(() => {
+    if (formData.loginAccount && formData.loginAccount.trim() !== '') {
+      const timeoutId = setTimeout(() => {
+        fetchPlayerByLogin(formData.loginAccount);
+      }, 500); // Debounce de 500ms
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      setFetchedPlayerName('');
+      setCurrentExp(0);
+    }
+  }, [formData.loginAccount]);
 
   // Calcular EXP resultante em tempo real
   const calculateResultingExp = () => {
@@ -68,32 +110,60 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       ...prev,
       [name]: value
     }));
+    // Limpar mensagem de erro quando usuário digitar
+    if (errorMessage) {
+      setErrorMessage('');
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setShowConfirmation(true); // Mostra confirmação em vez de executar
+    
+    // Validar se temos um jogador válido antes de mostrar confirmação
+    if (!fetchedPlayerName || fetchedPlayerName.trim() === '') {
+      setErrorMessage('Por favor, insira um login de conta válido (strNexonID).');
+      return;
+    }
+    
+    setShowConfirmation(true);
   };
 
 const handleConfirmAction = async () => {
   console.log('Data:', formData);
   
+  // Validar se o jogador existe antes de prosseguir
+  if (!fetchedPlayerName || fetchedPlayerName.trim() === '') {
+    try {
+      const playerProfile = await apiService.getPlayerProfile(formData.loginAccount);
+      if (!playerProfile || !playerProfile.NickName) {
+        setErrorMessage('Jogador não encontrado. Verifique o login (strNexonID) informado.');
+        setShowConfirmation(false);
+        return;
+      }
+    } catch (error) {
+      console.error('Erro ao validar jogador:', error);
+      setErrorMessage('Erro ao validar jogador. Tente novamente.');
+      setShowConfirmation(false);
+      return;
+    }
+  }
+  
   const adminName = user?.profile?.nickname || user?.username || 'Admin';
   const expAmount = parseInt(formData.exp);
-  const newExp = calculateResultingExp(); // Usar o cálculo já disponível
+  const newExp = calculateResultingExp();
 
   try {
     // Registra a atividade no banco de dados via API
     const dbLogData = {
       adminDiscordId: user?.profile?.discordId || 'system',
       adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: selectedPlayer?.name || formData.loginAccount || 'Jogador',
+      targetDiscordId: formData.oiduser,
+      targetNickname: fetchedPlayerName || 'Jogador desconhecido',
       action: 'remove_exp',
       old_value: currentExp.toString(),
       new_value: newExp.toString(),
       details: `Removeu ${expAmount} EXP (${currentExp} → ${newExp})`,
-      notes: `Remoção de EXP via login: ${formData.loginAccount}`
+      notes: `Remoção de EXP via strNexonID: ${formData.loginAccount}`
     };
 
     console.log('Enviando dados do log:', dbLogData);
@@ -131,18 +201,28 @@ const handleConfirmAction = async () => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Login da Conta
+              Login da Conta (strNexonID)
             </label>
             <input
               type="text"
               name="loginAccount"
               value={formData.loginAccount}
               onChange={handleInputChange}
+              placeholder="Digite o strNexonID da conta"
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
+            {fetchedPlayerName && (
+              <p className="mt-2 text-sm text-green-400">
+                Jogador encontrado: {fetchedPlayerName}
+              </p>
+            )}
+            {errorMessage && (
+              <p className="mt-2 text-sm text-red-400">
+                {errorMessage}
+              </p>
+            )}
           </div>
-
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
@@ -205,8 +285,8 @@ const handleConfirmAction = async () => {
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
-          description={`Tem certeza que deseja enviar: ${formData.exp} de EXP para o jogador: ${formData.loginAccount}?`}
-          confirmActionText="Sim, Enviar"
+          description={`Tem certeza que deseja remover ${formData.exp} de EXP do jogador: ${fetchedPlayerName || formData.loginAccount}?`}
+          confirmActionText="Sim, Remover"
           cancelActionText="Cancelar"
         />
     </div>

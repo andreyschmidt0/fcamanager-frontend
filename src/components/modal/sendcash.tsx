@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import ConfirmationModal from './confirm/confirmmodal';
-import { useActivityLog, createSendCashLog } from '../../contexts/ActivityLogContext';
 import { useAuth } from '../../hooks/useAuth';
 import apiService from '../../services/api.service';
 
@@ -13,7 +12,6 @@ interface SendCashProps {
 
 const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
-  const { addActivity } = useActivityLog();
   const { user } = useAuth();
   const [currentMoney, setCurrentMoney] = useState<number>(0);
   const [isLoadingMoney, setIsLoadingMoney] = useState(false);
@@ -22,22 +20,46 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
     loginAccount: '',
     cash:'',
   });
+  
+  // Novos estados para validação
+  const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
+  const [playerValidated, setPlayerValidated] = useState(false);
 
-  const fetchCurrentMoney = async (playerNickname: string) => {
-    setIsLoadingMoney(true);
+  // Função para validação cross-check de Discord ID + Login
+  const validatePlayerCrossCheck = async (discordId: string, login: string) => {
+    if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
+      setFetchedPlayerName('');
+      setCurrentMoney(0);
+      setPlayerValidated(false);
+      setErrorMessage('');
+      return;
+    }
+
+    setIsValidatingPlayer(true);
     try {
-      const playerProfile = await apiService.getPlayerProfile(playerNickname);
-      if (playerProfile?.Money) {
-        const money = parseInt(playerProfile.Money) || 0;
-        setCurrentMoney(money);
+      const result = await apiService.validatePlayerCrossCheck(discordId, login);
+      
+      if (result.isValid && result.player) {
+        setFetchedPlayerName(result.player.NickName || '');
+        setCurrentMoney(parseInt(result.player.Money) || 0);
+        setPlayerValidated(true);
+        setErrorMessage('');
       } else {
+        setFetchedPlayerName('');
         setCurrentMoney(0);
+        setPlayerValidated(false);
+        setErrorMessage(result.error || 'Erro na validação');
       }
     } catch (error) {
-      console.warn('Erro ao buscar Cash do jogador:', error);
+      console.error('Erro ao validar jogador:', error);
+      setFetchedPlayerName('');
       setCurrentMoney(0);
+      setPlayerValidated(false);
+      setErrorMessage('Erro de conexão');
     } finally {
-      setIsLoadingMoney(false);
+      setIsValidatingPlayer(false);
     }
   };
 
@@ -49,13 +71,43 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
         loginAccount: selectedPlayer.nexonId || '',
       }));
       
-      // Buscar Cash atual quando o modal abrir
-      const playerNickname = selectedPlayer.name || selectedPlayer.nexonId;
-      if (playerNickname) {
-        fetchCurrentMoney(playerNickname);
+      // Limpar estados de validação quando modal abrir com selectedPlayer
+      setFetchedPlayerName('');
+      setErrorMessage('');
+      setPlayerValidated(false);
+      
+      // Se temos selectedPlayer, validar automaticamente
+      if (selectedPlayer.discordId && selectedPlayer.nexonId) {
+        validatePlayerCrossCheck(selectedPlayer.discordId, selectedPlayer.nexonId);
       }
+    } else if (isOpen) {
+      // Limpar tudo quando modal abrir sem selectedPlayer
+      setFormData({ discordId: '', loginAccount: '', cash: '' });
+      setFetchedPlayerName('');
+      setErrorMessage('');
+      setPlayerValidated(false);
+      setCurrentMoney(0);
     }
   }, [selectedPlayer, isOpen]);
+
+  // useEffect com debounce para validação automática quando campos são digitados
+  useEffect(() => {
+    if (formData.discordId && formData.discordId.trim() !== '' && 
+        formData.loginAccount && formData.loginAccount.trim() !== '') {
+      
+      const timeoutId = setTimeout(() => {
+        validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+      }, 500); // Debounce de 500ms
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Se um dos campos estiver vazio, limpar validação
+      setFetchedPlayerName('');
+      setCurrentMoney(0);
+      setPlayerValidated(false);
+      setErrorMessage('');
+    }
+  }, [formData.discordId, formData.loginAccount]);
 
   // Calcular Cash resultante em tempo real
   const calculateResultingMoney = () => {
@@ -69,21 +121,56 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
       ...prev,
       [name]: value
     }));
+    
+    // Limpar mensagem de erro quando usuário digitar
+    if (errorMessage) {
+      setErrorMessage('');
+    }
   };
 
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setShowConfirmation(true); // Mostra confirmação em vez de executar
+    
+    // Validar se o jogador foi validado antes de mostrar confirmação
+    if (!playerValidated || !fetchedPlayerName) {
+      setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
+      return;
+    }
+    
+    // Validar se ainda está validando
+    if (isValidatingPlayer) {
+      setErrorMessage('Aguarde a validação ser concluída antes de enviar.');
+      return;
+    }
+    
+    setShowConfirmation(true);
   };
 
 const handleConfirmAction = async () => {
   console.log('Data:', formData);
   
+  // Validação dupla: Re-validar jogador antes de executar ação
+  if (!playerValidated || !fetchedPlayerName) {
+    try {
+      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+      if (!validationResult.isValid) {
+        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+        setShowConfirmation(false);
+        return;
+      }
+    } catch (error) {
+      console.error('Erro na validação dupla:', error);
+      setErrorMessage('Erro ao validar jogador. Tente novamente.');
+      setShowConfirmation(false);
+      return;
+    }
+  }
+  
   const adminName = user?.profile?.nickname || user?.username || 'Admin';
   const cashAmount = parseInt(formData.cash);
-  const newMoney = calculateResultingMoney(); // Usar o cálculo já disponível
+  const newMoney = calculateResultingMoney();
 
   try {
     // Registra a atividade no banco de dados via API
@@ -91,12 +178,12 @@ const handleConfirmAction = async () => {
       adminDiscordId: user?.profile?.discordId || 'system',
       adminNickname: adminName,
       targetDiscordId: formData.discordId,
-      targetNickname: selectedPlayer?.name || formData.loginAccount || 'Jogador',
+      targetNickname: fetchedPlayerName || formData.loginAccount,
       action: 'send_cash',
       old_value: currentMoney.toString(),
       new_value: newMoney.toString(),
       details: `Enviou ${cashAmount} Cash (${currentMoney} → ${newMoney})`,
-      notes: `Envio de Cash via login: ${formData.loginAccount}`
+      notes: `Envio de Cash validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
     };
 
     console.log('Enviando dados do log:', dbLogData);
@@ -152,16 +239,34 @@ const handleConfirmAction = async () => {
           {/* Login da Conta */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Login da conta
+              Login da conta (strNexonID)
             </label>
             <input
               type="text"
               name="loginAccount"
+              placeholder="Digite o strNexonID da conta"
               value={formData.loginAccount}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
+            
+            {/* Feedback visual de validação */}
+            {isValidatingPlayer && (
+              <p className="mt-2 text-sm text-yellow-400">
+                Validando jogador...
+              </p>
+            )}
+            {fetchedPlayerName && playerValidated && (
+              <p className="mt-2 text-sm text-green-400">
+                ✓ Jogador validado: {fetchedPlayerName}
+              </p>
+            )}
+            {errorMessage && (
+              <p className="mt-2 text-sm text-red-400">
+                ✗ {errorMessage}
+              </p>
+            )}
           </div>
 
 
@@ -187,16 +292,21 @@ const handleConfirmAction = async () => {
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Cash Atual</label>
                 <div className="text-lg font-semibold text-blue-400">
-                  {isLoadingMoney ? 'Carregando...' : currentMoney.toLocaleString()}
+                  {isValidatingPlayer || isLoadingMoney ? 'Carregando...' : currentMoney.toLocaleString()}
                 </div>
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Cash Calculado</label>
                 <div className="text-lg font-semibold text-green-400">
-                  {calculateResultingMoney().toLocaleString()}
+                  {isValidatingPlayer ? 'Validando...' : calculateResultingMoney().toLocaleString()}
                 </div>
               </div>
             </div>
+            {!playerValidated && !isValidatingPlayer && formData.discordId && formData.loginAccount && (
+              <div className="mt-2 text-xs text-yellow-400">
+                ⚠️ Aguardando validação do jogador para exibir informações precisas
+              </div>
+            )}
           </div>
           {/* Buttons */}
           <div className="flex gap-3 pt-4">

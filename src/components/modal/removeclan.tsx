@@ -28,6 +28,11 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
       }));
       setFetchedClanName(''); // Limpar nome buscado pois temos o selectedClan
       setErrorMessage(''); // Limpar mensagem de erro
+      
+      // Validar o clã selecionado automaticamente
+      if (selectedClan.oidGuild) {
+        fetchClanNameById(selectedClan.oidGuild.toString());
+      }
     }
   }, [selectedClan, isOpen]);
 
@@ -43,12 +48,18 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
       if (response.ok) {
         const clan = await response.json();
         setFetchedClanName(clan.strName || '');
+        setErrorMessage(''); // Limpar erro se existir
       } else if (response.status === 404) {
         setFetchedClanName('');
+        setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
+      } else {
+        setFetchedClanName('');
+        setErrorMessage('Erro ao buscar clã');
       }
     } catch (error) {
       console.error('Erro ao buscar nome do clã:', error);
       setFetchedClanName('');
+      setErrorMessage('Erro de conexão');
     }
   };
 
@@ -60,8 +71,10 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
       }, 500); // Debounce de 500ms
 
       return () => clearTimeout(timeoutId);
-    } else if (!selectedClan) {
+    } else if (!selectedClan && (!formData.oidGuild || formData.oidGuild.trim() === '')) {
+      // Limpar apenas quando não há selectedClan E o campo está vazio
       setFetchedClanName('');
+      setErrorMessage('');
     }
   }, [formData.oidGuild, selectedClan]);
 
@@ -99,13 +112,13 @@ const handleConfirmAction = async () => {
     try {
       const response = await fetch(`http://localhost:3000/api/users/clans/${formData.oidGuild}`);
       if (!response.ok) {
-        setErrorMessage('Clã não encontrado. Verifique o ID informado.');
+        setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
         setShowConfirmation(false);
         return;
       }
       const clan = await response.json();
       if (!clan || !clan.strName) {
-        setErrorMessage('Clã não encontrado. Verifique o ID informado.');
+        setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
         setShowConfirmation(false);
         return;
       }

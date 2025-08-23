@@ -297,6 +297,36 @@ class ApiService {
       return [];
     }
   }
+
+  // Validação cross-check de Discord ID + Login
+  async validatePlayerCrossCheck(discordId: string, login: string): Promise<{
+    isValid: boolean;
+    player?: any;
+    message?: string;
+    error?: string;
+    details?: string;
+  }> {
+    try {
+      const params = new URLSearchParams();
+      params.append('discordId', discordId);
+      params.append('login', login);
+      
+      const response = await api.get(`/users/validate-player?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return {
+          isValid: false,
+          error: error.response?.data?.error || 'Erro na validação',
+          details: error.response?.data?.details || 'Erro de conexão'
+        };
+      }
+      return {
+        isValid: false,
+        error: 'Erro inesperado na validação'
+      };
+    }
+  }
 }
 
 // Exportar instância única
