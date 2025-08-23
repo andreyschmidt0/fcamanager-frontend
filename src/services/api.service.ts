@@ -261,6 +261,16 @@ class ApiService {
     }
   }
 
+  async getPlayerProfile(nickname: string): Promise<any | null> {
+    try {
+      const response = await api.get(`/users/profile/${encodeURIComponent(nickname)}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar perfil do jogador por nickname:', error);
+      return null;
+    }
+  }
+
   async createLog(logData: LogPayload): Promise<void> {
     try {
       await api.post('/logs/create', logData);

@@ -45,30 +45,42 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
-
+  console.log('Data:', formData);
+  
   const adminName = user?.profile?.nickname || user?.username || 'Admin';
+  let oldEmail = 'Não encontrado';
 
   try {
-    // 1. Busque o perfil do jogador para obter o email antigo
-    const playerProfile = await apiService.getPlayerProfileByDiscordId(formData.discordId);
-    const oldEmail = playerProfile?.strEmail || 'Não encontrado';
+    // Busque o perfil do jogador pelo nickname para obter o email antigo
+    const playerNickname = selectedPlayer?.name || formData.loginAccount;
+    if (playerNickname) {
+      const playerProfile = await apiService.getPlayerProfile(playerNickname);
+      if (playerProfile?.strEmail) {
+        oldEmail = playerProfile.strEmail;
+      }
+    }
+  } catch (error) {
+    console.warn('Não foi possível buscar o perfil do jogador, usando email padrão');
+  }
 
-    // 2. Preencha o old_value e new_value no log
+  try {
+    // Registra a atividade no banco de dados via API
     const dbLogData = {
-      adminDiscordId: user?.profile.discordId || 'system',
+      adminDiscordId: user?.profile?.discordId || 'system',
       adminNickname: adminName,
       targetDiscordId: formData.discordId,
-      targetNickname: selectedPlayer?.name || formData.loginAccount,
+      targetNickname: selectedPlayer?.name || formData.loginAccount || 'Jogador',
       action: 'change_email',
-      old_value: oldEmail, // Valor antigo
-      new_value: formData.newemail, // Novo valor
+      old_value: oldEmail,
+      new_value: formData.newemail || 'Valor não definido',
+      details: `Alterou o email de ${oldEmail} para ${formData.newemail}`,
       notes: `Alterado via Discord ID: ${formData.discordId}`
     };
 
-    // 3. Chame o método de log
+    console.log('Enviando dados do log:', dbLogData);
     await apiService.createLog(dbLogData);
   } catch (error) {
-    console.error('Falha ao salvar log no banco de dados:', error);
+    console.error('Falha ao salvar log de alteração de email no banco de dados:', error);
   }
 
   setShowConfirmation(false);

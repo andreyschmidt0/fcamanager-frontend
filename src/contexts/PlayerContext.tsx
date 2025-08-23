@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 export interface Player {
   id: string;
   name: string;
-  clan: string;
+  ClanName: string;
   discordId: string;
   nexonId: string;
   banStatus: string;

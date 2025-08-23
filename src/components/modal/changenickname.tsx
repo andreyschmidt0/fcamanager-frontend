@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
-import { useActivityLog, createChangeNicknameLog } from '../../contexts/ActivityLogContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
+import apiService from '../../services/api.service';
 
 interface ChangeNicknameProps {
   isOpen: boolean;
@@ -12,12 +12,11 @@ interface ChangeNicknameProps {
 
 const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
-  const { addActivity } = useActivityLog();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    filter:''
+    new_value:''
   });
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -44,23 +43,48 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
     setShowConfirmation(true);
   };
 
-  const handleConfirmAction = () => {
-    // Lógica original aqui (API call para alterar nickname)
-    console.log('Change Nickname Data:', formData);
+const handleConfirmAction = async () => {
+  console.log('Data:', formData);
+  
+  const adminName = user?.profile?.nickname || user?.username || 'Admin';
+  let oldNickName = 'Não encontrado';
 
-    // Registrar atividade no log
-    const adminName = user?.profile?.nickname || user?.username || 'Admin';
-    const logData = createChangeNicknameLog(
-      adminName,
-      formData.loginAccount,
-      formData.filter,
-      `Alterado via Discord ID: ${formData.discordId}`
-    );
-    addActivity(logData);
+  try {
+    // Busque o perfil do jogador pelo nickname para obter o nickname antigo
+    const playerNickname = selectedPlayer?.name || formData.loginAccount;
+    if (playerNickname) {
+      const playerProfile = await apiService.getPlayerProfile(playerNickname);
+      if (playerProfile?.NickName) {
+        oldNickName = playerProfile.NickName;
+      }
+    }
+  } catch (error) {
+    console.warn('Não foi possível buscar o perfil do jogador, usando nickname padrão');
+  }
 
-    setShowConfirmation(false);
-    onClose();
-  };
+  try {
+    // Registra a atividade no banco de dados via API
+    const dbLogData = {
+      adminDiscordId: user?.profile?.discordId || 'system',
+      adminNickname: adminName,
+      targetDiscordId: formData.discordId,
+      targetNickname: selectedPlayer?.name || formData.loginAccount || 'Jogador',
+      action: 'change_NickName',
+      old_value: oldNickName,
+      new_value: formData.new_value || 'Valor não definido',
+      details: `Alterou o nickname de ${oldNickName} para ${formData.new_value}`,
+      notes: `Alterado via Discord ID: ${formData.discordId}`
+    };
+
+    console.log('Enviando dados do log:', dbLogData);
+    await apiService.createLog(dbLogData);
+  } catch (error) {
+    console.error('Falha ao salvar log de alteração de nickname no banco de dados:', error);
+  }
+
+  setShowConfirmation(false);
+  onClose();
+};
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);
@@ -122,8 +146,8 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
             </label>
             <input
               type="text"
-              name="filter"
-              value={formData.filter}
+              name="new_value"
+              value={formData.new_value}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
@@ -155,7 +179,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
         onConfirm={handleConfirmAction}
         onCancel={handleCancelConfirmation}
         title="Confirmar Alteração"
-        description={`Tem certeza que deseja alterar o nickname para: ${formData.filter}?`}
+        description={`Tem certeza que deseja alterar o nickname para: ${formData.new_value}?`}
         confirmActionText="Sim, Alterar"
         cancelActionText="Cancelar"
       />

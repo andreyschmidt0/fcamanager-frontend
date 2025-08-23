@@ -70,20 +70,21 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
       }
       
       const mappedPlayers: Player[] = users.map((user: any) => ({
-        id: `${user.strDiscordID}`,
+        id: `${user.oidUser}`,
         name: user.NickName,
-        clan: 'N/A', // Campo obrigatório do contexto
+        ClanName: user.ClanName,
         discordId: user.strDiscordID || '0',
         nexonId: user.strLNexonID,
         banStatus: user.Status === 'Banido' ? 'Sim' : 'Não',
-        banEndDate: null, // Campo obrigatório do contexto
+        banEndDate: null,
         email: user.strEmail,
         lastMacAddress: user.strLastMacAddress || '',
         lastLoginIP: user.strLastLoginIP || '',
         createDate: user.CreateDate,
         userType: user.UserType
       }));
-      
+      console.log(mappedPlayers)
+
       setPlayers(mappedPlayers);
       setHasSearched(true);
     } catch (error) {
@@ -441,6 +442,21 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                     <Copy size={12} />
                   </button>
                   {copiedId === selectedPlayer.discordId && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Clan:</span>
+                  <span className="text-gray-300">{selectedPlayer.ClanName}</span>
+                  <button
+                    onClick={() => copyToClipboard(selectedPlayer.ClanName)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    title="Copy Discord ID"
+                  >
+                    <Copy size={12} />
+                  </button>
+                  {copiedId === selectedPlayer.ClanName && (
                     <span className="text-green-400">Copied!</span>
                   )}
                 </div>
