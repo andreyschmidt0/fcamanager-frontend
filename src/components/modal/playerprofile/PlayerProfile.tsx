@@ -128,7 +128,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(identifier)}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/profile/${encodeURIComponent(identifier)}`);
       
       if (!response.ok) {
         throw new Error('Jogador não encontrado');

@@ -188,7 +188,6 @@ const handleConfirmAction = async () => {
       notes: `Alteração validada - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
     };
 
-    console.log('Enviando dados do log:', dbLogData);
     await apiService.createLog(dbLogData);
   } catch (error) {
     console.error('Falha ao salvar log de alteração de email no banco de dados:', error);

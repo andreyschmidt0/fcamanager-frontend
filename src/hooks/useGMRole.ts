@@ -16,7 +16,7 @@ export const useGMRole = () => {
 
       try {
         // Buscar informações do usuário no sistema GM
-        const profileResponse = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(user.profile.nickname)}`);
+        const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/profile/${encodeURIComponent(user.profile.nickname)}`);
         if (!profileResponse.ok) {
           setIsMaster(false);
           setLoading(false);
@@ -33,7 +33,7 @@ export const useGMRole = () => {
         }
 
         // Verificar o role no SQLite
-        const gmResponse = await fetch(`http://localhost:3000/api/gm-management/user/${encodeURIComponent(discordId)}`);
+        const gmResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/gm-management/user/${encodeURIComponent(discordId)}`);
         if (gmResponse.ok) {
           const gmData = await gmResponse.json();
           setIsMaster(gmData.success && gmData.gm?.role === 'MASTER');

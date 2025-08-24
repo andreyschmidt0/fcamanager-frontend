@@ -21,9 +21,7 @@ export interface LogPayload {
 
 
 // Configuração da API
-const API_BASE = import.meta.env.PROD 
-  ? 'https://fca-manager-api.onrender.com/api'  // Para produção
-  : 'http://localhost:3000/api';                // Para desenvolvimento local
+const API_BASE = import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api';
 
 // Criar instância do axios
 const api = axios.create({

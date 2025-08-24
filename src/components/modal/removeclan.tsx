@@ -44,7 +44,7 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/users/clans/${clanId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/clans/${clanId}`);
       if (response.ok) {
         const clan = await response.json();
         setFetchedClanName(clan.strName || '');
@@ -107,7 +107,7 @@ const handleConfirmAction = async () => {
   // Validar se o clã existe antes de prosseguir
   if (!selectedClan && (!fetchedClanName || fetchedClanName.trim() === '')) {
     try {
-      const response = await fetch(`http://localhost:3000/api/users/clans/${formData.oidGuild}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/clans/${formData.oidGuild}`);
       if (!response.ok) {
         setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
         setShowConfirmation(false);

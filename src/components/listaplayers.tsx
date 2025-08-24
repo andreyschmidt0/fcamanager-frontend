@@ -61,7 +61,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
             }
           };
 
-const response = await fetch(`http://localhost:3000/api/users/search?${getSearchParam()}`);
+const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/search?${getSearchParam()}`);
       
       if (!response.ok) {
         if (response.status === 500) {
@@ -120,7 +120,7 @@ const response = await fetch(`http://localhost:3000/api/users/search?${getSearch
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/api/users/clans/search?clanName=${encodeURIComponent(clanname)}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/clans/search?clanName=${encodeURIComponent(clanname)}`);
       
       if (!response.ok) {
         throw new Error('Erro na requisição');

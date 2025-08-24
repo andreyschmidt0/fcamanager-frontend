@@ -117,7 +117,6 @@ const PermissionsManager: React.FC<PermissionsManagerProps> = ({
     try {
       // Aqui seria a chamada para a API
       for (const [permissionKey, action] of Object.entries(pendingChanges)) {
-        console.log(`${action} permission ${permissionKey} for ${selectedGM.nickname}`);
         // await updatePermission(selectedGM.discord_id, permissionKey, action);
       }
       

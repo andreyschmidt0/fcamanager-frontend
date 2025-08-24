@@ -77,7 +77,7 @@ const RecentActivities: React.FC = () => {
     setIsLoading(true);
     try {
       // Primeiro buscar o Discord ID do usuário logado
-      const profileResponse = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
+      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
       if (!profileResponse.ok) {
         throw new Error('Erro ao obter perfil do administrador');
       }
@@ -99,7 +99,7 @@ const RecentActivities: React.FC = () => {
   const fetchGMUsers = async () => {
     try {
       // Primeiro buscar o Discord ID do usuário logado
-      const profileResponse = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
+      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
       if (!profileResponse.ok) {
         return;
       }
@@ -108,7 +108,7 @@ const RecentActivities: React.FC = () => {
       const discordId = profileData.strDiscordID;
       
       // Agora tentar buscar GMs usando o Discord ID
-      const response = await fetch(`http://localhost:3000/api/users/gms?discordId=${encodeURIComponent(discordId)}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/gms?discordId=${encodeURIComponent(discordId)}`);
       if (response.ok) {
         const data = await response.json();
         if (data.isAuthorized) {
