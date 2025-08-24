@@ -19,7 +19,46 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
     loginAccount: '',
     newemail:''
   });
+  
+  // Estados para validação
+  const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
+  const [playerValidated, setPlayerValidated] = useState(false);
+  
   const [showConfirmation, setShowConfirmation] = useState(false);
+
+  // Função para validação cross-check de Discord ID + Login
+  const validatePlayerCrossCheck = async (discordId: string, login: string) => {
+    if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
+      setFetchedPlayerName('');
+      setPlayerValidated(false);
+      setErrorMessage('');
+      return;
+    }
+
+    setIsValidatingPlayer(true);
+    try {
+      const result = await apiService.validatePlayerCrossCheck(discordId, login);
+      
+      if (result.isValid && result.player) {
+        setFetchedPlayerName(result.player.NickName || '');
+        setPlayerValidated(true);
+        setErrorMessage('');
+      } else {
+        setFetchedPlayerName('');
+        setPlayerValidated(false);
+        setErrorMessage(result.error || 'Erro na validação');
+      }
+    } catch (error) {
+      console.error('Erro ao validar jogador:', error);
+      setFetchedPlayerName('');
+      setPlayerValidated(false);
+      setErrorMessage('Erro de conexão');
+    } finally {
+      setIsValidatingPlayer(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -28,8 +67,46 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
         discordId: selectedPlayer.discordId || '',
         loginAccount: selectedPlayer.nexonId || ''
       }));
+      
+      // Limpar estados de validação quando modal abrir com selectedPlayer
+      setFetchedPlayerName('');
+      setErrorMessage('');
+      setPlayerValidated(false);
+      
+      // Se temos selectedPlayer, validar automaticamente
+      if (selectedPlayer.discordId && selectedPlayer.nexonId) {
+        validatePlayerCrossCheck(selectedPlayer.discordId, selectedPlayer.nexonId);
+      }
+    } else if (isOpen) {
+      // Limpar tudo quando modal abrir sem selectedPlayer
+      setFormData({ 
+        discordId: '', 
+        loginAccount: '', 
+        newemail: ''
+      });
+      setFetchedPlayerName('');
+      setErrorMessage('');
+      setPlayerValidated(false);
     }
   }, [selectedPlayer, isOpen]);
+
+  // useEffect com debounce para validação automática quando campos são digitados
+  useEffect(() => {
+    if (formData.discordId && formData.discordId.trim() !== '' && 
+        formData.loginAccount && formData.loginAccount.trim() !== '') {
+      
+      const timeoutId = setTimeout(() => {
+        validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+      }, 500); // Debounce de 500ms
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Se um dos campos estiver vazio, limpar validação
+      setFetchedPlayerName('');
+      setPlayerValidated(false);
+      setErrorMessage('');
+    }
+  }, [formData.discordId, formData.loginAccount]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -37,24 +114,58 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
       ...prev,
       [name]: value
     }));
+    
+    // Limpar mensagem de erro quando usuário digitar
+    if (errorMessage) {
+      setErrorMessage('');
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar se o jogador foi validado antes de mostrar confirmação
+    if (!playerValidated || !fetchedPlayerName) {
+      setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
+      return;
+    }
+    
+    // Validar se ainda está validando
+    if (isValidatingPlayer) {
+      setErrorMessage('Aguarde a validação ser concluída antes de alterar o email.');
+      return;
+    }
+    
     setShowConfirmation(true);
   };
 
 const handleConfirmAction = async () => {
-  console.log('Data:', formData);
+  
+  // Validação dupla: Re-validar jogador antes de executar ação
+  if (!playerValidated || !fetchedPlayerName) {
+    try {
+      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+      if (!validationResult.isValid) {
+        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+        setShowConfirmation(false);
+        return;
+      }
+    } catch (error) {
+      console.error('Erro na validação dupla:', error);
+      setErrorMessage('Erro ao validar jogador. Tente novamente.');
+      setShowConfirmation(false);
+      return;
+    }
+  }
   
   const adminName = user?.profile?.nickname || user?.username || 'Admin';
+  
   let oldEmail = 'Não encontrado';
 
   try {
-    // Busque o perfil do jogador pelo nickname para obter o email antigo
-    const playerNickname = selectedPlayer?.name || formData.loginAccount;
-    if (playerNickname) {
-      const playerProfile = await apiService.getPlayerProfile(playerNickname);
+    // Buscar o perfil do jogador pelo nickname validado para obter o email antigo
+    if (fetchedPlayerName) {
+      const playerProfile = await apiService.getPlayerProfile(fetchedPlayerName);
       if (playerProfile?.strEmail) {
         oldEmail = playerProfile.strEmail;
       }
@@ -69,12 +180,12 @@ const handleConfirmAction = async () => {
       adminDiscordId: user?.profile?.discordId || 'system',
       adminNickname: adminName,
       targetDiscordId: formData.discordId,
-      targetNickname: selectedPlayer?.name || formData.loginAccount || 'Jogador',
+      targetNickname: fetchedPlayerName || formData.loginAccount,
       action: 'change_email',
       old_value: oldEmail,
       new_value: formData.newemail || 'Valor não definido',
       details: `Alterou o email de ${oldEmail} para ${formData.newemail}`,
-      notes: `Alterado via Discord ID: ${formData.discordId}`
+      notes: `Alteração validada - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
     };
 
     console.log('Enviando dados do log:', dbLogData);
@@ -134,11 +245,29 @@ const handleConfirmAction = async () => {
             <input
               type="text"
               name="loginAccount"
+              placeholder="Digite o strNexonID da conta"
               value={formData.loginAccount}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
+            
+            {/* Feedback visual de validação */}
+            {isValidatingPlayer && (
+              <p className="mt-2 text-sm text-yellow-400">
+                Validando jogador...
+              </p>
+            )}
+            {fetchedPlayerName && playerValidated && (
+              <p className="mt-2 text-sm text-green-400">
+                ✓ Jogador validado: {fetchedPlayerName}
+              </p>
+            )}
+            {errorMessage && (
+              <p className="mt-2 text-sm text-red-400">
+                ✗ {errorMessage}
+              </p>
+            )}
           </div>
 
           <div>
@@ -181,7 +310,7 @@ const handleConfirmAction = async () => {
         onConfirm={handleConfirmAction}
         onCancel={handleCancelConfirmation}
         title="Confirmar Alteração"
-        description={`Tem certeza que deseja alterar o email para: ${formData.newemail}?`}
+        description={`Tem certeza que deseja alterar o email do jogador: ${fetchedPlayerName || formData.loginAccount} (Discord: ${formData.discordId}) para: ${formData.newemail}?`}
         confirmActionText="Sim, Alterar"
         cancelActionText="Cancelar"
       />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Shield, UserCheck, UserX, Eye, EyeOff, Settings, Search, Filter } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -29,6 +29,13 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [showInactive, setShowInactive] = useState(false);
   const [currentUserDiscordId, setCurrentUserDiscordId] = useState<string>('');
+  const [tempRole, setTempRole] = useState<keyof typeof roles | null>(null);
+  const [tempNotes, setTempNotes] = useState<string>('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Cache para adminDiscordId
+  const adminDiscordIdCache = useRef<string | null>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Definir apenas 2 níveis: Master e Usuário
   const roles = {
@@ -50,14 +57,26 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  // Função auxiliar para buscar Discord ID do usuário logado
-  const getAdminDiscordId = async () => {
+  // Função auxiliar para buscar Discord ID do usuário logado com cache
+  const getAdminDiscordId = useCallback(async () => {
+    if (adminDiscordIdCache.current) {
+      return adminDiscordIdCache.current;
+    }
+    
     const profileResponse = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
-    if (!profileResponse.ok) throw new Error('Erro ao obter perfil do administrador');
+    if (!profileResponse.ok) {
+      // Verificar se a resposta é HTML (erro 429) ou JSON
+      const contentType = profileResponse.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        throw new Error('Muitas tentativas. Aguarde um momento e tente novamente.');
+      }
+      throw new Error('Erro ao obter perfil do administrador');
+    }
     
     const profileData = await profileResponse.json();
+    adminDiscordIdCache.current = profileData.strDiscordID;
     return profileData.strDiscordID;
-  };
+  }, [user?.profile?.nickname]);
 
   const fetchGMs = async () => {
     setLoading(true);
@@ -187,6 +206,15 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
         }),
       });
 
+      // Verificar se a resposta é JSON válida
+      const contentType = response.headers.get('content-type');
+      if (!response.ok) {
+        if (contentType && contentType.includes('text/html')) {
+          throw new Error('Muitas tentativas. Aguarde um momento e tente novamente.');
+        }
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+
       const data = await response.json();
       
       if (data.success) {
@@ -210,6 +238,17 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
       alert(`Erro ao atualizar notas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
+
+  // Função debounced para notas (não usado mais no onChange)
+  const debouncedUpdateNotes = useCallback((gm: GM, notes: string) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    debounceTimeoutRef.current = setTimeout(() => {
+      handleUpdateNotes(gm, notes);
+    }, 1000);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -340,6 +379,9 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
                       <button
                         onClick={() => {
                           setSelectedGM(gm);
+                          setTempRole(gm.role);
+                          setTempNotes(gm.notes || '');
+                          setHasUnsavedChanges(false);
                           setShowPermissionModal(true);
                         }}
                         className="p-2 bg-green-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -396,11 +438,27 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
               {/* Modal content for permissions would go here */}
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-white">
-                    Gerenciar Permissões - {selectedGM.nickname}
-                  </h3>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">
+                      Gerenciar Permissões - {selectedGM.nickname}
+                    </h3>
+                    {hasUnsavedChanges && (
+                      <p className="text-yellow-500 text-sm mt-1">• Há alterações não salvas</p>
+                    )}
+                  </div>
                   <button
-                    onClick={() => setShowPermissionModal(false)}
+                    onClick={() => {
+                      if (hasUnsavedChanges) {
+                        if (confirm('Há alterações não salvas. Deseja descartar as mudanças?')) {
+                          setShowPermissionModal(false);
+                          setTempRole(null);
+                          setTempNotes('');
+                          setHasUnsavedChanges(false);
+                        }
+                      } else {
+                        setShowPermissionModal(false);
+                      }
+                    }}
                     className="text-gray-400 hover:text-white"
                   >
                     <X size={20} />
@@ -411,9 +469,15 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-white mb-2">Nível de Acesso</label>
                   <select
-                    value={selectedGM.role}
-                    onChange={(e) => handleUpdateRole(selectedGM, e.target.value as keyof typeof roles)}
-                    className="w-full bg-[#1d1e24] text-white rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    value={tempRole || selectedGM.role}
+                    onChange={(e) => {
+                      const newRole = e.target.value as keyof typeof roles;
+                      setTempRole(newRole);
+                      setHasUnsavedChanges(true);
+                    }}
+                    className={`w-full bg-[#1d1e24] text-white rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none ${
+                      tempRole && tempRole !== selectedGM.role ? 'border-2 border-yellow-500' : ''
+                    }`}
                     disabled={selectedGM.discord_id === currentUserDiscordId && selectedGM.role === 'MASTER'}
                   >
                     {Object.entries(roles).map(([key, role]) => (
@@ -423,7 +487,7 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
                   <p className="text-xs text-gray-400 mt-1">
                     {selectedGM.discord_id === currentUserDiscordId && selectedGM.role === 'MASTER' 
                       ? 'Masters não podem alterar seu próprio nível de acesso'
-                      : 'Apenas Masters podem alterar níveis de acesso'
+                      : 'Apenas Masters podem alterar níveis de acesso. Clique em "Salvar" para confirmar as mudanças.'
                     }
                   </p>
                 </div>
@@ -431,12 +495,12 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
                 {/* Role Description */}
                 <div className="mb-6 p-3 bg-[#1d1e24] rounded-lg">
                   <h4 className="text-sm font-medium text-white mb-2">Descrição do Nível:</h4>
-                  <p className="text-sm text-gray-300">{roles[selectedGM.role].description}</p>
+                  <p className="text-sm text-gray-300">{roles[tempRole || selectedGM.role].description}</p>
                   
                   <div className="mt-3">
                     <h5 className="text-xs font-medium text-white mb-1">Permissões:</h5>
                     <ul className="text-xs text-gray-300 space-y-1">
-                      {selectedGM.role === 'MASTER' ? (
+                      {(tempRole || selectedGM.role) === 'MASTER' ? (
                         <>
                           <li>• Gerenciar todos os usuários GM</li>
                           <li>• Alterar níveis de acesso</li>
@@ -459,47 +523,79 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-white mb-2">Notas Administrativas</label>
                   <textarea
-                    value={selectedGM.notes || ''}
-                    onChange={(e) => handleUpdateNotes(selectedGM, e.target.value)}
+                    value={tempNotes || selectedGM.notes || ''}
+                    onChange={(e) => {
+                      setTempNotes(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
                     placeholder="Adicionar notas sobre este GM..."
-                    className="w-full bg-[#1d1e24] text-white rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none resize-none"
+                    className={`w-full bg-[#1d1e24] text-white rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none resize-none ${
+                      tempNotes !== '' && tempNotes !== selectedGM.notes ? 'border-2 border-yellow-500' : ''
+                    }`}
                     rows={3}
                   />
+                  <p className="text-xs text-gray-400 mt-1">
+                    As alterações serão salvas apenas quando você clicar em "Salvar".
+                  </p>
                 </div>
 
                 <div className="flex gap-3 mt-6">
                   <button
-                    onClick={() => setShowPermissionModal(false)}
+                    onClick={() => {
+                      if (hasUnsavedChanges) {
+                        if (confirm('Há alterações não salvas. Deseja descartar as mudanças?')) {
+                          setShowPermissionModal(false);
+                          setTempRole(null);
+                          setTempNotes('');
+                          setHasUnsavedChanges(false);
+                        }
+                      } else {
+                        setShowPermissionModal(false);
+                      }
+                    }}
                     className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={async () => {
-                      if (selectedGM) {
-                        // Salvar todas as alterações
+                      if (selectedGM && hasUnsavedChanges) {
                         try {
-                          // Se houve alteração de role, salvar
                           const originalGM = gms.find(g => g.discord_id === selectedGM.discord_id);
-                          if (originalGM && originalGM.role !== selectedGM.role) {
-                            await handleUpdateRole(selectedGM, selectedGM.role);
+                          let success = true;
+                          
+                          // Se houve alteração de role, salvar
+                          if (tempRole && tempRole !== selectedGM.role) {
+                            await handleUpdateRole(selectedGM, tempRole);
                           }
                           
                           // Se houve alteração de notas, salvar
-                          if (originalGM && originalGM.notes !== selectedGM.notes) {
-                            await handleUpdateNotes(selectedGM, selectedGM.notes || '');
+                          if (tempNotes !== '' && tempNotes !== selectedGM.notes) {
+                            await handleUpdateNotes(selectedGM, tempNotes);
                           }
                           
-                          alert('Alterações salvas com sucesso!');
-                          setShowPermissionModal(false);
+                          if (success) {
+                            alert('Alterações salvas com sucesso!');
+                            setShowPermissionModal(false);
+                            setTempRole(null);
+                            setTempNotes('');
+                            setHasUnsavedChanges(false);
+                          }
                         } catch (error) {
                           console.error('Erro ao salvar:', error);
                         }
+                      } else if (!hasUnsavedChanges) {
+                        setShowPermissionModal(false);
                       }
                     }}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors"
+                    className={`flex-1 py-2 rounded-lg transition-colors ${
+                      hasUnsavedChanges 
+                        ? 'bg-green-600 hover:bg-green-700 text-white' 
+                        : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                    }`}
+                    disabled={!hasUnsavedChanges}
                   >
-                    Salvar
+                    {hasUnsavedChanges ? 'Salvar Alterações' : 'Nenhuma Alteração'}
                   </button>
                 </div>
               </div>

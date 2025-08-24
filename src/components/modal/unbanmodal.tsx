@@ -13,6 +13,38 @@ interface UnbanModalProps {
 const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { user } = useAuth();
+
+  // Função para validação cross-check de Discord ID + Login
+  const validatePlayerCrossCheck = async (discordId: string, login: string) => {
+    if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
+      setFetchedPlayerName('');
+      setPlayerValidated(false);
+      setErrorMessage('');
+      return;
+    }
+
+    setIsValidatingPlayer(true);
+    try {
+      const result = await apiService.validatePlayerCrossCheck(discordId, login);
+      
+      if (result.isValid && result.player) {
+        setFetchedPlayerName(result.player.NickName || '');
+        setPlayerValidated(true);
+        setErrorMessage('');
+      } else {
+        setFetchedPlayerName('');
+        setPlayerValidated(false);
+        setErrorMessage(result.error || 'Erro na validação');
+      }
+    } catch (error) {
+      console.error('Erro ao validar jogador:', error);
+      setFetchedPlayerName('');
+      setPlayerValidated(false);
+      setErrorMessage('Erro de conexão');
+    } finally {
+      setIsValidatingPlayer(false);
+    }
+  };
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -20,6 +52,13 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
     unbanScope: 'P',
     clearMacBlock: 'N'
   });
+  
+  // Estados para validação
+  const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
+  const [playerValidated, setPlayerValidated] = useState(false);
+  
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
@@ -29,8 +68,48 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
         discordId: selectedPlayer.discordId || '',
         loginAccount: selectedPlayer.nexonId || ''
       }));
+      
+      // Limpar estados de validação quando modal abrir com selectedPlayer
+      setFetchedPlayerName('');
+      setErrorMessage('');
+      setPlayerValidated(false);
+      
+      // Se temos selectedPlayer, validar automaticamente
+      if (selectedPlayer.discordId && selectedPlayer.nexonId) {
+        validatePlayerCrossCheck(selectedPlayer.discordId, selectedPlayer.nexonId);
+      }
+    } else if (isOpen) {
+      // Limpar tudo quando modal abrir sem selectedPlayer
+      setFormData({ 
+        discordId: '', 
+        loginAccount: '', 
+        unbanReason: '', 
+        unbanScope: 'P', 
+        clearMacBlock: 'N' 
+      });
+      setFetchedPlayerName('');
+      setErrorMessage('');
+      setPlayerValidated(false);
     }
   }, [selectedPlayer, isOpen]);
+
+  // useEffect com debounce para validação automática quando campos são digitados
+  useEffect(() => {
+    if (formData.discordId && formData.discordId.trim() !== '' && 
+        formData.loginAccount && formData.loginAccount.trim() !== '') {
+      
+      const timeoutId = setTimeout(() => {
+        validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+      }, 500); // Debounce de 500ms
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Se um dos campos estiver vazio, limpar validação
+      setFetchedPlayerName('');
+      setPlayerValidated(false);
+      setErrorMessage('');
+    }
+  }, [formData.discordId, formData.loginAccount]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -38,38 +117,73 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
       ...prev,
       [name]: value
     }));
+    
+    // Limpar mensagem de erro quando usuário digitar
+    if (errorMessage) {
+      setErrorMessage('');
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar se o jogador foi validado antes de mostrar confirmação
+    if (!playerValidated || !fetchedPlayerName) {
+      setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
+      return;
+    }
+    
+    // Validar se ainda está validando
+    if (isValidatingPlayer) {
+      setErrorMessage('Aguarde a validação ser concluída antes de desbanir.');
+      return;
+    }
+    
     setShowConfirmation(true);
   };
 
-  const handleConfirmAction = async () => {
-    // Lógica original (API call para desbanir)
-    console.log('Data:', formData);
-
-    const adminName = user?.profile?.nickname || user?.username || 'Admin';
-
-    // Registra a atividade no banco de dados via API
+const handleConfirmAction = async () => {
+  
+  // Validação dupla: Re-validar jogador antes de executar ação
+  if (!playerValidated || !fetchedPlayerName) {
     try {
-      const dbLogData = {
-        adminDiscordId: user?.profile.discordId || 'system',
-        adminNickname: adminName,
-        targetDiscordId: formData.discordId,
-        targetNickname: selectedPlayer?.name || formData.loginAccount,
-        action: 'unban',
-        details: 'Desbaniu o jogador',
-        notes: formData.unbanReason,
-      };
-      await apiService.createLog(dbLogData);
+      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+      if (!validationResult.isValid) {
+        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+        setShowConfirmation(false);
+        return;
+      }
     } catch (error) {
-      console.error('Falha ao salvar log no banco de dados:', error);
+      console.error('Erro na validação dupla:', error);
+      setErrorMessage('Erro ao validar jogador. Tente novamente.');
+      setShowConfirmation(false);
+      return;
     }
+  }
 
-    setShowConfirmation(false);
-    onClose();
-  };
+  const adminName = user?.profile?.nickname || 'Admin';
+
+  // Registra a atividade no banco de dados via API
+  try {
+    const dbLogData = {
+      adminDiscordId: user?.profile?.discordId || 'system',
+      adminNickname: adminName,
+      targetDiscordId: formData.discordId,
+      targetNickname: fetchedPlayerName || formData.loginAccount,
+      action: 'unban_user',
+      old_value: 'banido',
+      new_value: 'desbanido',
+      details: `Desbaniu o jogador`,
+      notes: `${formData.unbanReason} | Desbanimento validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`,
+    };
+    await apiService.createLog(dbLogData);
+  } catch (error) {
+    console.error('Falha ao salvar log de desbanimento no banco de dados:', error);
+  }
+
+  setShowConfirmation(false);
+  onClose();
+};
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);
@@ -118,11 +232,29 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
             <input
               type="text"
               name="loginAccount"
+              placeholder="Digite o strNexonID da conta"
               value={formData.loginAccount}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
+            
+            {/* Feedback visual de validação */}
+            {isValidatingPlayer && (
+              <p className="mt-2 text-sm text-yellow-400">
+                Validando jogador...
+              </p>
+            )}
+            {fetchedPlayerName && playerValidated && (
+              <p className="mt-2 text-sm text-green-400">
+                ✓ Jogador validado: {fetchedPlayerName}
+              </p>
+            )}
+            {errorMessage && (
+              <p className="mt-2 text-sm text-red-400">
+                ✗ {errorMessage}
+              </p>
+            )}
           </div>
 
           {/* Motivo do Desbanimento */}
@@ -190,15 +322,15 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
           </div>
         </form>
       </div>
-      <ConfirmationModal
-        isOpen={showConfirmation}
-        onConfirm={handleConfirmAction}
-        onCancel={handleCancelConfirmation}
-        title="Confirmar Ação"
-        description={`Tem certeza que deseja desbanir o jogador: ${formData.loginAccount} com o ID Discord: ${formData.discordId}`}
-        confirmActionText="Sim, Desbanir"
-        cancelActionText="Cancelar"
-      />
+        <ConfirmationModal
+          isOpen={showConfirmation}
+          onConfirm={handleConfirmAction}
+          onCancel={handleCancelConfirmation}
+          title="Confirmar Ação"
+          description={`Tem certeza que deseja desbanir o jogador: ${fetchedPlayerName || formData.loginAccount} (Discord: ${formData.discordId})?`}
+          confirmActionText="Sim, Desbanir"
+          cancelActionText="Cancelar"
+        />
     </div>
   );
 };

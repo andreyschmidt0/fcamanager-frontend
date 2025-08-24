@@ -111,9 +111,9 @@ const RecentActivities: React.FC = () => {
     const getActionDetails = (action: string, log: any) => {
       switch (action) {
         case 'change_nickname':
-          return `Alterou nickname de`;
+          return `alterou nickname de "${log.old_value}" para "${log.new_value}"`;
         case 'change_email':
-          return `Alterou email de`;
+          return `alterou email de "${log.old_value}" para "${log.new_value}"`;
         case 'remove_clan':
           // old_value está no formato "ID|Nome"
           const clanInfo = log.old_value ? log.old_value.split('|') : ['', ''];
@@ -157,15 +157,17 @@ const RecentActivities: React.FC = () => {
           const itemMatch = log.new_value?.match(/^(\d+)x/);
           return itemMatch ? parseInt(itemMatch[1]) : undefined;
         case 'ban_user':
-          // Extrair período do banimento do details
-          const banDetails = log.details;
-          if (banDetails?.includes('permanente')) {
-            return 'Permanentemente';
-          } else if (banDetails?.includes('dias')) {
-            const dayMatch = banDetails.match(/(\d+)\s*dias?/i);
-            return dayMatch ? `${dayMatch[1]} dias` : undefined;
+          // Extrair duração do banimento do new_value
+          const banDuration = log.new_value;
+          if (banDuration === '999') {
+            return 'permanente';
+          } else if (banDuration && !isNaN(banDuration)) {
+            return `${banDuration} dias`;
           }
           return undefined;
+        case 'change_nickname':
+        case 'change_email':
+          return undefined; // Não precisam de amount pois já está na details
         default:
           return undefined;
       }
@@ -177,6 +179,9 @@ const RecentActivities: React.FC = () => {
         case 'remove_exp': return 'exp';
         case 'send_item': return 'item';
         case 'ban_user': return 'ban';
+        case 'change_nickname':
+        case 'change_email':
+          return undefined; // Não precisam de amountType
         default: return undefined;
       }
     };
@@ -368,7 +373,7 @@ const RecentActivities: React.FC = () => {
                           activity.amountType === 'exp' ? 'text-blue-400' :
                           'text-yellow-400'
                         }`}>
-                          ({activity.amount}{activity.amountType === 'ban' && activity.amount === 'Permanentemente' ? '' : activity.amountType === 'ban' ? '' : ` ${activity.amountType}`})
+                          ({activity.amount}{activity.amountType === 'ban' ? '' : ` ${activity.amountType}`})
                         </p>
                       )}
                       {activity.period && (

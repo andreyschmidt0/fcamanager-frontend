@@ -103,9 +103,6 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
-  console.log('Data:', formData);
-  console.log('selectedClan no momento da exclusão:', selectedClan);
-  console.log('fetchedClanName:', fetchedClanName);
   
   // Validar se o clã existe antes de prosseguir
   if (!selectedClan && (!fetchedClanName || fetchedClanName.trim() === '')) {
@@ -149,7 +146,6 @@ const handleConfirmAction = async () => {
       notes: `Clã removido via ID: ${formData.oidGuild}`
     };
 
-    console.log('Enviando dados do log:', dbLogData);
     await apiService.createLog(dbLogData);
   } catch (error) {
     console.error('Falha ao salvar log de remoção de clã no banco de dados:', error);

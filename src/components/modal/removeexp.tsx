@@ -139,7 +139,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
-  console.log('Data:', formData);
   
   // Garantir que temos uma validação dupla antes de prosseguir (como nos outros modais)
   if (!playerValidated) {
@@ -176,7 +175,6 @@ const handleConfirmAction = async () => {
       notes: `Remoção de EXP via strNexonID: ${formData.loginAccount}`
     };
 
-    console.log('Enviando dados do log:', dbLogData);
     await apiService.createLog(dbLogData);
   } catch (error) {
     console.error('Falha ao salvar log de remoção de EXP no banco de dados:', error);

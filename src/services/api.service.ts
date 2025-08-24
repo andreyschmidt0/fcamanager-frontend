@@ -284,17 +284,25 @@ class ApiService {
     }
   }
 
-  async getLogs(period?: string, gmNickname?: string, limit?: number): Promise<any[]> {
+  async getLogs(period?: string, gmNickname?: string, limit?: number, discordId?: string): Promise<any[]> {
     try {
       const params = new URLSearchParams();
       if (period) params.append('period', period);
       if (gmNickname) params.append('gmNickname', gmNickname);
       if (limit) params.append('limit', limit.toString());
+      if (discordId) params.append('discordId', discordId);
       
       const response = await api.get(`/logs?${params.toString()}`);
       return response.data.logs || [];
     } catch (error) {
       console.error('Erro ao buscar logs:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Detalhes do erro:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
       return [];
     }
   }

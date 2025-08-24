@@ -140,7 +140,6 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
-  console.log('Data:', formData);
   
   // Validação dupla: Re-validar jogador antes de executar ação
   if (!playerValidated || !fetchedPlayerName) {
@@ -171,13 +170,12 @@ const handleConfirmAction = async () => {
       targetDiscordId: formData.discordId,
       targetNickname: fetchedPlayerName || formData.loginAccount,
       action: 'send_item',
-      old_value: null,
+      old_value: 'N/A',
       new_value: itemDescription,
       details: `Enviou ${itemDescription}`,
       notes: formData.userMessage || `Envio de item validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
     };
 
-    console.log('Enviando dados do log:', dbLogData);
     await apiService.createLog(dbLogData);
   } catch (error) {
     console.error('Falha ao salvar log de envio de item no banco de dados:', error);

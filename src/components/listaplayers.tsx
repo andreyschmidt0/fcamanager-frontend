@@ -15,7 +15,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const { selectedPlayer, setSelectedPlayer } = usePlayer();
   const { selectedClan, setSelectedClan } = useClan();
   const [viewMode, setViewMode] = useState<'players' | 'clans'>('players');
-  const [searchType, setSearchType] = useState<'nickname' | 'discordId' | 'macaddress' | 'ipaddress'>('nickname');
+  const [searchType, setSearchType] = useState<'nickname' | 'discordId' | 'macaddress' | 'ipaddress' | 'oiduser'>('nickname');
   const [search, setSearch] = useState<string>('');
   const [players, setPlayers] = useState<Player[]>([]);
   const [clans, setClans] = useState<Clan[]>([]);
@@ -54,6 +54,8 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               return `macaddress=${encodeURIComponent(searchTerm)}`;
             case 'ipaddress':
               return `ipaddress=${encodeURIComponent(searchTerm)}`;
+            case 'oiduser':
+              return `oiduser=${encodeURIComponent(searchTerm)}`;
             default:
               return ''; // Retorna uma string vazia para casos não mapeados
             }
@@ -80,7 +82,7 @@ const response = await fetch(`http://localhost:3000/api/users/search?${getSearch
       }
       
       const mappedPlayers: Player[] = users.map((user: any) => ({
-        id: `${user.oidUser}`,
+        id: user.oidUser.toString(),
         name: user.NickName,
         ClanName: user.ClanName,
         discordId: user.strDiscordID || '0',
@@ -93,7 +95,6 @@ const response = await fetch(`http://localhost:3000/api/users/search?${getSearch
         createDate: user.CreateDate,
         userType: user.UserType
       }));
-      console.log(mappedPlayers)
 
       setPlayers(mappedPlayers);
       setHasSearched(true);
@@ -200,17 +201,7 @@ const response = await fetch(`http://localhost:3000/api/users/search?${getSearch
             {/* Search Type Toggle - Only show for players mode */}
             {viewMode === 'players' && (
               <div className="px-4 pb-6" style={{ flexShrink: 0 }}>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => setSearchType('nickname')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                      searchType === 'nickname' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
-                    }`}
-                  >
-                    NICKNAME
-                  </button>
+                <div className="flex gap-2 flex-wrap">
                   <button 
                     onClick={() => setSearchType('discordId')}
                     className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
@@ -240,6 +231,26 @@ const response = await fetch(`http://localhost:3000/api/users/search?${getSearch
                     }`}
                   >
                     IPADDRESS
+                  </button>
+                   <button 
+                    onClick={() => setSearchType('oiduser')}
+                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                      searchType === 'oiduser' 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                    }`}
+                  >
+                    OIDUSER
+                  </button>
+                  <button 
+                    onClick={() => setSearchType('nickname')}
+                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                      searchType === 'nickname' 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                    }`}
+                  >
+                    NICKNAME
                   </button>
                 </div>
               </div>
@@ -472,6 +483,21 @@ const response = await fetch(`http://localhost:3000/api/users/search?${getSearch
                     <Copy size={12} />
                   </button>
                   {copiedId === selectedPlayer.discordId && (
+                    <span className="text-green-400">Copied!</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">oidUser:</span>
+                  <span className="text-gray-300">{selectedPlayer.id}</span>
+                  <button
+                    onClick={() => copyToClipboard(selectedPlayer.id)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    title="Copy Discord ID"
+                  >
+                    <Copy size={12} />
+                  </button>
+                  {copiedId === selectedPlayer.id && (
                     <span className="text-green-400">Copied!</span>
                   )}
                 </div>

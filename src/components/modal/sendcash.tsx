@@ -149,7 +149,6 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
-  console.log('Data:', formData);
   
   // Validação dupla: Re-validar jogador antes de executar ação
   if (!playerValidated || !fetchedPlayerName) {
@@ -186,7 +185,6 @@ const handleConfirmAction = async () => {
       notes: `Envio de Cash validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
     };
 
-    console.log('Enviando dados do log:', dbLogData);
     await apiService.createLog(dbLogData);
   } catch (error) {
     console.error('Falha ao salvar log de envio de Cash no banco de dados:', error);
