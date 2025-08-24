@@ -56,10 +56,10 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               return `ipaddress=${encodeURIComponent(searchTerm)}`;
             default:
               return ''; // Retorna uma string vazia para casos não mapeados
-          }
-        };
+            }
+          };
 
-        const response = await fetch(`http://localhost:3000/api/users/search?${getSearchParam}`);
+const response = await fetch(`http://localhost:3000/api/users/search?${getSearchParam()}`);
       
       if (!response.ok) {
         if (response.status === 500) {

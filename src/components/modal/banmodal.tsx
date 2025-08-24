@@ -147,6 +147,8 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
+  console.log('Data:', formData);
+  
   // Validação dupla: Re-validar jogador antes de executar ação
   if (!playerValidated || !fetchedPlayerName) {
     try {
@@ -179,6 +181,7 @@ const handleConfirmAction = async () => {
       notes: `${formData.banReason} | Banimento validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`,
     };
     await apiService.createLog(dbLogData);
+    console.log('Log de banimento salvo com sucesso no banco de dados.');
   } catch (error) {
     console.error('Falha ao salvar log de banimento no banco de dados:', error);
   }
