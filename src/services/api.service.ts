@@ -13,6 +13,8 @@ export interface LogPayload {
   targetDiscordId: string;
   targetNickname: string;
   action: string;
+  old_value?: string;
+  new_value?: string;
   details: string;
   notes?: string;
 }

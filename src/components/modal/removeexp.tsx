@@ -18,53 +18,47 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const [isLoadingExp, setIsLoadingExp] = useState(false);
   const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [playerValidated, setPlayerValidated] = useState(false);
+  const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    exp:'',
-    oiduser:''
+    exp:''
   });
 
-  // Função para buscar jogador APENAS por strNexonID (login)
-  const fetchPlayerByLogin = async (login: string) => {
-    if (!login || login.trim() === '') {
+  // Função de validação cruzada (como nos outros modais funcionais)
+  const validatePlayerCrossCheck = async (discordId: string, login: string) => {
+    if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
       setFetchedPlayerName('');
       setCurrentExp(0);
+      setPlayerValidated(false);
+      setErrorMessage('');
       return;
     }
 
+    setIsValidatingPlayer(true);
     try {
-      // Usar a nova rota específica que busca APENAS por strNexonID
-      const response = await fetch(`http://localhost:3000/api/users/profile/login/${encodeURIComponent(login)}`);
+      const result = await apiService.validatePlayerCrossCheck(discordId, login);
       
-      if (response.ok) {
-        const playerProfile = await response.json();
-        if (playerProfile?.NickName) {
-          setFetchedPlayerName(playerProfile.NickName);
-          // Atualizar o EXP atual também
-          if (playerProfile.EXP) {
-            const exp = parseInt(playerProfile.EXP) || 0;
-            setCurrentExp(exp);
-          }
-          setErrorMessage(''); // Limpar erro se existir
-        } else {
-          setFetchedPlayerName('');
-          setCurrentExp(0);
-        }
-      } else if (response.status === 404) {
-        setFetchedPlayerName('');
-        setCurrentExp(0);
-        setErrorMessage('Jogador não encontrado com este strNexonID');
+      if (result.isValid && result.player) {
+        setFetchedPlayerName(result.player.NickName || '');
+        setCurrentExp(parseInt(result.player.EXP) || 0);
+        setPlayerValidated(true);
+        setErrorMessage('');
       } else {
         setFetchedPlayerName('');
         setCurrentExp(0);
-        setErrorMessage('Erro ao buscar jogador');
+        setPlayerValidated(false);
+        setErrorMessage(result.error || 'Erro na validação');
       }
     } catch (error) {
-      console.error('Erro ao buscar jogador por login:', error);
+      console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
       setCurrentExp(0);
+      setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
+    } finally {
+      setIsValidatingPlayer(false);
     }
   };
 
@@ -73,30 +67,46 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       setFormData(prev => ({
         ...prev,
         discordId: selectedPlayer.discordId || '',
-        loginAccount: selectedPlayer.nexonId || '' // Sempre usar nexonId (strNexonID)
+        loginAccount: selectedPlayer.nexonId || ''
       }));
       
-      // Buscar jogador por strNexonID quando o modal abrir
-      if (selectedPlayer.nexonId) {
-        fetchPlayerByLogin(selectedPlayer.nexonId);
+      // Limpar estados de validação quando modal abrir com selectedPlayer
+      setFetchedPlayerName('');
+      setErrorMessage('');
+      setPlayerValidated(false);
+      
+      // Se temos selectedPlayer, validar automaticamente
+      if (selectedPlayer.discordId && selectedPlayer.nexonId) {
+        validatePlayerCrossCheck(selectedPlayer.discordId, selectedPlayer.nexonId);
       }
-      setErrorMessage(''); // Limpar mensagem de erro
+    } else if (isOpen) {
+      // Limpar tudo quando modal abrir sem selectedPlayer
+      setFormData({ discordId: '', loginAccount: '', exp: '' });
+      setFetchedPlayerName('');
+      setErrorMessage('');
+      setPlayerValidated(false);
+      setCurrentExp(0);
     }
   }, [selectedPlayer, isOpen]);
 
-  // Buscar jogador quando o login é digitado diretamente
+  // useEffect com debounce para validação automática quando campos são digitados
   useEffect(() => {
-    if (formData.loginAccount && formData.loginAccount.trim() !== '') {
+    if (formData.discordId && formData.discordId.trim() !== '' && 
+        formData.loginAccount && formData.loginAccount.trim() !== '') {
+      
       const timeoutId = setTimeout(() => {
-        fetchPlayerByLogin(formData.loginAccount);
+        validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
       }, 500); // Debounce de 500ms
 
       return () => clearTimeout(timeoutId);
     } else {
+      // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
       setCurrentExp(0);
+      setPlayerValidated(false);
+      setErrorMessage('');
     }
-  }, [formData.loginAccount]);
+  }, [formData.discordId, formData.loginAccount]);
 
   // Calcular EXP resultante em tempo real
   const calculateResultingExp = () => {
@@ -119,9 +129,9 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar se temos um jogador válido antes de mostrar confirmação
-    if (!fetchedPlayerName || fetchedPlayerName.trim() === '') {
-      setErrorMessage('Por favor, insira um login de conta válido (strNexonID).');
+    // Validar se temos um jogador validado antes de mostrar confirmação
+    if (!playerValidated || !fetchedPlayerName || fetchedPlayerName.trim() === '') {
+      setErrorMessage('Por favor, preencha Discord ID e Login da conta e aguarde a validação.');
       return;
     }
     
@@ -131,17 +141,17 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
 const handleConfirmAction = async () => {
   console.log('Data:', formData);
   
-  // Validar se o jogador existe antes de prosseguir
-  if (!fetchedPlayerName || fetchedPlayerName.trim() === '') {
+  // Garantir que temos uma validação dupla antes de prosseguir (como nos outros modais)
+  if (!playerValidated) {
     try {
-      const playerProfile = await apiService.getPlayerProfile(formData.loginAccount);
-      if (!playerProfile || !playerProfile.NickName) {
-        setErrorMessage('Jogador não encontrado. Verifique o login (strNexonID) informado.');
+      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+      if (!validationResult.isValid) {
+        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
         setShowConfirmation(false);
         return;
       }
     } catch (error) {
-      console.error('Erro ao validar jogador:', error);
+      console.error('Erro na validação dupla:', error);
       setErrorMessage('Erro ao validar jogador. Tente novamente.');
       setShowConfirmation(false);
       return;
@@ -157,7 +167,7 @@ const handleConfirmAction = async () => {
     const dbLogData = {
       adminDiscordId: user?.profile?.discordId || 'system',
       adminNickname: adminName,
-      targetDiscordId: formData.oiduser,
+      targetDiscordId: formData.discordId || '',
       targetNickname: fetchedPlayerName || 'Jogador desconhecido',
       action: 'remove_exp',
       old_value: currentExp.toString(),
@@ -201,6 +211,21 @@ const handleConfirmAction = async () => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-white mb-2">
+              Discord ID
+            </label>
+            <input
+              type="text"
+              name="discordId"
+              value={formData.discordId}
+              onChange={handleInputChange}
+              placeholder="Digite o Discord ID do jogador"
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
               Login da Conta (strNexonID)
             </label>
             <input
@@ -212,9 +237,14 @@ const handleConfirmAction = async () => {
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
-            {fetchedPlayerName && (
+            {isValidatingPlayer && (
+              <p className="mt-2 text-sm text-blue-400">
+                Validando jogador...
+              </p>
+            )}
+            {playerValidated && fetchedPlayerName && (
               <p className="mt-2 text-sm text-green-400">
-                Jogador encontrado: {fetchedPlayerName}
+                ✓ Jogador validado: {fetchedPlayerName}
               </p>
             )}
             {errorMessage && (
