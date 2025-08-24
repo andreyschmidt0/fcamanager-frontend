@@ -13,6 +13,7 @@ import ChangeEmail from './modal/changeemail';
 import RemoveExp from './modal/removeexp';
 import RemoveClan from './modal/removeclan';
 import SendCash from './modal/sendcash';
+import TransferClan from './modal/transferclan';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -234,6 +235,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
           onClose={() => setIsModalOpen(false)}
         />
       )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Transferir Clã' && (
+        <TransferClan
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />  
+      )}
+
     </div>
   );
 };

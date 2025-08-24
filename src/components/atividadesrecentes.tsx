@@ -64,15 +64,29 @@ const RecentActivities: React.FC = () => {
     }
   }, [isMaster, loading]);
 
-  // Buscar logs quando período ou GM mudar
+  // Buscar logs quando período, GM mudar, ou quando isMaster/loading mudarem
   useEffect(() => {
     fetchLogs();
-  }, [selectedPeriod, selectedGM]);
+  }, [selectedPeriod, selectedGM, isMaster, loading]);
 
   const fetchLogs = async () => {
+    if (!isMaster || loading) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const logs = await apiService.getLogs(selectedPeriod, selectedGM || undefined, 50);
+      // Primeiro buscar o Discord ID do usuário logado
+      const profileResponse = await fetch(`http://localhost:3000/api/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
+      if (!profileResponse.ok) {
+        throw new Error('Erro ao obter perfil do administrador');
+      }
+      
+      const profileData = await profileResponse.json();
+      const currentUserDiscordId = profileData.strDiscordID;
+
+      const logs = await apiService.getLogs(selectedPeriod, selectedGM || undefined, 1000, currentUserDiscordId);
+
       setDatabaseLogs(logs);
     } catch (error) {
       console.error('Erro ao buscar logs:', error);

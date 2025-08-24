@@ -5,30 +5,26 @@ import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
 import apiService from '../../services/api.service';
 
-
-interface SendItemProps {
+interface TransferClanProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
+const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    productId: '',
-    quantity: '',
-    userMessage: '',
+    oiduserlider: '',
+    oidusernovolider: '',
   });
-
-  // Estados para validação
+  
+  // Novos estados para validação
   const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [playerValidated, setPlayerValidated] = useState(false);
-
-  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Função para validação cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
@@ -67,7 +63,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
       setFormData(prev => ({
         ...prev,
         discordId: selectedPlayer.discordId || '',
-        loginAccount: selectedPlayer.nexonId || ''
+        loginAccount: selectedPlayer.nexonId || '',
       }));
       
       // Limpar estados de validação quando modal abrir com selectedPlayer
@@ -81,7 +77,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
       }
     } else if (isOpen) {
       // Limpar tudo quando modal abrir sem selectedPlayer
-      setFormData({ discordId: '', loginAccount: '', productId: '', quantity: '', userMessage: '' });
+      setFormData({ discordId: '', loginAccount: '', oiduserlider: '', oidusernovolider: '' });
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
@@ -106,6 +102,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
     }
   }, [formData.discordId, formData.loginAccount]);
 
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -118,6 +115,8 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
       setErrorMessage('');
     }
   };
+
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,8 +156,6 @@ const handleConfirmAction = async () => {
   }
   
   const adminName = user?.profile?.nickname || user?.username || 'Admin';
-  const quantity = parseInt(formData.quantity);
-  const itemDescription = `${quantity}x ${formData.productId}`;
 
   try {
     // Registra a atividade no banco de dados via API
@@ -167,16 +164,16 @@ const handleConfirmAction = async () => {
       adminNickname: adminName,
       targetDiscordId: formData.discordId,
       targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'send_item',
-      old_value: 'N/A',
-      new_value: itemDescription,
-      details: `Enviou ${itemDescription}`,
-      notes: formData.userMessage || `Envio de item validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
+      action: 'transfer_clan',
+      old_value: formData.oiduserlider,
+      new_value: formData.oidusernovolider,
+      details: `5Transferiu o clã do jogador ${fetchedPlayerName} (Discord: ${formData.discordId}, Login: ${formData.loginAccount})`,
+      notes: `Clã transferido via Discord ID: ${formData.discordId} e Login: ${formData.loginAccount}`
     };
 
     await apiService.createLog(dbLogData);
   } catch (error) {
-    console.error('Falha ao salvar log de envio de item no banco de dados:', error);
+    console.error('Falha ao salvar log de envio de Cash no banco de dados:', error);
   }
 
   setShowConfirmation(false);
@@ -187,7 +184,6 @@ const handleConfirmAction = async () => {
     setShowConfirmation(false);
   };
 
-
   if (!isOpen) return null;
 
   return (
@@ -196,7 +192,7 @@ const handleConfirmAction = async () => {
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
           <h2 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            ENVIAR ITEM
+            ENVIAR CASH
           </h2>
           <button
             onClick={onClose}
@@ -257,47 +253,34 @@ const handleConfirmAction = async () => {
             )}
           </div>
 
-          {/* ID do Produto */}
+
+          {/* Quantidade de Cash */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              ID do Produto
+              OIDUSER do líder atual
             </label>
             <input
-              type="text"
-              name="productId"
-              value={formData.productId}
+              type="number"
+              name="oiduserlider"
+              placeholder='Digite o oidUser do líder atual'
+              value={formData.oiduserlider}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
           </div>
 
-          <div>
+            <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Quantidade
+              OIDUSER do novo líder
             </label>
             <input
-              type="text"
-              name="quantity"
-              placeholder='Ex: 1'
-              value={formData.quantity}
+              type="number"
+              name="oidusernovolider"
+              placeholder='Digite o oidUser do novo líder'
+              value={formData.oidusernovolider}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Mensagem Usuario
-            </label>
-            <textarea
-              name="userMessage"
-              value={formData.userMessage}
-              onChange={handleInputChange}
-              rows={3}
-              placeholder='Digite uma mensagem para o usuário'
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors resize-none"
               required
             />
           </div>
@@ -320,17 +303,17 @@ const handleConfirmAction = async () => {
           </div>
         </form>
       </div>
-        <ConfirmationModal
+    <ConfirmationModal
           isOpen={showConfirmation}
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
-          description={`Tem certeza que deseja enviar ${formData.quantity}x ${formData.productId} para o jogador: ${fetchedPlayerName || formData.loginAccount} (Discord: ${formData.discordId})?`}
-          confirmActionText="Sim, Enviar"
+          description={`Você tem certeza que deseja transferir o clã do jogador ${fetchedPlayerName} (Discord: ${formData.discordId}, Login: ${formData.loginAccount})?`}
+          confirmActionText="Sim, transferir"
           cancelActionText="Cancelar"
         />
     </div>
   );
 };
 
-export default SendItem;
+export default TransferClan;
