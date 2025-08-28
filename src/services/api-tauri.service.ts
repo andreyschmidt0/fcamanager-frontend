@@ -8,17 +8,6 @@ export interface PlayerProfileData {
   strNickname: string;
 }
 
-export interface LogPayload {
-  adminDiscordId: string;
-  adminNickname: string;
-  targetDiscordId: string;
-  targetNickname: string;
-  action: string;
-  old_value?: string;
-  new_value?: string;
-  details: string;
-  notes?: string;
-}
 
 // Configuração da API
 const API_BASE = import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api';
@@ -299,21 +288,6 @@ class ApiTauriService {
     }
   }
 
-  async createLog(logData: LogPayload): Promise<void> {
-    try {
-      const response = await fetch(`${API_BASE}/logs/create`, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(logData),
-        connectTimeout: 30000
-      });
-
-      await this.handleResponse<void>(response);
-    } catch (error) {
-      console.error('Erro ao registrar log:', error);
-      throw new Error('Falha ao registrar log no backend.');
-    }
-  }
 
   async getLogs(period?: string, gmNickname?: string, limit?: number, discordId?: string): Promise<any[]> {
     try {
@@ -514,6 +488,40 @@ class ApiTauriService {
     } catch (error) {
       console.error('Erro ao buscar informações do GM:', error);
       throw error;
+    }
+  }
+
+  // Change user password
+  async changePassword(data: {
+    targetNexonId: string;
+    newPassword: string;
+    adminDiscordId: string;
+    targetOidUser?: number;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/change-password`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao alterar senha'
+      };
     }
   }
 
