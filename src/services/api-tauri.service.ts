@@ -559,6 +559,40 @@ class ApiTauriService {
     }
   }
 
+  // Change user email
+  async changeEmail(data: {
+    targetNexonId: string;
+    newEmail: string;
+    adminDiscordId: string;
+    targetOidUser?: number;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/change-email`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao alterar email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao alterar email'
+      };
+    }
+  }
+
   // Refresh token
   async refreshToken(refreshToken: string): Promise<{success: boolean; accessToken?: string; refreshToken?: string; error?: string}> {
     try {

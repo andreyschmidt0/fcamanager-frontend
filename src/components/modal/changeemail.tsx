@@ -22,6 +22,7 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   
   // Estados para validação
   const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
+  const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [playerValidated, setPlayerValidated] = useState(false);
@@ -43,16 +44,19 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
       
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
+        setValidatedOidUser(result.player.oidUser || null);
         setPlayerValidated(true);
         setErrorMessage('');
       } else {
         setFetchedPlayerName('');
+        setValidatedOidUser(null);
         setPlayerValidated(false);
         setErrorMessage(result.error || 'Erro na validação');
       }
     } catch (error) {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
     } finally {
@@ -70,6 +74,7 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
       
       // Limpar estados de validação quando modal abrir com selectedPlayer
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setErrorMessage('');
       setPlayerValidated(false);
       
@@ -85,6 +90,7 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
         newemail: ''
       });
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setErrorMessage('');
       setPlayerValidated(false);
     }
@@ -103,6 +109,7 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
     } else {
       // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
     }
@@ -142,14 +149,17 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
 const handleConfirmAction = async () => {
   
   // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName) {
+  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid) {
+      if (!validationResult.isValid || !validationResult.player?.oidUser) {
         setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
         setShowConfirmation(false);
         return;
       }
+      // Atualizar dados validados
+      setValidatedOidUser(validationResult.player.oidUser);
+      setFetchedPlayerName(validationResult.player.NickName || '');
     } catch (error) {
       console.error('Erro na validação dupla:', error);
       setErrorMessage('Erro ao validar jogador. Tente novamente.');
@@ -157,44 +167,29 @@ const handleConfirmAction = async () => {
       return;
     }
   }
-  
-  const adminName = user?.profile?.nickname || user?.username || 'Admin';
-  
-  let oldEmail = 'Não encontrado';
 
   try {
-    // Buscar o perfil do jogador pelo nickname validado para obter o email antigo
-    if (fetchedPlayerName) {
-      const playerProfile = await apiService.getPlayerProfile(fetchedPlayerName);
-      if (playerProfile?.strEmail) {
-        oldEmail = playerProfile.strEmail;
-      }
+    // Chamar API para alterar email
+    const result = await apiService.changeEmail({
+      targetNexonId: formData.loginAccount,
+      newEmail: formData.newemail,
+      adminDiscordId: user?.profile?.discordId || 'system',
+      targetOidUser: validatedOidUser!
+    });
+
+    if (result.success) {
+      setErrorMessage('');
+      setShowConfirmation(false);
+      onClose();
+    } else {
+      setErrorMessage(result.error || 'Erro ao alterar email');
+      setShowConfirmation(false);
     }
   } catch (error) {
-    console.warn('Não foi possível buscar o perfil do jogador, usando email padrão');
+    console.error("Erro ao alterar email:", error);
+    setErrorMessage('Erro de conexão ao alterar email');
+    setShowConfirmation(false);
   }
-
-  try {
-    // Registra a atividade no banco de dados via API
-    const dbLogData = {
-      adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'change_email',
-      old_value: oldEmail,
-      new_value: formData.newemail || 'Valor não definido',
-      details: `Alterou o email de ${oldEmail} para ${formData.newemail}`,
-      notes: `Alteração validada - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
-    };
-
-    // Log agora é gerado automaticamente pelo sistema do jogo
-  } catch (error) {
-    console.error('Erro:', error);
-  }
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -259,7 +254,7 @@ const handleConfirmAction = async () => {
             )}
             {fetchedPlayerName && playerValidated && (
               <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName}
+                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
               </p>
             )}
             {errorMessage && (
