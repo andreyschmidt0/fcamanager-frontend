@@ -21,6 +21,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
   
   // Estados para validação
   const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
+  const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [playerValidated, setPlayerValidated] = useState(false);
@@ -42,16 +43,19 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
       
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
+        setValidatedOidUser(result.player.oidUser || null);
         setPlayerValidated(true);
         setErrorMessage('');
       } else {
         setFetchedPlayerName('');
+        setValidatedOidUser(null);
         setPlayerValidated(false);
         setErrorMessage(result.error || 'Erro na validação');
       }
     } catch (error) {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
     } finally {
@@ -69,6 +73,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
       
       // Limpar estados de validação quando modal abrir com selectedPlayer
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setErrorMessage('');
       setPlayerValidated(false);
       
@@ -84,6 +89,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
         new_value: ''
       });
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setErrorMessage('');
       setPlayerValidated(false);
     }
@@ -102,6 +108,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
     } else {
       // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
     }
@@ -141,14 +148,17 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
 const handleConfirmAction = async () => {
   
   // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName) {
+  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid) {
+      if (!validationResult.isValid || !validationResult.player?.oidUser) {
         setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
         setShowConfirmation(false);
         return;
       }
+      // Atualizar dados validados
+      setValidatedOidUser(validationResult.player.oidUser);
+      setFetchedPlayerName(validationResult.player.NickName || '');
     } catch (error) {
       console.error('Erro na validação dupla:', error);
       setErrorMessage('Erro ao validar jogador. Tente novamente.');
@@ -156,33 +166,29 @@ const handleConfirmAction = async () => {
       return;
     }
   }
-  
-  const adminName = user?.profile?.nickname || user?.username || 'Admin';
-  
-  // Usar o nome validado como nickname antigo
-  const oldNickName = fetchedPlayerName || selectedPlayer?.name || formData.loginAccount || 'Não encontrado';
 
   try {
-    // Registra a atividade no banco de dados via API
-    const dbLogData = {
+    // Chamar API para alterar nickname
+    const result = await apiService.changeNickname({
+      targetNexonId: formData.loginAccount,
+      newNickname: formData.new_value,
       adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'change_nickname',
-      old_value: oldNickName,
-      new_value: formData.new_value || 'Valor não definido',
-      details: `Alterou o nickname de ${oldNickName} para ${formData.new_value}`,
-      notes: `Alteração validada - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
-    };
+      targetOidUser: validatedOidUser!
+    });
 
-    // Log agora é gerado automaticamente pelo sistema do jogo
+    if (result.success) {
+      setErrorMessage('');
+      setShowConfirmation(false);
+      onClose();
+    } else {
+      setErrorMessage(result.error || 'Erro ao alterar nickname');
+      setShowConfirmation(false);
+    }
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("Erro ao alterar nickname:", error);
+    setErrorMessage('Erro de conexão ao alterar nickname');
+    setShowConfirmation(false);
   }
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -247,7 +253,7 @@ const handleConfirmAction = async () => {
             )}
             {fetchedPlayerName && playerValidated && (
               <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName}
+                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
               </p>
             )}
             {errorMessage && (
