@@ -175,9 +175,9 @@ const handleConfirmAction = async () => {
       notes: `Remoção de EXP via strNexonID: ${formData.loginAccount}`
     };
 
-    await apiService.createLog(dbLogData);
+    // Log agora é gerado automaticamente pelo sistema do jogo
   } catch (error) {
-    console.error('Falha ao salvar log de remoção de EXP no banco de dados:', error);
+    console.error("Erro:", error);
   }
 
   setShowConfirmation(false);

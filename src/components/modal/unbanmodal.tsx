@@ -163,23 +163,7 @@ const handleConfirmAction = async () => {
 
   const adminName = user?.profile?.nickname || 'Admin';
 
-  // Registra a atividade no banco de dados via API
-  try {
-    const dbLogData = {
-      adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'unban_user',
-      old_value: 'banido',
-      new_value: 'desbanido',
-      details: `Desbaniu o jogador`,
-      notes: `${formData.unbanReason} | Desbanimento validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`,
-    };
-    await apiService.createLog(dbLogData);
-  } catch (error) {
-    console.error('Falha ao salvar log de desbanimento no banco de dados:', error);
-  }
+  // Log agora é gerado automaticamente pelo sistema do jogo
 
   setShowConfirmation(false);
   onClose();

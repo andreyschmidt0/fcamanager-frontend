@@ -171,24 +171,7 @@ const handleConfirmAction = async () => {
   const cashAmount = parseInt(formData.cash);
   const newMoney = calculateResultingMoney();
 
-  try {
-    // Registra a atividade no banco de dados via API
-    const dbLogData = {
-      adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'send_cash',
-      old_value: currentMoney.toString(),
-      new_value: newMoney.toString(),
-      details: `Enviou ${cashAmount} Cash (${currentMoney} → ${newMoney})`,
-      notes: `Envio de Cash validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
-    };
-
-    await apiService.createLog(dbLogData);
-  } catch (error) {
-    console.error('Falha ao salvar log de envio de Cash no banco de dados:', error);
-  }
+  // Log agora é gerado automaticamente pelo sistema do jogo
 
   setShowConfirmation(false);
   onClose();

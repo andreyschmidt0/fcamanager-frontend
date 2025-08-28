@@ -174,9 +174,9 @@ const handleConfirmAction = async () => {
       notes: formData.userMessage || `Envio de item validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
     };
 
-    await apiService.createLog(dbLogData);
+    // Log agora é gerado automaticamente pelo sistema do jogo
   } catch (error) {
-    console.error('Falha ao salvar log de envio de item no banco de dados:', error);
+    console.error("Erro:", error);
   }
 
   setShowConfirmation(false);

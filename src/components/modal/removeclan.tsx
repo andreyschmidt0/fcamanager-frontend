@@ -136,9 +136,9 @@ const handleConfirmAction = async () => {
       notes: `Clã removido via ID: ${formData.oidGuild}`
     };
 
-    await apiService.createLog(dbLogData);
+    // Log agora é gerado automaticamente pelo sistema do jogo
   } catch (error) {
-    console.error('Falha ao salvar log de remoção de clã no banco de dados:', error);
+    console.error("Erro:", error);
   }
 
   setShowConfirmation(false);

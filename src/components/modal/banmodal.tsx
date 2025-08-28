@@ -168,23 +168,7 @@ const handleConfirmAction = async () => {
   const banPeriod = formData.banDuration === '999' ? 'permanente' : `${formData.banDuration} dias`;
   const adminName = user?.profile?.nickname || 'Admin';
 
-  // Registra a atividade no banco de dados via API
-  try {
-    const dbLogData = {
-      adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'ban_user',
-      old_value: 'desbanido',
-      new_value: formData.banDuration,
-      details: `Baniu o jogador`,
-      notes: `${formData.banReason} | Banimento validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`,
-    };
-    await apiService.createLog(dbLogData);
-  } catch (error) {
-    console.error('Falha ao salvar log de banimento no banco de dados:', error);
-  }
+  // Log agora é gerado automaticamente pelo sistema do jogo
 
   setShowConfirmation(false);
   onClose();

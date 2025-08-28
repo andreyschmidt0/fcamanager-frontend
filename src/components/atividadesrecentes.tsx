@@ -117,94 +117,69 @@ const RecentActivities: React.FC = () => {
 
   // Converter logs do banco para o formato do componente
   const convertLogToActivity = (log: any): ActivityLog => {
-    const getActionDetails = (action: string, log: any) => {
-      switch (action) {
-        case 'change_nickname':
-          return `alterou nickname de "${log.old_value}" para "${log.new_value}"`;
-        case 'change_email':
-          return `alterou email de "${log.old_value}" para "${log.new_value}"`;
-        case 'change_password':
-          return `alterou a senha do jogador`;
-        case 'remove_clan':
-          // old_value está no formato "ID|Nome"
-          const clanInfo = log.old_value ? log.old_value.split('|') : ['', ''];
-          const clanId = clanInfo[0] || '';
-          const clanName = clanInfo[1] || log.target_nickname || 'Clã desconhecido';
-          return `Removeu clã ${clanId} ${clanName}`;
-        case 'remove_exp':
-          const oldExp = parseInt(log.old_value) || 0;
-          const newExp = parseInt(log.new_value) || 0;
-          const removedExp = oldExp - newExp;
-          return `Removeu ${removedExp} de EXP de`;
-        case 'send_cash':
-          const oldCash = parseInt(log.old_value) || 0;
-          const newCash = parseInt(log.new_value) || 0;
-          const sentCash = newCash - oldCash;
-          return `Enviou ${sentCash} de Cash para`;
-        case 'send_item':
-          const itemInfo = log.new_value; // Ex: "5x 1001"
-          return `Enviou ${itemInfo} para`;
-        case 'ban_user':
-          return `Baniu`;
-        case 'unban_user':
-          return `Desbaniu`;
-        case 'transfer_discord':
-          return `Transferiu conta com oiduser: ${log.old_value} para Discord ID: ${log.new_value}`;
-        case 'transfer_clan':
-          return `Transferiu clã para ${log.target_nickname || 'Jogador'}`;
-        default:
-          return `Ação em`;
+    const getActionDetails = (log: any) => {
+      // Mapear baseado no ActionType e SourceProcedure do BST_AdminActionLog
+      const actionType = log.action;
+      const sourceProcedure = log.source_procedure;
+      
+      // Mapear tipos de ação baseado no SourceProcedure ou ActionType
+      if (actionType && actionType.includes('Banimento')) {
+        return `Baniu`;
+      } else if (actionType && actionType.includes('Desbloqueio')) {
+        return `Desbaniu`;
+      } else if (sourceProcedure && sourceProcedure.includes('DeleteClan')) {
+        return `Removeu clã`;
+      } else if (sourceProcedure && sourceProcedure.includes('Cash')) {
+        return `Alterou Cash`;
+      } else if (sourceProcedure && sourceProcedure.includes('Exp')) {
+        return `Alterou EXP`;
+      } else if (sourceProcedure && sourceProcedure.includes('Nick')) {
+        return `Alterou nickname`;
+      } else if (sourceProcedure && sourceProcedure.includes('Email')) {
+        return `Alterou email`;
+      } else if (sourceProcedure && sourceProcedure.includes('Password')) {
+        return `Alterou senha`;
+      } else if (sourceProcedure && sourceProcedure.includes('Item')) {
+        return `Enviou item`;
+      } else if (sourceProcedure && sourceProcedure.includes('Transfer')) {
+        return `Transferiu`;
+      } else {
+        return actionType || `Realizou ação`;
       }
     };
 
-    const getAmount = (action: string, log: any) => {
-      switch (action) {
-        case 'send_cash':
-          const oldCash = parseInt(log.old_value) || 0;
-          const newCash = parseInt(log.new_value) || 0;
-          return newCash - oldCash;
-        case 'remove_exp':
-          const oldExp = parseInt(log.old_value) || 0;
-          const newExp = parseInt(log.new_value) || 0;
-          return oldExp - newExp;
-        case 'send_item':
-          // Extrair quantidade do formato "5x 1001"
-          const itemMatch = log.new_value?.match(/^(\d+)x/);
-          return itemMatch ? parseInt(itemMatch[1]) : undefined;
-        case 'ban_user':
-          // Extrair duração do banimento do new_value
-          const banDuration = log.new_value;
-          if (banDuration === '999') {
-            return 'permanente';
-          } else if (banDuration && !isNaN(banDuration)) {
-            return `${banDuration} dias`;
-          }
-          return undefined;
-        case 'change_nickname':
-        case 'change_email':
-        case 'change_password':
-        case 'transfer_clan':
-        case 'transfer_discord':
-          return undefined; // Não precisam de amount pois já está na details
-        default:
-          return undefined;
+    const getAmount = (log: any) => {
+      const sourceProcedure = log.source_procedure;
+      const actionType = log.action;
+      
+      // Extrair valores baseado no tipo de ação
+      if (sourceProcedure && sourceProcedure.includes('Cash')) {
+        const oldCash = parseInt(log.old_value?.replace(/\D/g, '')) || 0;
+        const newCash = parseInt(log.new_value?.replace(/\D/g, '')) || 0;
+        return Math.abs(newCash - oldCash);
+      } else if (sourceProcedure && sourceProcedure.includes('Exp')) {
+        const oldExp = parseInt(log.old_value?.replace(/\D/g, '')) || 0;
+        const newExp = parseInt(log.new_value?.replace(/\D/g, '')) || 0;
+        return Math.abs(oldExp - newExp);
+      } else if (actionType && actionType.includes('Banimento') && log.notes) {
+        // Extrair duração do banimento das notas
+        const durationMatch = log.notes.match(/Duração:\s*(\d+)\s*dias/i);
+        if (durationMatch) {
+          return durationMatch[1] === '999' ? 'permanente' : `${durationMatch[1]} dias`;
+        }
       }
+      return undefined;
     };
 
-    const getAmountType = (action: string) => {
-      switch (action) {
-        case 'send_cash': return 'cash';
-        case 'remove_exp': return 'exp';
-        case 'send_item': return 'item';
-        case 'ban_user': return 'ban';
-        case 'change_nickname':
-        case 'change_email':
-        case 'change_password':
-        case 'transfer_clan':
-        case 'transfer_discord':
-          return undefined; // Não precisam de amountType
-        default: return undefined;
-      }
+    const getAmountType = (log: any) => {
+      const sourceProcedure = log.source_procedure;
+      const actionType = log.action;
+      
+      if (sourceProcedure && sourceProcedure.includes('Cash')) return 'cash';
+      if (sourceProcedure && sourceProcedure.includes('Exp')) return 'exp';
+      if (sourceProcedure && sourceProcedure.includes('Item')) return 'item';
+      if (actionType && actionType.includes('Banimento')) return 'ban';
+      return undefined;
     };
 
     const result = {
@@ -213,10 +188,10 @@ const RecentActivities: React.FC = () => {
       adminName: log.admin_nickname || 'Admin',
       action: 'Alterar' as const,
       target: log.target_nickname || 'Jogador',
-      details: getActionDetails(log.action, log),
+      details: getActionDetails(log),
       justification: log.notes || undefined,
-      amount: getAmount(log.action, log),
-      amountType: getAmountType(log.action) as 'cash' | 'exp' | 'item' | 'ban' | undefined
+      amount: getAmount(log),
+      amountType: getAmountType(log) as 'cash' | 'exp' | 'item' | 'ban' | undefined
     };
     
     return result;
