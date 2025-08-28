@@ -167,7 +167,7 @@ const handleConfirmAction = async () => {
       action: 'transfer_discord',
       old_value: formData.oiduserlider,
       new_value: formData.oidusernovolider,
-      details: `Transferiu a conta do jogador ${fetchedPlayerName} para o discord ID ${formData.discordId},)`,
+      details: `Transferiu a conta do jogador ${fetchedPlayerName} para o discord ID ${formData.oidusernovolider}`,
       notes: `Clã transferido via Discord ID: ${formData.discordId} e Login: ${formData.loginAccount}`
     };
 
@@ -192,7 +192,7 @@ const handleConfirmAction = async () => {
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
           <h2 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            ENVIAR CASH
+            TRANSFERIR DISCORD
           </h2>
           <button
             onClick={onClose}
@@ -296,7 +296,7 @@ const handleConfirmAction = async () => {
               type="submit"
               className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Enviar Item
+              Transferir Discord
             </button>
           </div>
         </form>
@@ -306,8 +306,8 @@ const handleConfirmAction = async () => {
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
-          description={`Você tem certeza que deseja transferir o clã do jogador ${fetchedPlayerName} (Discord: ${formData.discordId}, Login: ${formData.loginAccount})?`}
-          confirmActionText="Sim, transferir"
+          description={`Você tem certeza que deseja transferir o discord do jogador ${fetchedPlayerName} (Discord: ${formData.discordId}, Login: ${formData.loginAccount})?`}
+          confirmActionText="Sim, transferir discord"
           cancelActionText="Cancelar"
         />
     </div>
