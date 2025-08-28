@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ImageOff, Import } from 'lucide-react';
 import BanModal from './modal/banmodal';
 import UnbanModal from './modal/unbanmodal';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -15,6 +15,7 @@ import RemoveClan from './modal/removeclan';
 import SendCash from './modal/sendcash';
 import TransferClan from './modal/transferclan';
 import TransferDiscord from './modal/transferdiscord';
+import ChangePassword from './modal/changepassword';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -83,7 +84,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Exp'] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
-    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email'] }
+    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha'] }
   ];
   
   return (
@@ -244,6 +245,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Transferir Discord' && (
         <TransferDiscord
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />  
+      )}
+            {isModalOpen && selectedAction && selectedAction.option === 'Alterar Senha' && (
+        <ChangePassword
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />  
