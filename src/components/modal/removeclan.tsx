@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { useClan } from '../../contexts/ClanContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
-import apiService from '../../services/api.service';
+import apiService from '../../services/api-tauri.service';
 
 interface removeclanProps {
   isOpen: boolean;
@@ -44,17 +44,13 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/clans/${clanId}`);
-      if (response.ok) {
-        const clan = await response.json();
+      const clan = await apiService.getClanById(clanId);
+      if (clan) {
         setFetchedClanName(clan.strName || '');
         setErrorMessage(''); // Limpar erro se existir
-      } else if (response.status === 404) {
-        setFetchedClanName('');
-        setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
       } else {
         setFetchedClanName('');
-        setErrorMessage('Erro ao buscar clã');
+        setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
       }
     } catch (error) {
       console.error('Erro ao buscar nome do clã:', error);
@@ -107,13 +103,7 @@ const handleConfirmAction = async () => {
   // Validar se o clã existe antes de prosseguir
   if (!selectedClan && (!fetchedClanName || fetchedClanName.trim() === '')) {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/clans/${formData.oidGuild}`);
-      if (!response.ok) {
-        setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
-        setShowConfirmation(false);
-        return;
-      }
-      const clan = await response.json();
+      const clan = await apiService.getClanById(formData.oidGuild);
       if (!clan || !clan.strName) {
         setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
         setShowConfirmation(false);

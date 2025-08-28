@@ -4,12 +4,14 @@ import MainPage from './main/page';
 import './index.css';
 import LoadingSpinner from './components/loading/loading';
 import ConfirmModal from './components/modal/confirm/confirmmodal';
+import DebugModal from './components/debug/DebugModal';
 import { ActivityLogProvider } from './contexts/ActivityLogContext';
 import { useAuth } from './hooks/useAuth';
 import TokenManager from './utils/tokenManager';
 
 function App() {
   const [showLoading, setShowLoading] = useState(false);
+  const [showDebugModal, setShowDebugModal] = useState(false);
   const { user, isLoading, isAuthenticated } = useAuth();
   const tokenManager = TokenManager.getInstance();
 
@@ -25,14 +27,28 @@ function App() {
     };
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    // Keyboard shortcut for debug modal (Ctrl + D)
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 'd') {
+        event.preventDefault();
+        setShowDebugModal(prev => !prev);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const handleLoginSuccess = (user: any) => {
     setShowLoading(true);
     setTimeout(() => {
       setShowLoading(false);
       // Força a atualização do estado do usuário no localStorage
       window.dispatchEvent(new Event('user-updated'));
-      // Iniciar gerenciamento de tokens após login
-      tokenManager.startTokenRefresh();
+      // Token refresh será iniciado automaticamente pelo useEffect quando isAuthenticated mudar
     }, 1500); // 1.5 segundos de loading, ajuste conforme necessário
   };
 
@@ -59,6 +75,11 @@ function App() {
           fullScreen={true}
         />
       ) : null}
+
+      <DebugModal 
+        isOpen={showDebugModal} 
+        onClose={() => setShowDebugModal(false)} 
+      />
     </ActivityLogProvider>
   );
 }

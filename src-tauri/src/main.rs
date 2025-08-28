@@ -25,6 +25,7 @@ fn log_security_event(event: String, username: String, success: bool) -> Result<
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
             greet,
             get_app_version,

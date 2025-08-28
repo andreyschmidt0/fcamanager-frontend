@@ -5,6 +5,7 @@ import { usePlayer, Player } from '../contexts/PlayerContext';
 import { useClan, Clan } from '../contexts/ClanContext';
 import PlayerInfo from './modal/playerinfo/playerinfo';
 import PlayerProfile from './modal/playerprofile/PlayerProfile';
+import apiService from '../services/api-tauri.service';
 
 interface PlayersListProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -44,37 +45,10 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
     setLoading(true);
     try {
-        const getSearchParam = () => {
-          switch (searchType) {
-            case 'nickname':
-              return `nickname=${encodeURIComponent(searchTerm)}`;
-            case 'discordId':
-              return `discordId=${encodeURIComponent(searchTerm)}`;
-            case 'macaddress':
-              return `macaddress=${encodeURIComponent(searchTerm)}`;
-            case 'ipaddress':
-              return `ipaddress=${encodeURIComponent(searchTerm)}`;
-            case 'oiduser':
-              return `oiduser=${encodeURIComponent(searchTerm)}`;
-            default:
-              return ''; // Retorna uma string vazia para casos não mapeados
-            }
-          };
+      const searchParams: { [key: string]: string } = {};
+      searchParams[searchType] = searchTerm;
 
-const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/search?${getSearchParam()}`);
-      
-      if (!response.ok) {
-        if (response.status === 500) {
-          throw new Error('Erro no servidor - Verifique se o banco de dados está conectado');
-        } else if (response.status === 400) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Parâmetros inválidos');
-        } else {
-          throw new Error(`Erro ${response.status} - ${response.statusText}`);
-        }
-      }
-      
-      const users = await response.json();
+      const users = await apiService.searchUsers(searchParams);
       
       // Verificar se a resposta é um array válido
       if (!Array.isArray(users)) {
@@ -120,13 +94,7 @@ const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamana
 
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/clans/search?clanName=${encodeURIComponent(clanname)}`);
-      
-      if (!response.ok) {
-        throw new Error('Erro na requisição');
-      }
-      
-      const clans = await response.json();
+      const clans = await apiService.searchClans(clanname);
       
       const mappedClans: Clan[] = clans.map((clan: any) => ({
         strName: clan.strName,

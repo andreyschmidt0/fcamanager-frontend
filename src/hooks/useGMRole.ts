@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import apiService from '../services/api-tauri.service';
 
 export const useGMRole = () => {
   const { user } = useAuth();
@@ -16,14 +17,12 @@ export const useGMRole = () => {
 
       try {
         // Buscar informações do usuário no sistema GM
-        const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/profile/${encodeURIComponent(user.profile.nickname)}`);
-        if (!profileResponse.ok) {
+        const profileData = await apiService.getPlayerProfile(user.profile.nickname);
+        if (!profileData) {
           setIsMaster(false);
           setLoading(false);
           return;
         }
-        
-        const profileData = await profileResponse.json();
         const discordId = profileData.strDiscordID;
         
         if (!discordId) {
@@ -33,13 +32,8 @@ export const useGMRole = () => {
         }
 
         // Verificar o role no SQLite
-        const gmResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/gm-management/user/${encodeURIComponent(discordId)}`);
-        if (gmResponse.ok) {
-          const gmData = await gmResponse.json();
-          setIsMaster(gmData.success && gmData.gm?.role === 'MASTER');
-        } else {
-          setIsMaster(false);
-        }
+        const gmData = await apiService.getGMUser(discordId);
+        setIsMaster(gmData.success && gmData.gm?.role === 'MASTER');
       } catch (error) {
         console.error('Erro ao verificar role do GM:', error);
         setIsMaster(false);

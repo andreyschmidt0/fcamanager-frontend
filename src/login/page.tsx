@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import '../index.css';
 import '../fonts.css';
-import { getAuthService, isRunningInTauri } from '../services/tauri-auth';
+import AuthService from '../services/auth';
 
 interface LoginPageProps {
   onLoginSuccess?: (user: any) => void;
 }
 
 const MAX_RETRIES = 3;
+
+// Helper function to detect if running in Tauri
+const isRunningInTauri = () => typeof window !== 'undefined' && (window as any).__TAURI__ !== undefined;
 const RETRY_DELAY = 2000; // 2 seconds
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
@@ -23,8 +26,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setIsLoading(true);
 
     try {
-      // Usa o serviço de autenticação apropriado (Tauri ou web)
-      const authService = getAuthService();
+      // Usa o serviço de autenticação
+      const authService = AuthService.getInstance();
       const result = await authService.login({
         username: login,
         password: password

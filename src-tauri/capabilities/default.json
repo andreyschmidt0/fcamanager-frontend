@@ -1,0 +1,20 @@
+{
+  "$schema": "../gen/schemas/capabilities.json",
+  "identifier": "default",
+  "description": "Default capabilities for the FCA Manager application",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://fcamanager-backend.onrender.com/*"
+        },
+        {
+          "url": "http://localhost:*"
+        }
+      ]
+    }
+  ]
+}

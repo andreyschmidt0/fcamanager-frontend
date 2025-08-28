@@ -1,4 +1,4 @@
-import apiService from './api.service';
+import apiService from './api-tauri.service';
 
 export interface AuthResult {
     success: boolean;
@@ -135,7 +135,6 @@ class AuthService {
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('currentUser');
         localStorage.removeItem('tokenExpiryTime');
-        apiService.logout();
     }
 
     async login(credentials: LoginCredentials): Promise<AuthResult> {
@@ -168,15 +167,6 @@ class AuthService {
                 }
                 localStorage.setItem('currentUser', JSON.stringify(result.user));
                 localStorage.setItem('tokenExpiryTime', this.tokenExpiryTime.toString());
-                
-                // Configurar header de autorização
-                apiService.setAuthToken(result.accessToken);
-                
-                    ( {
-                    username: result.user.username,
-                    nickname: result.user.profile.nickname,
-                    role: result.user.role
-                });
             }
 
             return result;
@@ -232,9 +222,6 @@ class AuthService {
                     localStorage.setItem('refreshToken', result.refreshToken);
                 }
                 localStorage.setItem('tokenExpiryTime', this.tokenExpiryTime.toString());
-                
-                // Configurar header de autorização
-                apiService.setAuthToken(result.accessToken);
                 
                 return true;
             }

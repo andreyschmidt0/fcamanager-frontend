@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
-import apiService from '../../services/api.service';
+import apiService from '../../services/api-tauri.service';
 
 
 interface SendItemProps {

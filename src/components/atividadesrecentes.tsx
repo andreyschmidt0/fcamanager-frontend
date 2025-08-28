@@ -3,7 +3,7 @@ import { ChevronDown, RefreshCw } from 'lucide-react';
 import { useActivityLog, ActivityLog } from '../contexts/ActivityLogContext';
 import { useAuth } from '../hooks/useAuth';
 import { useGMRole } from '../hooks/useGMRole';
-import apiService from '../services/api.service';
+import apiService from '../services/api-tauri.service';
 
 
 interface GMUser {
@@ -77,12 +77,11 @@ const RecentActivities: React.FC = () => {
     setIsLoading(true);
     try {
       // Primeiro buscar o Discord ID do usuário logado
-      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
-      if (!profileResponse.ok) {
+      const profileData = await apiService.getPlayerProfile(user?.profile?.nickname || '');
+      if (!profileData) {
         throw new Error('Erro ao obter perfil do administrador');
       }
       
-      const profileData = await profileResponse.json();
       const currentUserDiscordId = profileData.strDiscordID;
 
       const logs = await apiService.getLogs(selectedPeriod, selectedGM || undefined, 1000, currentUserDiscordId);
@@ -99,21 +98,17 @@ const RecentActivities: React.FC = () => {
   const fetchGMUsers = async () => {
     try {
       // Primeiro buscar o Discord ID do usuário logado
-      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
-      if (!profileResponse.ok) {
+      const profileData = await apiService.getPlayerProfile(user?.profile?.nickname || '');
+      if (!profileData) {
         return;
       }
       
-      const profileData = await profileResponse.json();
       const discordId = profileData.strDiscordID;
       
       // Agora tentar buscar GMs usando o Discord ID
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/gms?discordId=${encodeURIComponent(discordId)}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.isAuthorized) {
-          setGMUsers(data.gms || data.gmUsers);
-        }
+      const data = await apiService.getGMList(discordId);
+      if (data && data.isAuthorized) {
+        setGMUsers(data.gms || data.gmUsers || []);
       }
     } catch (error) {
       console.error('Erro ao buscar GMs:', error);
@@ -151,6 +146,8 @@ const RecentActivities: React.FC = () => {
           return `Baniu`;
         case 'unban_user':
           return `Desbaniu`;
+        case 'transfer_clan':
+          return `Transferiu clã para ${log.target_nickname || 'Jogador'}`;
         default:
           return `Ação em`;
       }
@@ -181,6 +178,7 @@ const RecentActivities: React.FC = () => {
           return undefined;
         case 'change_nickname':
         case 'change_email':
+        case 'transfer_clan':
           return undefined; // Não precisam de amount pois já está na details
         default:
           return undefined;
@@ -195,6 +193,7 @@ const RecentActivities: React.FC = () => {
         case 'ban_user': return 'ban';
         case 'change_nickname':
         case 'change_email':
+        case 'transfer_clan':
           return undefined; // Não precisam de amountType
         default: return undefined;
       }

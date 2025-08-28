@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Shield, UserCheck, UserX, Eye, EyeOff, Settings, Search, Filter } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
+import apiService from '../../../services/api-tauri.service';
 
 interface GM {
   id: number;
@@ -63,17 +64,11 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
       return adminDiscordIdCache.current;
     }
     
-    const profileResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/profile/${encodeURIComponent(user?.profile?.nickname || '')}`);
-    if (!profileResponse.ok) {
-      // Verificar se a resposta é HTML (erro 429) ou JSON
-      const contentType = profileResponse.headers.get('content-type');
-      if (contentType && contentType.includes('text/html')) {
-        throw new Error('Muitas tentativas. Aguarde um momento e tente novamente.');
-      }
+    const profileData = await apiService.getPlayerProfile(user?.profile?.nickname || '');
+    if (!profileData) {
       throw new Error('Erro ao obter perfil do administrador');
     }
     
-    const profileData = await profileResponse.json();
     adminDiscordIdCache.current = profileData.strDiscordID;
     return profileData.strDiscordID;
   }, [user?.profile?.nickname]);
@@ -85,16 +80,13 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
       setCurrentUserDiscordId(discordId); // Armazenar o Discord ID do usuário logado
       
       // Usar a nova API de GM Management
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/gm-management/list`);
-      if (!response.ok) {
-        throw new Error('Erro ao buscar GMs');
-      }
+      const data: any = await apiService.getGMManagementList();
       
-      const data = await response.json();
-      if (data.success) {
+      if (data && data.success && Array.isArray(data.gms)) {
         setGms(data.gms);
       } else {
-        throw new Error('Erro na resposta da API');
+        console.error('Unexpected API response format:', data);
+        setGms([]);
       }
     } catch (error) {
       console.error('Erro ao buscar GMs:', error);
@@ -120,19 +112,11 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
     try {
       const adminDiscordId = await getAdminDiscordId();
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/gm-management/role?discordId=${encodeURIComponent(adminDiscordId)}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          targetDiscordId: gm.discord_id,
-          newRole: newRole,
-          notes: `Role alterada para ${roles[newRole].name}`
-        }),
+      const data = await apiService.updateGMRole(adminDiscordId, {
+        targetDiscordId: gm.discord_id,
+        newRole: newRole,
+        notes: `Role alterada para ${roles[newRole].name}`
       });
-
-      const data = await response.json();
       
       if (data.success) {
         // Atualizar GM localmente
@@ -158,19 +142,11 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
       const newStatus = !gm.is_active;
       const adminDiscordId = await getAdminDiscordId();
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/gm-management/status?discordId=${encodeURIComponent(adminDiscordId)}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          targetDiscordId: gm.discord_id,
-          isActive: newStatus,
-          notes: `GM ${newStatus ? 'ativado' : 'desativado'} manualmente`
-        }),
+      const data = await apiService.updateGMStatus(adminDiscordId, {
+        targetDiscordId: gm.discord_id,
+        isActive: newStatus,
+        notes: `GM ${newStatus ? 'ativado' : 'desativado'} manualmente`
       });
-
-      const data = await response.json();
       
       if (data.success) {
         // Atualizar GM localmente
@@ -195,27 +171,10 @@ const GMManagement: React.FC<GMManagementProps> = ({ isOpen, onClose }) => {
     try {
       const adminDiscordId = await getAdminDiscordId();
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/gm-management/notes?discordId=${encodeURIComponent(adminDiscordId)}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          targetDiscordId: gm.discord_id,
-          notes: notes
-        }),
+      const data = await apiService.updateGMNotes(adminDiscordId, {
+        targetDiscordId: gm.discord_id,
+        notes: notes
       });
-
-      // Verificar se a resposta é JSON válida
-      const contentType = response.headers.get('content-type');
-      if (!response.ok) {
-        if (contentType && contentType.includes('text/html')) {
-          throw new Error('Muitas tentativas. Aguarde um momento e tente novamente.');
-        }
-        throw new Error(`Erro HTTP: ${response.status}`);
-      }
-
-      const data = await response.json();
       
       if (data.success) {
         // Atualizar GM localmente

@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
-import apiService from '../../services/api.service';
+import apiService from '../../services/api-tauri.service';
 
 interface TransferClanProps {
   isOpen: boolean;
@@ -167,7 +167,7 @@ const handleConfirmAction = async () => {
       action: 'transfer_clan',
       old_value: formData.oiduserlider,
       new_value: formData.oidusernovolider,
-      details: `5Transferiu o clã do jogador ${fetchedPlayerName} (Discord: ${formData.discordId}, Login: ${formData.loginAccount})`,
+      details: `Transferiu o clã do jogador ${fetchedPlayerName} (Discord: ${formData.discordId}, Login: ${formData.loginAccount})`,
       notes: `Clã transferido via Discord ID: ${formData.discordId} e Login: ${formData.loginAccount}`
     };
 

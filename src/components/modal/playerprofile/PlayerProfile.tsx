@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import apiService from '../../../services/api-tauri.service';
 
 interface PlayerProfileData {
   strDiscordID: string;
@@ -128,13 +129,12 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://fcamanager-backend.onrender.com/api'}/users/profile/${encodeURIComponent(identifier)}`);
+      const data = await apiService.getPlayerProfile(identifier);
       
-      if (!response.ok) {
+      if (!data) {
         throw new Error('Jogador não encontrado');
       }
       
-      const data = await response.json();
       setPlayerData(data);
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
