@@ -253,8 +253,6 @@ const handleConfirmAction = async () => {
             )}
           </div>
 
-
-          {/* Quantidade de Cash */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
               OIDUSER do líder atual

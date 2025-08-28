@@ -146,6 +146,8 @@ const RecentActivities: React.FC = () => {
           return `Baniu`;
         case 'unban_user':
           return `Desbaniu`;
+        case 'tranfer_discord':
+          return `Transferiu conta para ${log.target_nickname || 'Jogador'}`;
         case 'transfer_clan':
           return `Transferiu clã para ${log.target_nickname || 'Jogador'}`;
         default:
@@ -179,6 +181,7 @@ const RecentActivities: React.FC = () => {
         case 'change_nickname':
         case 'change_email':
         case 'transfer_clan':
+        case 'transfer_discord':
           return undefined; // Não precisam de amount pois já está na details
         default:
           return undefined;
@@ -194,6 +197,7 @@ const RecentActivities: React.FC = () => {
         case 'change_nickname':
         case 'change_email':
         case 'transfer_clan':
+        case 'transfer_discord':
           return undefined; // Não precisam de amountType
         default: return undefined;
       }

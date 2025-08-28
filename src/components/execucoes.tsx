@@ -14,6 +14,7 @@ import RemoveExp from './modal/removeexp';
 import RemoveClan from './modal/removeclan';
 import SendCash from './modal/sendcash';
 import TransferClan from './modal/transferclan';
+import TransferDiscord from './modal/transferdiscord';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -237,6 +238,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Transferir Clã' && (
         <TransferClan
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />  
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Transferir Discord' && (
+        <TransferDiscord
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />  
