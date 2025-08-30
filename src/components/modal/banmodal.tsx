@@ -165,10 +165,29 @@ const handleConfirmAction = async () => {
     }
   }
 
-  const banPeriod = formData.banDuration === '999' ? 'permanente' : `${formData.banDuration} dias`;
-  const adminName = user?.profile?.nickname || 'Admin';
+  const banData = {
+    targetNexonId: formData.loginAccount,
+    reason: formData.banReason,
+    adminDiscordId: user?.profile?.discordId || '',
+    targetOidUser: undefined // Será preenchido pelo backend se necessário
+  };
 
-  // Log agora é gerado automaticamente pelo sistema do jogo
+  try {
+    const result = await apiService.banUser(banData);
+    
+    if (result.success) {
+      // Exibir mensagem de sucesso para o usuário
+      console.log('Sucesso:', result.message);
+      // Aqui você pode adicionar uma notificação de sucesso se desejar
+    } else {
+      // Exibir mensagem de erro
+      setErrorMessage(result.error || result.message || 'Erro desconhecido');
+    }
+    
+  } catch (error) {
+    console.error('Erro ao banir usuário:', error);
+    setErrorMessage('Erro de conexão ao tentar banir o usuário');
+  }
 
   setShowConfirmation(false);
   onClose();
@@ -176,6 +195,7 @@ const handleConfirmAction = async () => {
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);
+    
   };
 
   if (!isOpen) return null;

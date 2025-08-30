@@ -7,18 +7,14 @@ interface LoginPageProps {
   onLoginSuccess?: (user: any) => void;
 }
 
-const MAX_RETRIES = 3;
-
 // Helper function to detect if running in Tauri
 const isRunningInTauri = () => typeof window !== 'undefined' && (window as any).__TAURI__ !== undefined;
-const RETRY_DELAY = 2000; // 2 seconds
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +73,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </div>
             {/* Platform indicator */}
             <div className="text-xs text-gray-500 mb-2">
-              {isRunningInTauri() ? '🖥️ Desktop App' : '🌐 Web Version'}
+              🖥️ Desktop App
             </div>
           </div>
 
