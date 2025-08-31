@@ -16,7 +16,6 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    oiduserlider: '',
     oidusernovolider: '',
   });
   
@@ -26,12 +25,14 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [playerValidated, setPlayerValidated] = useState(false);
   const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
+  const [validatedClanName, setValidatedClanName] = useState<string>('');
 
   // Função para validação cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
     if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
       setFetchedPlayerName('');
       setValidatedOidUser(null);
+      setValidatedClanName('');
       setPlayerValidated(false);
       setErrorMessage('');
       return;
@@ -44,11 +45,13 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
         setValidatedOidUser(result.player.oidUser || null);
+        setValidatedClanName(result.player.ClanName || '');
         setPlayerValidated(true);
         setErrorMessage('');
       } else {
         setFetchedPlayerName('');
         setValidatedOidUser(null);
+        setValidatedClanName('');
         setPlayerValidated(false);
         setErrorMessage(result.error || 'Erro na validação');
       }
@@ -56,6 +59,7 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
       setValidatedOidUser(null);
+      setValidatedClanName('');
       setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
     } finally {
@@ -76,6 +80,7 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       setErrorMessage('');
       setPlayerValidated(false);
       setValidatedOidUser(null);
+      setValidatedClanName('');
       
       // Se temos selectedPlayer, validar automaticamente
       if (selectedPlayer.discordId && selectedPlayer.nexonId) {
@@ -83,16 +88,23 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       }
     } else if (isOpen) {
       // Limpar tudo quando modal abrir sem selectedPlayer
-      setFormData({ discordId: '', loginAccount: '', oiduserlider: '', oidusernovolider: '' });
+      setFormData({ discordId: '', loginAccount: '', oidusernovolider: '' });
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
       setValidatedOidUser(null);
+      setValidatedClanName('');
     }
   }, [selectedPlayer, isOpen]);
 
   // useEffect com debounce para validação automática quando campos são digitados
   useEffect(() => {
+    // Não executar debounce se temos selectedPlayer (para evitar validação dupla)
+    if (selectedPlayer && selectedPlayer.discordId && selectedPlayer.nexonId) {
+      console.log('[TRANSFERCLAN] ⏭️ Pulando debounce - selectedPlayer detectado');
+      return;
+    }
+
     if (formData.discordId && formData.discordId.trim() !== '' && 
         formData.loginAccount && formData.loginAccount.trim() !== '') {
       
@@ -105,10 +117,11 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
       setValidatedOidUser(null);
+      setValidatedClanName('');
       setPlayerValidated(false);
       setErrorMessage('');
     }
-  }, [formData.discordId, formData.loginAccount]);
+  }, [formData.discordId, formData.loginAccount, selectedPlayer]);
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -164,29 +177,28 @@ const handleConfirmAction = async () => {
     }
   }
   
-  const adminName = user?.profile?.nickname || user?.username || 'Admin';
-
   try {
-    // Registra a atividade no banco de dados via API
-    const dbLogData = {
-      adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'transfer_clan',
-      old_value: formData.oiduserlider,
-      new_value: formData.oidusernovolider,
-      details: `Transferiu o clã do jogador ${fetchedPlayerName} (Discord: ${formData.discordId}, Login: ${formData.loginAccount})`,
-      notes: `Clã transferido via Discord ID: ${formData.discordId} e Login: ${formData.loginAccount}`
-    };
+    // Chamar API para transferir liderança do clã
+    const result = await apiService.transferClanLeadership({
+      gmOidUser: user?.id || 0,
+      oldLeaderOidUser: validatedOidUser!, // Usar o oidUser validado automaticamente
+      newLeaderOidUser: parseInt(formData.oidusernovolider),
+      adminDiscordId: user?.profile?.discordId || 'system'
+    });
 
-    // Log agora é gerado automaticamente pelo sistema do jogo
+    if (result.success) {
+      setErrorMessage('');
+      setShowConfirmation(false);
+      onClose();
+    } else {
+      setErrorMessage(result.error || 'Erro ao transferir liderança do clã');
+      setShowConfirmation(false);
+    }
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("Erro ao transferir liderança:", error);
+    setErrorMessage('Erro de conexão ao transferir liderança do clã');
+    setShowConfirmation(false);
   }
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -252,7 +264,7 @@ const handleConfirmAction = async () => {
             )}
             {fetchedPlayerName && playerValidated && (
               <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
+                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser} | clanName: {validatedClanName || 'N/A'}
               </p>
             )}
             {errorMessage && (
@@ -262,22 +274,22 @@ const handleConfirmAction = async () => {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              OIDUSER do líder atual
-            </label>
-            <input
-              type="number"
-              name="oiduserlider"
-              placeholder='Digite o oidUser do líder atual'
-              value={formData.oiduserlider}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-          </div>
-
+          {/* Mostrar oidUser do líder atual validado automaticamente */}
+          {fetchedPlayerName && playerValidated && validatedOidUser && (
             <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                OIDUSER do líder atual (preenchido automaticamente)
+              </label>
+              <input
+                type="text"
+                value={validatedOidUser}
+                disabled
+                className="w-full px-3 py-2 bg-[#2a2b32] text-gray-400 rounded-lg cursor-not-allowed"
+              />
+            </div>
+          )}
+
+          <div>
             <label className="block text-sm font-medium text-white mb-2">
               OIDUSER do novo líder
             </label>

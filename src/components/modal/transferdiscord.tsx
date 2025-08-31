@@ -16,8 +16,7 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    oiduserlider: '',
-    oidusernovolider: '',
+    newDiscordID: '',
   });
   
   // Novos estados para validação
@@ -83,7 +82,7 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
       }
     } else if (isOpen) {
       // Limpar tudo quando modal abrir sem selectedPlayer
-      setFormData({ discordId: '', loginAccount: '', oiduserlider: '', oidusernovolider: '' });
+      setFormData({ discordId: '', loginAccount: '', newDiscordID: '' });
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
@@ -164,25 +163,30 @@ const handleConfirmAction = async () => {
     }
   }
   
-  const adminName = user?.profile?.nickname || user?.username || 'Admin';
+  const gmOidUser = user?.id || 2;
+
+  const changeDiscordData = {
+    gmOidUser: gmOidUser, // oidUser do GM executando a ação
+    targetOidUser: validatedOidUser!, // oidUser do usuário que terá o Discord alterado
+    newDiscordID: formData.newDiscordID, // Discord ID novo
+    adminDiscordId: user?.profile?.discordId || 'system'
+  };
 
   try {
-    // Registra a atividade no banco de dados via API
-    const dbLogData = {
-      adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'transfer_discord',
-      old_value: formData.oiduserlider,
-      new_value: formData.oidusernovolider,
-      details: `Transferiu a conta do jogador ${fetchedPlayerName} para o discord ID ${formData.oidusernovolider}`,
-      notes: `Clã transferido via Discord ID: ${formData.discordId} e Login: ${formData.loginAccount}`
-    };
-
-    // Log agora é gerado automaticamente pelo sistema do jogo
+    const result = await apiService.changeUserDiscordId(changeDiscordData);
+    
+    if (result.success) {
+      // Exibir mensagem de sucesso para o usuário
+      console.log('Sucesso:', result.message);
+      // Aqui você pode adicionar uma notificação de sucesso se desejar
+    } else {
+      // Exibir mensagem de erro
+      setErrorMessage(result.error || result.message || 'Erro desconhecido');
+    }
+    
   } catch (error) {
-    console.error("Erro:", error);
+    console.error('Erro ao alterar Discord ID:', error);
+    setErrorMessage('Erro de conexão ao tentar alterar o Discord ID');
   }
 
   setShowConfirmation(false);
@@ -201,7 +205,7 @@ const handleConfirmAction = async () => {
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
           <h2 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            TRANSFERIR DISCORD
+            ALTERAR DISCORD ID
           </h2>
           <button
             onClick={onClose}
@@ -262,30 +266,30 @@ const handleConfirmAction = async () => {
             )}
           </div>
 
+          {/* Mostrar oidUser do alvo validado */}
+          {fetchedPlayerName && playerValidated && validatedOidUser && (
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                OID User do jogador alvo (validado automaticamente)
+              </label>
+              <input
+                type="text"
+                value={validatedOidUser}
+                disabled
+                className="w-full px-3 py-2 bg-[#2a2b32] text-gray-400 rounded-lg cursor-not-allowed"
+              />
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              OIDUSER do líder atual
+              Novo Discord ID
             </label>
             <input
-              type="number"
-              name="oiduserlider"
-              placeholder='Digite o oidUser do líder atual'
-              value={formData.oiduserlider}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-          </div>
-
-            <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Discord Novo
-            </label>
-            <input
-              type="number"
-              name="oidusernovolider"
-              placeholder='Digite o novo discord ID'
-              value={formData.oidusernovolider}
+              type="text"
+              name="newDiscordID"
+              placeholder='Digite o novo Discord ID (ex: 134123421342131)'
+              value={formData.newDiscordID}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
@@ -305,7 +309,7 @@ const handleConfirmAction = async () => {
               type="submit"
               className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Transferir Discord
+              Alterar Discord ID
             </button>
           </div>
         </form>
@@ -315,8 +319,8 @@ const handleConfirmAction = async () => {
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
           title="Confirmar Ação"
-          description={`Você tem certeza que deseja transferir o discord do jogador ${fetchedPlayerName} (Discord: ${formData.discordId}, Login: ${formData.loginAccount})?`}
-          confirmActionText="Sim, transferir discord"
+          description={`Você tem certeza que deseja alterar o Discord ID do jogador ${fetchedPlayerName} (Discord atual: ${formData.discordId}, Login: ${formData.loginAccount}) para o novo Discord ID: ${formData.newDiscordID}?`}
+          confirmActionText="Sim, alterar Discord ID"
           cancelActionText="Cancelar"
         />
     </div>

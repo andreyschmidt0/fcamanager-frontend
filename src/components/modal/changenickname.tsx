@@ -37,6 +37,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
       return;
     }
 
+    console.log('[CHANGENICKNAME] 🔄 Iniciando validação:', { discordId, login });
     setIsValidatingPlayer(true);
     try {
       const result = await apiService.validatePlayerCrossCheck(discordId, login);
@@ -59,6 +60,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
       setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
     } finally {
+      console.log('[CHANGENICKNAME] ✅ Finalizando validação');
       setIsValidatingPlayer(false);
     }
   };
@@ -79,6 +81,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
       
       // Se temos selectedPlayer, validar automaticamente
       if (selectedPlayer.discordId && selectedPlayer.nexonId) {
+        console.log('[CHANGENICKNAME] 🚀 Validação automática com selectedPlayer:', selectedPlayer);
         validatePlayerCrossCheck(selectedPlayer.discordId, selectedPlayer.nexonId);
       }
     } else if (isOpen) {
@@ -97,10 +100,17 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
 
   // useEffect com debounce para validação automática quando campos são digitados
   useEffect(() => {
+    // Não executar debounce se temos selectedPlayer (para evitar validação dupla)
+    if (selectedPlayer && selectedPlayer.discordId && selectedPlayer.nexonId) {
+      console.log('[CHANGENICKNAME] ⏭️ Pulando debounce - selectedPlayer detectado');
+      return;
+    }
+
     if (formData.discordId && formData.discordId.trim() !== '' && 
         formData.loginAccount && formData.loginAccount.trim() !== '') {
       
       const timeoutId = setTimeout(() => {
+        console.log('[CHANGENICKNAME] ⏱️ Validação por debounce:', { discordId: formData.discordId, loginAccount: formData.loginAccount });
         validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
       }, 500); // Debounce de 500ms
 
@@ -112,7 +122,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
       setPlayerValidated(false);
       setErrorMessage('');
     }
-  }, [formData.discordId, formData.loginAccount]);
+  }, [formData.discordId, formData.loginAccount, selectedPlayer]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -149,6 +159,7 @@ const handleConfirmAction = async () => {
   
   // Validação dupla: Re-validar jogador antes de executar ação
   if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
+    console.log('[CHANGENICKNAME] 🔒 Validação dupla no handleConfirmAction');
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
       if (!validationResult.isValid || !validationResult.player?.oidUser) {

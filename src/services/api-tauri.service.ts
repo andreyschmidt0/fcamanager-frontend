@@ -759,6 +759,40 @@ class ApiTauriService {
     }
   }
 
+  // Transferir liderança de clã usando BSP_AdminTransferClanLeadership
+  async transferClanLeadership(data: {
+    gmOidUser: number;
+    oldLeaderOidUser: number;
+    newLeaderOidUser: number;
+    adminDiscordId: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/transfer-clan-leadership`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao transferir liderança do clã:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro inesperado na transferência'
+      };
+    }
+  }
+
   // Definir rank de usuário usando BSP_SetUserRankByLevel
   async setUserRank(data: {
     discordId: string;
@@ -790,6 +824,40 @@ class ApiTauriService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro ao definir rank'
+      };
+    }
+  }
+
+  // Change user Discord ID using BSP_ChangeUserDiscordID
+  async changeUserDiscordId(data: {
+    gmOidUser: number;
+    targetOidUser: number;
+    newDiscordID: string;
+    adminDiscordId: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/change-discord-id`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao alterar Discord ID:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao alterar Discord ID'
       };
     }
   }
