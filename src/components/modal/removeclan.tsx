@@ -14,7 +14,8 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
   const { selectedClan } = useClan();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    oidGuild: ''
+    oidGuild: '',
+    reason: ''
   });
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [fetchedClanName, setFetchedClanName] = useState<string>('');
@@ -94,6 +95,12 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
       setErrorMessage('Por favor, insira um ID de clã válido.');
       return;
     }
+
+    // Validar se a razão foi preenchida
+    if (!formData.reason || formData.reason.trim() === '') {
+      setErrorMessage('Por favor, informe a razão da exclusão do clã.');
+      return;
+    }
     
     setShowConfirmation(true);
   };
@@ -117,32 +124,27 @@ const handleConfirmAction = async () => {
     }
   }
 
-  const adminName = user?.profile?.nickname || user?.username || 'Admin';
-  
-  // Usar selectedClan primeiro, depois fetchedClanName, e por último fallback
-  const clanName = selectedClan?.strName || fetchedClanName || 'Clã desconhecido';
-
   try {
-    // Registra a atividade no banco de dados via API
-    const dbLogData = {
-      adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: selectedClan?.oidGuild?.toString() || formData.oidGuild,
-      targetNickname: clanName,
-      action: 'remove_clan',
-      old_value: `${formData.oidGuild}|${clanName}`, // ID|Nome do clã
-      new_value: 'Excluído',
-      details: `Removeu o clã ${clanName}`,
-      notes: `Clã removido via ID: ${formData.oidGuild}`
-    };
+    // Chamar API para deletar clã
+    const result = await apiService.deleteClan({
+      oidGuild: parseInt(formData.oidGuild),
+      reason: formData.reason,
+      adminDiscordId: user?.profile?.discordId || 'system'
+    });
 
-    // Log agora é gerado automaticamente pelo sistema do jogo
+    if (result.success) {
+      setErrorMessage('');
+      setShowConfirmation(false);
+      onClose();
+    } else {
+      setErrorMessage(result.error || 'Erro ao deletar clã');
+      setShowConfirmation(false);
+    }
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("Erro ao deletar clã:", error);
+    setErrorMessage('Erro de conexão ao deletar clã');
+    setShowConfirmation(false);
   }
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -186,11 +188,21 @@ const handleConfirmAction = async () => {
                 Clã encontrado: {fetchedClanName}
               </p>
             )}
-            {errorMessage && (
-              <p className="mt-2 text-sm text-red-400">
-                {errorMessage}
-              </p>
-            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Razão da Exclusão
+            </label>
+            <textarea
+              name="reason"
+              value={formData.reason}
+              onChange={handleInputChange}
+              rows={3}
+              placeholder="Ex: Clã inativo por mais de 90 dias."
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-red-500 focus:outline-none transition-colors resize-none"
+              required
+            />
           </div>
 
           {/* Buttons */}
@@ -217,9 +229,13 @@ const handleConfirmAction = async () => {
         isOpen={showConfirmation}
         onConfirm={handleConfirmAction}
         onCancel={handleCancelConfirmation}
-        title="Confirmar Ação"
-        description={`Tem certeza que deseja remover o clã com ID: ${formData.oidGuild}?`}
-        confirmActionText="Sim, Remover"
+        title="Confirmar Exclusão de Clã"
+        description={`ATENÇÃO: Tem absoluta certeza que deseja DELETAR PERMANENTEMENTE o clã "${fetchedClanName || selectedClan?.strName || 'ID: ' + formData.oidGuild}"?
+
+Razão: "${formData.reason}"
+
+Esta ação é IRREVERSÍVEL e o clã será excluído definitivamente.`}
+        confirmActionText="Sim, Deletar Permanentemente"
         cancelActionText="Cancelar"
       />
     </div>

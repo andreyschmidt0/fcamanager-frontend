@@ -20,10 +20,12 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [playerValidated, setPlayerValidated] = useState(false);
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
+  const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    exp:''
+    targetGradeLevel: '',
+    reason: ''
   });
 
   // Função de validação cruzada (como nos outros modais funcionais)
@@ -31,6 +33,7 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
     if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
       setFetchedPlayerName('');
       setCurrentExp(0);
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
       return;
@@ -43,11 +46,13 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
         setCurrentExp(parseInt(result.player.EXP) || 0);
+        setValidatedOidUser(result.player.oidUser || null);
         setPlayerValidated(true);
         setErrorMessage('');
       } else {
         setFetchedPlayerName('');
         setCurrentExp(0);
+        setValidatedOidUser(null);
         setPlayerValidated(false);
         setErrorMessage(result.error || 'Erro na validação');
       }
@@ -55,6 +60,7 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
       setCurrentExp(0);
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
     } finally {
@@ -74,6 +80,7 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
+      setValidatedOidUser(null);
       
       // Se temos selectedPlayer, validar automaticamente
       if (selectedPlayer.discordId && selectedPlayer.nexonId) {
@@ -81,10 +88,11 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       }
     } else if (isOpen) {
       // Limpar tudo quando modal abrir sem selectedPlayer
-      setFormData({ discordId: '', loginAccount: '', exp: '' });
+      setFormData({ discordId: '', loginAccount: '', targetGradeLevel: '', reason: '' });
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
+      setValidatedOidUser(null);
       setCurrentExp(0);
     }
   }, [selectedPlayer, isOpen]);
@@ -103,16 +111,12 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
       setCurrentExp(0);
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
     }
   }, [formData.discordId, formData.loginAccount]);
 
-  // Calcular EXP resultante em tempo real
-  const calculateResultingExp = () => {
-    const expToRemove = parseInt(formData.exp) || 0;
-    return Math.max(0, currentExp - expToRemove);
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -130,8 +134,20 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     
     // Validar se temos um jogador validado antes de mostrar confirmação
-    if (!playerValidated || !fetchedPlayerName || fetchedPlayerName.trim() === '') {
+    if (!playerValidated || !fetchedPlayerName || fetchedPlayerName.trim() === '' || !validatedOidUser) {
       setErrorMessage('Por favor, preencha Discord ID e Login da conta e aguarde a validação.');
+      return;
+    }
+    
+    // Validar se a razão foi preenchida
+    if (!formData.reason || formData.reason.trim() === '') {
+      setErrorMessage('Por favor, informe a razão do downgrade.');
+      return;
+    }
+    
+    // Validar se o targetGradeLevel foi preenchido
+    if (!formData.targetGradeLevel || formData.targetGradeLevel.trim() === '') {
+      setErrorMessage('Por favor, informe o nível de patente.');
       return;
     }
     
@@ -141,14 +157,15 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
 const handleConfirmAction = async () => {
   
   // Garantir que temos uma validação dupla antes de prosseguir (como nos outros modais)
-  if (!playerValidated) {
+  if (!playerValidated || !validatedOidUser) {
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid) {
+      if (!validationResult.isValid || !validationResult.player?.oidUser) {
         setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
         setShowConfirmation(false);
         return;
       }
+      setValidatedOidUser(validationResult.player.oidUser);
     } catch (error) {
       console.error('Erro na validação dupla:', error);
       setErrorMessage('Erro ao validar jogador. Tente novamente.');
@@ -156,32 +173,31 @@ const handleConfirmAction = async () => {
       return;
     }
   }
-  
-  const adminName = user?.profile?.nickname || user?.username || 'Admin';
-  const expAmount = parseInt(formData.exp);
-  const newExp = calculateResultingExp();
 
   try {
-    // Registra a atividade no banco de dados via API
-    const dbLogData = {
+    // Chamar API para aplicar downgrade de rank
+    const result = await apiService.setUserRank({
+      discordId: formData.discordId,
+      loginAccount: formData.loginAccount,
+      targetGradeLevel: parseInt(formData.targetGradeLevel),
+      reason: formData.reason,
       adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId || '',
-      targetNickname: fetchedPlayerName || 'Jogador desconhecido',
-      action: 'remove_exp',
-      old_value: currentExp.toString(),
-      new_value: newExp.toString(),
-      details: `Removeu ${expAmount} EXP (${currentExp} → ${newExp})`,
-      notes: `Remoção de EXP via strNexonID: ${formData.loginAccount}`
-    };
+      targetOidUser: validatedOidUser!
+    });
 
-    // Log agora é gerado automaticamente pelo sistema do jogo
+    if (result.success) {
+      setErrorMessage('');
+      setShowConfirmation(false);
+      onClose();
+    } else {
+      setErrorMessage(result.error || 'Erro ao aplicar downgrade');
+      setShowConfirmation(false);
+    }
   } catch (error) {
-    console.error("Erro:", error);
+    console.error('Erro ao aplicar downgrade:', error);
+    setErrorMessage('Erro de conexão ao aplicar downgrade');
+    setShowConfirmation(false);
   }
-
-  setShowConfirmation(false);
-  onClose();
 };
   
     const handleCancelConfirmation = () => {
@@ -242,7 +258,7 @@ const handleConfirmAction = async () => {
             )}
             {playerValidated && fetchedPlayerName && (
               <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName}
+                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
               </p>
             )}
             {errorMessage && (
@@ -254,40 +270,34 @@ const handleConfirmAction = async () => {
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Quantidade de EXP
+              Nível de Patente (Grade Level)
             </label>
             <input
-              type="text"
-              name="exp"
-              value={formData.exp}
+              type="number"
+              name="targetGradeLevel"
+              value={formData.targetGradeLevel}
               onChange={handleInputChange}
+              placeholder="Ex: 30 (para patente correspondente)"
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
+              min="1"
+              max="100"
             />
           </div>
 
-          {/* Informações de EXP */}
-          <div className="bg-[#1a1b1f] rounded-lg p-4 border border-gray-600">
-            <h3 className="text-sm font-medium text-white mb-3">Informações de EXP</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">EXP Atual</label>
-                <div className="text-lg font-semibold text-blue-400">
-                  {isLoadingExp ? 'Carregando...' : currentExp.toLocaleString()}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">EXP Calculado</label>
-                <div className="text-lg font-semibold text-green-400">
-                  {calculateResultingExp().toLocaleString()}
-                </div>
-              </div>
-            </div>
-            {formData.exp && parseInt(formData.exp) > currentExp && (
-              <div className="mt-2 text-xs text-red-400">
-                ⚠️ A quantidade a ser removida é maior que o EXP atual
-              </div>
-            )}
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Razão do Downgrade
+            </label>
+            <textarea
+              name="reason"
+              value={formData.reason}
+              onChange={handleInputChange}
+              rows={3}
+              placeholder="Ex: Correção de rank após punição."
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-red-500 focus:outline-none transition-colors resize-none"
+              required
+            />
           </div>
 
           {/* Buttons */}
@@ -301,9 +311,9 @@ const handleConfirmAction = async () => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Remover Exp
+              Aplicar Downgrade
             </button>
           </div>
         </form>
@@ -312,9 +322,9 @@ const handleConfirmAction = async () => {
           isOpen={showConfirmation}
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
-          title="Confirmar Ação"
-          description={`Tem certeza que deseja remover ${formData.exp} de EXP do jogador: ${fetchedPlayerName || formData.loginAccount}?`}
-          confirmActionText="Sim, Remover"
+          title="Confirmar Downgrade de Rank"
+          description={`Tem certeza que deseja remover exp?`}
+          confirmActionText="Sim, Aplicar Downgrade"
           cancelActionText="Cancelar"
         />
     </div>

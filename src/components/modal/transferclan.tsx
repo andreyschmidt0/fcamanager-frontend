@@ -25,11 +25,13 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [playerValidated, setPlayerValidated] = useState(false);
+  const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
 
   // Função para validação cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
     if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
       return;
@@ -41,16 +43,19 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
+        setValidatedOidUser(result.player.oidUser || null);
         setPlayerValidated(true);
         setErrorMessage('');
       } else {
         setFetchedPlayerName('');
+        setValidatedOidUser(null);
         setPlayerValidated(false);
         setErrorMessage(result.error || 'Erro na validação');
       }
     } catch (error) {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
     } finally {
@@ -70,6 +75,7 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
+      setValidatedOidUser(null);
       
       // Se temos selectedPlayer, validar automaticamente
       if (selectedPlayer.discordId && selectedPlayer.nexonId) {
@@ -81,6 +87,7 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
+      setValidatedOidUser(null);
     }
   }, [selectedPlayer, isOpen]);
 
@@ -97,6 +104,7 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
     } else {
       // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
     }
@@ -122,7 +130,7 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     
     // Validar se o jogador foi validado antes de mostrar confirmação
-    if (!playerValidated || !fetchedPlayerName) {
+    if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
       setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
       return;
     }
@@ -139,14 +147,15 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
 const handleConfirmAction = async () => {
   
   // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName) {
+  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid) {
+      if (!validationResult.isValid || !validationResult.player?.oidUser) {
         setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
         setShowConfirmation(false);
         return;
       }
+      setValidatedOidUser(validationResult.player.oidUser);
     } catch (error) {
       console.error('Erro na validação dupla:', error);
       setErrorMessage('Erro ao validar jogador. Tente novamente.');
@@ -192,7 +201,7 @@ const handleConfirmAction = async () => {
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
           <h2 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            ENVIAR CASH
+            TRANSFERIR CLÃ
           </h2>
           <button
             onClick={onClose}
@@ -243,7 +252,7 @@ const handleConfirmAction = async () => {
             )}
             {fetchedPlayerName && playerValidated && (
               <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName}
+                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
               </p>
             )}
             {errorMessage && (

@@ -13,107 +13,31 @@ interface SendCashProps {
 const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { user } = useAuth();
-  const [currentMoney, setCurrentMoney] = useState<number>(0);
-  const [isLoadingMoney, setIsLoadingMoney] = useState(false);
   const [formData, setFormData] = useState({
-    discordId: '',
-    loginAccount: '',
-    cash:'',
+    loginAccounts: '',
+    cashAmount: '',
+    creditReason: '',
   });
-  
-  // Novos estados para validação
-  const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
-  const [playerValidated, setPlayerValidated] = useState(false);
-
-  // Função para validação cross-check de Discord ID + Login
-  const validatePlayerCrossCheck = async (discordId: string, login: string) => {
-    if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
-      setFetchedPlayerName('');
-      setCurrentMoney(0);
-      setPlayerValidated(false);
-      setErrorMessage('');
-      return;
-    }
-
-    setIsValidatingPlayer(true);
-    try {
-      const result = await apiService.validatePlayerCrossCheck(discordId, login);
-      
-      if (result.isValid && result.player) {
-        setFetchedPlayerName(result.player.NickName || '');
-        setCurrentMoney(parseInt(result.player.Money) || 0);
-        setPlayerValidated(true);
-        setErrorMessage('');
-      } else {
-        setFetchedPlayerName('');
-        setCurrentMoney(0);
-        setPlayerValidated(false);
-        setErrorMessage(result.error || 'Erro na validação');
-      }
-    } catch (error) {
-      console.error('Erro ao validar jogador:', error);
-      setFetchedPlayerName('');
-      setCurrentMoney(0);
-      setPlayerValidated(false);
-      setErrorMessage('Erro de conexão');
-    } finally {
-      setIsValidatingPlayer(false);
-    }
-  };
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
       setFormData(prev => ({
         ...prev,
-        discordId: selectedPlayer.discordId || '',
-        loginAccount: selectedPlayer.nexonId || '',
+        loginAccounts: selectedPlayer.nexonId || ''
       }));
-      
-      // Limpar estados de validação quando modal abrir com selectedPlayer
-      setFetchedPlayerName('');
       setErrorMessage('');
-      setPlayerValidated(false);
-      
-      // Se temos selectedPlayer, validar automaticamente
-      if (selectedPlayer.discordId && selectedPlayer.nexonId) {
-        validatePlayerCrossCheck(selectedPlayer.discordId, selectedPlayer.nexonId);
-      }
     } else if (isOpen) {
       // Limpar tudo quando modal abrir sem selectedPlayer
-      setFormData({ discordId: '', loginAccount: '', cash: '' });
-      setFetchedPlayerName('');
+      setFormData({ 
+        loginAccounts: '', 
+        cashAmount: '', 
+        creditReason: '' 
+      });
       setErrorMessage('');
-      setPlayerValidated(false);
-      setCurrentMoney(0);
     }
   }, [selectedPlayer, isOpen]);
-
-  // useEffect com debounce para validação automática quando campos são digitados
-  useEffect(() => {
-    if (formData.discordId && formData.discordId.trim() !== '' && 
-        formData.loginAccount && formData.loginAccount.trim() !== '') {
-      
-      const timeoutId = setTimeout(() => {
-        validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      }, 500); // Debounce de 500ms
-
-      return () => clearTimeout(timeoutId);
-    } else {
-      // Se um dos campos estiver vazio, limpar validação
-      setFetchedPlayerName('');
-      setCurrentMoney(0);
-      setPlayerValidated(false);
-      setErrorMessage('');
-    }
-  }, [formData.discordId, formData.loginAccount]);
-
-  // Calcular Cash resultante em tempo real
-  const calculateResultingMoney = () => {
-    const cashToSend = parseInt(formData.cash) || 0;
-    return currentMoney + cashToSend; // SOMAR para sendcash
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -128,20 +52,29 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const [showConfirmation, setShowConfirmation] = useState(false);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar se o jogador foi validado antes de mostrar confirmação
-    if (!playerValidated || !fetchedPlayerName) {
-      setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
+    // Validar campos obrigatórios
+    if (!formData.loginAccounts.trim()) {
+      setErrorMessage('Por favor, informe ao menos um login de conta.');
       return;
     }
     
-    // Validar se ainda está validando
-    if (isValidatingPlayer) {
-      setErrorMessage('Aguarde a validação ser concluída antes de enviar.');
+    if (!formData.cashAmount.trim()) {
+      setErrorMessage('Por favor, informe a quantidade de cash.');
+      return;
+    }
+
+    if (!formData.creditReason.trim()) {
+      setErrorMessage('Por favor, informe a razão do envio.');
+      return;
+    }
+
+    // Validar se cashAmount é número válido
+    const cashAmount = parseInt(formData.cashAmount);
+    if (isNaN(cashAmount) || cashAmount <= 0) {
+      setErrorMessage('A quantidade deve ser um número válido maior que zero.');
       return;
     }
     
@@ -149,32 +82,28 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
-  
-  // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName) {
-    try {
-      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid) {
-        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
-        setShowConfirmation(false);
-        return;
-      }
-    } catch (error) {
-      console.error('Erro na validação dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
+  try {
+    // Chamar API para enviar cash
+    const result = await apiService.creditCashToList({
+      nexonIdList: formData.loginAccounts,
+      cashAmount: parseInt(formData.cashAmount),
+      creditReason: formData.creditReason,
+      adminDiscordId: user?.profile?.discordId || 'system'
+    });
+
+    if (result.success) {
+      setErrorMessage('');
       setShowConfirmation(false);
-      return;
+      onClose();
+    } else {
+      setErrorMessage(result.error || 'Erro ao enviar cash');
+      setShowConfirmation(false);
     }
+  } catch (error) {
+    console.error("Erro ao enviar cash:", error);
+    setErrorMessage('Erro de conexão ao enviar cash');
+    setShowConfirmation(false);
   }
-  
-  const adminName = user?.profile?.nickname || user?.username || 'Admin';
-  const cashAmount = parseInt(formData.cash);
-  const newMoney = calculateResultingMoney();
-
-  // Log agora é gerado automaticamente pelo sistema do jogo
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -201,55 +130,24 @@ const handleConfirmAction = async () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Discord ID */}
+          {/* Login das Contas */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Discord ID do usuário alvo
+              Login das contas (strNexonID)
             </label>
             <input
               type="text"
-              name="discordId"
-              placeholder='Ex 123456789012345678'
-              value={formData.discordId}
+              name="loginAccounts"
+              placeholder="Ex: schmidt, nicki, player3"
+              value={formData.loginAccounts}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
+            <p className="mt-1 text-xs text-gray-400">
+              Separe múltiplos logins com vírgula (,)
+            </p>
           </div>
-
-          {/* Login da Conta */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Login da conta (strNexonID)
-            </label>
-            <input
-              type="text"
-              name="loginAccount"
-              placeholder="Digite o strNexonID da conta"
-              value={formData.loginAccount}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-            
-            {/* Feedback visual de validação */}
-            {isValidatingPlayer && (
-              <p className="mt-2 text-sm text-yellow-400">
-                Validando jogador...
-              </p>
-            )}
-            {fetchedPlayerName && playerValidated && (
-              <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName}
-              </p>
-            )}
-            {errorMessage && (
-              <p className="mt-2 text-sm text-red-400">
-                ✗ {errorMessage}
-              </p>
-            )}
-          </div>
-
 
           {/* Quantidade de Cash */}
           <div>
@@ -258,37 +156,42 @@ const handleConfirmAction = async () => {
             </label>
             <input
               type="number"
-              name="cash"
-              value={formData.cash}
+              name="cashAmount"
+              min="1"
+              placeholder="Ex: 10000"
+              value={formData.cashAmount}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
+            <p className="mt-1 text-xs text-gray-400">
+              Quantidade de cash para todos os jogadores
+            </p>
           </div>
 
-          {/* Informações de Cash */}
-          <div className="bg-[#1a1b1f] rounded-lg p-4 border border-gray-600">
-            <h3 className="text-sm font-medium text-white mb-3">Informações de Cash</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Cash Atual</label>
-                <div className="text-lg font-semibold text-blue-400">
-                  {isValidatingPlayer || isLoadingMoney ? 'Carregando...' : currentMoney.toLocaleString()}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Cash Calculado</label>
-                <div className="text-lg font-semibold text-green-400">
-                  {isValidatingPlayer ? 'Validando...' : calculateResultingMoney().toLocaleString()}
-                </div>
-              </div>
-            </div>
-            {!playerValidated && !isValidatingPlayer && formData.discordId && formData.loginAccount && (
-              <div className="mt-2 text-xs text-yellow-400">
-                ⚠️ Aguardando validação do jogador para exibir informações precisas
-              </div>
-            )}
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Razão do Envio
+            </label>
+            <textarea
+              name="creditReason"
+              value={formData.creditReason}
+              onChange={handleInputChange}
+              rows={3}
+              placeholder="Ex: Vencedores do Sorteio Semanal"
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors resize-none"
+              required
+            />
           </div>
+
+          {/* Mensagem de erro */}
+          {errorMessage && (
+            <div className="bg-red-900/20 border border-red-600 rounded-lg p-3">
+              <p className="text-red-400 text-sm">
+                ✗ {errorMessage}
+              </p>
+            </div>
+          )}
           {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button
@@ -302,7 +205,7 @@ const handleConfirmAction = async () => {
               type="submit"
               className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Enviar Item
+              Enviar Cash
             </button>
           </div>
         </form>
@@ -311,9 +214,11 @@ const handleConfirmAction = async () => {
           isOpen={showConfirmation}
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
-          title="Confirmar Ação"
-          description={`Tem certeza que deseja enviar: ${formData.cash} de Cash para o jogador: ${formData.loginAccount} com o Discord ID: ${formData.discordId}?`}
-          confirmActionText="Sim, Enviar"
+          title="Confirmar Envio de Cash"
+          description={`Tem certeza que deseja enviar ${formData.cashAmount} de Cash para os jogadores: ${formData.loginAccounts}?
+
+Razão: "${formData.creditReason}"`}
+          confirmActionText="Sim, Enviar Cash"
           cancelActionText="Cancelar"
         />
     </div>

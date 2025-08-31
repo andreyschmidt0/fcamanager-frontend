@@ -4,34 +4,35 @@ import { usePlayer } from '../../contexts/PlayerContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
 import apiService from '../../services/api-tauri.service';
+import { Player } from '../../contexts/PlayerContext';
 
-interface TransferDiscordProps {
+interface RemoveAccountProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) => {
+const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
-    oiduserlider: '',
-    oidusernovolider: '',
+    reason: ''
   });
   
-  // Novos estados para validação
+  // Estados para valida��o
   const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
+  const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [playerValidated, setPlayerValidated] = useState(false);
-  const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
+  
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
-  // Função para validação cross-check de Discord ID + Login
+  // Fun��o para valida��o cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
     if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
       setFetchedPlayerName('');
-      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
       return;
@@ -50,14 +51,14 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
         setFetchedPlayerName('');
         setValidatedOidUser(null);
         setPlayerValidated(false);
-        setErrorMessage(result.error || 'Erro na validação');
+        setErrorMessage(result.error || 'Erro na valida��o');
       }
     } catch (error) {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
       setValidatedOidUser(null);
       setPlayerValidated(false);
-      setErrorMessage('Erro de conexão');
+      setErrorMessage('Erro de conex�o');
     } finally {
       setIsValidatingPlayer(false);
     }
@@ -68,14 +69,14 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
       setFormData(prev => ({
         ...prev,
         discordId: selectedPlayer.discordId || '',
-        loginAccount: selectedPlayer.nexonId || '',
+        loginAccount: selectedPlayer.nexonId || ''
       }));
       
-      // Limpar estados de validação quando modal abrir com selectedPlayer
+      // Limpar estados de valida��o quando modal abrir com selectedPlayer
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setErrorMessage('');
       setPlayerValidated(false);
-      setValidatedOidUser(null);
       
       // Se temos selectedPlayer, validar automaticamente
       if (selectedPlayer.discordId && selectedPlayer.nexonId) {
@@ -83,15 +84,19 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
       }
     } else if (isOpen) {
       // Limpar tudo quando modal abrir sem selectedPlayer
-      setFormData({ discordId: '', loginAccount: '', oiduserlider: '', oidusernovolider: '' });
+      setFormData({ 
+        discordId: '', 
+        loginAccount: '', 
+        reason: ''
+      });
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setErrorMessage('');
       setPlayerValidated(false);
-      setValidatedOidUser(null);
     }
   }, [selectedPlayer, isOpen]);
 
-  // useEffect com debounce para validação automática quando campos são digitados
+  // useEffect com debounce para valida��o autom�tica quando campos s�o digitados
   useEffect(() => {
     if (formData.discordId && formData.discordId.trim() !== '' && 
         formData.loginAccount && formData.loginAccount.trim() !== '') {
@@ -102,14 +107,13 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
 
       return () => clearTimeout(timeoutId);
     } else {
-      // Se um dos campos estiver vazio, limpar validação
+      // Se um dos campos estiver vazio, limpar valida��o
       setFetchedPlayerName('');
       setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
     }
   }, [formData.discordId, formData.loginAccount]);
-
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -118,26 +122,30 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
       [name]: value
     }));
     
-    // Limpar mensagem de erro quando usuário digitar
+    // Limpar mensagem de erro quando usu�rio digitar
     if (errorMessage) {
       setErrorMessage('');
     }
   };
 
-  const [showConfirmation, setShowConfirmation] = useState(false);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar se o jogador foi validado antes de mostrar confirmação
-    if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
-      setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
+    // Validar se o jogador foi validado antes de mostrar confirma��o
+    if (!playerValidated || !fetchedPlayerName) {
+      setErrorMessage('Por favor, aguarde a valida��o do jogador ser conclu�da.');
       return;
     }
     
-    // Validar se ainda está validando
+    // Validar se ainda est� validando
     if (isValidatingPlayer) {
-      setErrorMessage('Aguarde a validação ser concluída antes de enviar.');
+      setErrorMessage('Aguarde a valida��o ser conclu�da antes de remover a conta.');
+      return;
+    }
+
+    // Validar se a raz�o foi preenchida
+    if (!formData.reason || formData.reason.trim() === '') {
+      setErrorMessage('Por favor, informe o motivo da remo��o da conta.');
       return;
     }
     
@@ -146,47 +154,48 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
 
 const handleConfirmAction = async () => {
   
-  // Validação dupla: Re-validar jogador antes de executar ação
+  // Valida��o dupla: Re-validar jogador antes de executar a��o
   if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
       if (!validationResult.isValid || !validationResult.player?.oidUser) {
-        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+        setErrorMessage('Jogador n�o p�de ser validado. Verifique os dados informados.');
         setShowConfirmation(false);
         return;
       }
+      // Atualizar dados validados
       setValidatedOidUser(validationResult.player.oidUser);
+      setFetchedPlayerName(validationResult.player.NickName || '');
     } catch (error) {
-      console.error('Erro na validação dupla:', error);
+      console.error('Erro na valida��o dupla:', error);
       setErrorMessage('Erro ao validar jogador. Tente novamente.');
       setShowConfirmation(false);
       return;
     }
   }
-  
-  const adminName = user?.profile?.nickname || user?.username || 'Admin';
 
   try {
-    // Registra a atividade no banco de dados via API
-    const dbLogData = {
+    // Chamar API para remover conta
+    const result = await apiService.removeAccount({
+      targetNexonId: formData.loginAccount,
+      reason: formData.reason,
       adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'transfer_discord',
-      old_value: formData.oiduserlider,
-      new_value: formData.oidusernovolider,
-      details: `Transferiu a conta do jogador ${fetchedPlayerName} para o discord ID ${formData.oidusernovolider}`,
-      notes: `Clã transferido via Discord ID: ${formData.discordId} e Login: ${formData.loginAccount}`
-    };
+      targetOidUser: validatedOidUser!
+    });
 
-    // Log agora é gerado automaticamente pelo sistema do jogo
+    if (result.success) {
+      setErrorMessage('');
+      setShowConfirmation(false);
+      onClose();
+    } else {
+      setErrorMessage(result.error || 'Erro ao remover conta');
+      setShowConfirmation(false);
+    }
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("Erro ao remover conta:", error);
+    setErrorMessage('Erro de conex�o ao remover conta');
+    setShowConfirmation(false);
   }
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -200,8 +209,8 @@ const handleConfirmAction = async () => {
       <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
-          <h2 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            TRANSFERIR DISCORD
+          <h2 className="absolute left-1/2 w-[80%] text-center -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
+            REMOVER CONTA
           </h2>
           <button
             onClick={onClose}
@@ -221,18 +230,17 @@ const handleConfirmAction = async () => {
             <input
               type="text"
               name="discordId"
-              placeholder='Ex 123456789012345678'
               value={formData.discordId}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+              placeholder='Ex 123456789012345678'
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-red-500 focus:outline-none transition-colors"
               required
             />
           </div>
 
-          {/* Login da Conta */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Login da conta (strNexonID)
+              Login da Conta
             </label>
             <input
               type="text"
@@ -240,11 +248,11 @@ const handleConfirmAction = async () => {
               placeholder="Digite o strNexonID da conta"
               value={formData.loginAccount}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-red-500 focus:outline-none transition-colors"
               required
             />
             
-            {/* Feedback visual de validação */}
+            {/* Feedback visual de valida��o */}
             {isValidatingPlayer && (
               <p className="mt-2 text-sm text-yellow-400">
                 Validando jogador...
@@ -252,42 +260,27 @@ const handleConfirmAction = async () => {
             )}
             {fetchedPlayerName && playerValidated && (
               <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
+                Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
               </p>
             )}
             {errorMessage && (
               <p className="mt-2 text-sm text-red-400">
-                ✗ {errorMessage}
+                {errorMessage}
               </p>
             )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              OIDUSER do líder atual
+              Motivo da Remoção
             </label>
-            <input
-              type="number"
-              name="oiduserlider"
-              placeholder='Digite o oidUser do líder atual'
-              value={formData.oiduserlider}
+            <textarea
+              name="reason"
+              placeholder='Motivo da exclusão'
+              value={formData.reason}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-          </div>
-
-            <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Discord Novo
-            </label>
-            <input
-              type="number"
-              name="oidusernovolider"
-              placeholder='Digite o novo discord ID'
-              value={formData.oidusernovolider}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+              rows={3}
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-red-500 focus:outline-none transition-colors resize-none"
               required
             />
           </div>
@@ -303,24 +296,26 @@ const handleConfirmAction = async () => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
             >
-              Transferir Discord
+              Remover Conta
             </button>
           </div>
         </form>
       </div>
-    <ConfirmationModal
-          isOpen={showConfirmation}
-          onConfirm={handleConfirmAction}
-          onCancel={handleCancelConfirmation}
-          title="Confirmar Ação"
-          description={`Você tem certeza que deseja transferir o discord do jogador ${fetchedPlayerName} (Discord: ${formData.discordId}, Login: ${formData.loginAccount})?`}
-          confirmActionText="Sim, transferir discord"
-          cancelActionText="Cancelar"
-        />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelConfirmation}
+        title="Confirmar Remoção de Conta"
+        description={'Tem certeza que deseja excluir a conta?'}
+        confirmActionText="Sim, Remover Permanentemente"
+        cancelActionText="Cancelar"
+      />
     </div>
   );
 };
 
-export default TransferDiscord;
+export default RemoveAccount;

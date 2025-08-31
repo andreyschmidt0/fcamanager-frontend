@@ -28,6 +28,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [playerValidated, setPlayerValidated] = useState(false);
+  const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -35,6 +36,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
     if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
       return;
@@ -46,16 +48,19 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
       
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
+        setValidatedOidUser(result.player.oidUser || null);
         setPlayerValidated(true);
         setErrorMessage('');
       } else {
         setFetchedPlayerName('');
+        setValidatedOidUser(null);
         setPlayerValidated(false);
         setErrorMessage(result.error || 'Erro na validação');
       }
     } catch (error) {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
     } finally {
@@ -75,6 +80,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
+      setValidatedOidUser(null);
       
       // Se temos selectedPlayer, validar automaticamente
       if (selectedPlayer.discordId && selectedPlayer.nexonId) {
@@ -94,6 +100,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
+      setValidatedOidUser(null);
     }
   }, [selectedPlayer, isOpen]);
 
@@ -110,6 +117,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
     } else {
       // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
+      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
     }
@@ -132,7 +140,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     
     // Validar se o jogador foi validado antes de mostrar confirmação
-    if (!playerValidated || !fetchedPlayerName) {
+    if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
       setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
       return;
     }
@@ -149,14 +157,15 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
 const handleConfirmAction = async () => {
   
   // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName) {
+  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid) {
+      if (!validationResult.isValid || !validationResult.player?.oidUser) {
         setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
         setShowConfirmation(false);
         return;
       }
+      setValidatedOidUser(validationResult.player.oidUser);
     } catch (error) {
       console.error('Erro na validação dupla:', error);
       setErrorMessage('Erro ao validar jogador. Tente novamente.');
@@ -169,7 +178,7 @@ const handleConfirmAction = async () => {
     targetNexonId: formData.loginAccount,
     reason: formData.banReason,
     adminDiscordId: user?.profile?.discordId || '',
-    targetOidUser: undefined // Será preenchido pelo backend se necessário
+    targetOidUser: validatedOidUser!
   };
 
   try {
@@ -257,7 +266,7 @@ const handleConfirmAction = async () => {
             )}
             {fetchedPlayerName && playerValidated && (
               <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName}
+                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
               </p>
             )}
             {errorMessage && (

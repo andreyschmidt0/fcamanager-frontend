@@ -15,96 +15,34 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    discordId: '',
-    loginAccount: '',
-    productId: '',
-    quantity: '',
-    userMessage: '',
+    loginAccounts: '',
+    productIds: '',
+    count: '',
+    message: '',
   });
 
-  // Estados para validação
-  const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
-  const [playerValidated, setPlayerValidated] = useState(false);
 
   const [showConfirmation, setShowConfirmation] = useState(false);
-
-  // Função para validação cross-check de Discord ID + Login
-  const validatePlayerCrossCheck = async (discordId: string, login: string) => {
-    if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
-      setFetchedPlayerName('');
-      setPlayerValidated(false);
-      setErrorMessage('');
-      return;
-    }
-
-    setIsValidatingPlayer(true);
-    try {
-      const result = await apiService.validatePlayerCrossCheck(discordId, login);
-      
-      if (result.isValid && result.player) {
-        setFetchedPlayerName(result.player.NickName || '');
-        setPlayerValidated(true);
-        setErrorMessage('');
-      } else {
-        setFetchedPlayerName('');
-        setPlayerValidated(false);
-        setErrorMessage(result.error || 'Erro na validação');
-      }
-    } catch (error) {
-      console.error('Erro ao validar jogador:', error);
-      setFetchedPlayerName('');
-      setPlayerValidated(false);
-      setErrorMessage('Erro de conexão');
-    } finally {
-      setIsValidatingPlayer(false);
-    }
-  };
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
       setFormData(prev => ({
         ...prev,
-        discordId: selectedPlayer.discordId || '',
-        loginAccount: selectedPlayer.nexonId || ''
+        loginAccounts: selectedPlayer.nexonId || ''
       }));
-      
-      // Limpar estados de validação quando modal abrir com selectedPlayer
-      setFetchedPlayerName('');
       setErrorMessage('');
-      setPlayerValidated(false);
-      
-      // Se temos selectedPlayer, validar automaticamente
-      if (selectedPlayer.discordId && selectedPlayer.nexonId) {
-        validatePlayerCrossCheck(selectedPlayer.discordId, selectedPlayer.nexonId);
-      }
     } else if (isOpen) {
       // Limpar tudo quando modal abrir sem selectedPlayer
-      setFormData({ discordId: '', loginAccount: '', productId: '', quantity: '', userMessage: '' });
-      setFetchedPlayerName('');
+      setFormData({ 
+        loginAccounts: '', 
+        productIds: '', 
+        count: '', 
+        message: '' 
+      });
       setErrorMessage('');
-      setPlayerValidated(false);
     }
   }, [selectedPlayer, isOpen]);
-
-  // useEffect com debounce para validação automática quando campos são digitados
-  useEffect(() => {
-    if (formData.discordId && formData.discordId.trim() !== '' && 
-        formData.loginAccount && formData.loginAccount.trim() !== '') {
-      
-      const timeoutId = setTimeout(() => {
-        validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      }, 500); // Debounce de 500ms
-
-      return () => clearTimeout(timeoutId);
-    } else {
-      // Se um dos campos estiver vazio, limpar validação
-      setFetchedPlayerName('');
-      setPlayerValidated(false);
-      setErrorMessage('');
-    }
-  }, [formData.discordId, formData.loginAccount]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -122,15 +60,31 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar se o jogador foi validado antes de mostrar confirmação
-    if (!playerValidated || !fetchedPlayerName) {
-      setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
+    // Validar campos obrigatórios
+    if (!formData.loginAccounts.trim()) {
+      setErrorMessage('Por favor, informe ao menos um login de conta.');
       return;
     }
     
-    // Validar se ainda está validando
-    if (isValidatingPlayer) {
-      setErrorMessage('Aguarde a validação ser concluída antes de enviar.');
+    if (!formData.productIds.trim()) {
+      setErrorMessage('Por favor, informe ao menos um ID de produto.');
+      return;
+    }
+    
+    if (!formData.count.trim()) {
+      setErrorMessage('Por favor, informe a quantidade.');
+      return;
+    }
+
+    if (!formData.message.trim()) {
+      setErrorMessage('Por favor, informe uma mensagem.');
+      return;
+    }
+
+    // Validar se count é número válido
+    const count = parseInt(formData.count);
+    if (isNaN(count) || count <= 0) {
+      setErrorMessage('A quantidade deve ser um número válido maior que zero.');
       return;
     }
     
@@ -138,49 +92,29 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
-  
-  // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName) {
-    try {
-      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid) {
-        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
-        setShowConfirmation(false);
-        return;
-      }
-    } catch (error) {
-      console.error('Erro na validação dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
-      setShowConfirmation(false);
-      return;
-    }
-  }
-  
-  const adminName = user?.profile?.nickname || user?.username || 'Admin';
-  const quantity = parseInt(formData.quantity);
-  const itemDescription = `${quantity}x ${formData.productId}`;
-
   try {
-    // Registra a atividade no banco de dados via API
-    const dbLogData = {
-      adminDiscordId: user?.profile?.discordId || 'system',
-      adminNickname: adminName,
-      targetDiscordId: formData.discordId,
-      targetNickname: fetchedPlayerName || formData.loginAccount,
-      action: 'send_item',
-      old_value: 'N/A',
-      new_value: itemDescription,
-      details: `Enviou ${itemDescription}`,
-      notes: formData.userMessage || `Envio de item validado - Discord: ${formData.discordId} | Login: ${formData.loginAccount}`
-    };
+    // Chamar API para enviar produtos
+    const result = await apiService.sendProductToList({
+      nexonIdList: formData.loginAccounts,
+      productListString: formData.productIds,
+      count: parseInt(formData.count),
+      message: formData.message,
+      adminDiscordId: user?.profile?.discordId || 'system'
+    });
 
-    // Log agora é gerado automaticamente pelo sistema do jogo
+    if (result.success) {
+      setErrorMessage('');
+      setShowConfirmation(false);
+      onClose();
+    } else {
+      setErrorMessage(result.error || 'Erro ao enviar produtos');
+      setShowConfirmation(false);
+    }
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("Erro ao enviar produtos:", error);
+    setErrorMessage('Erro de conexão ao enviar produtos');
+    setShowConfirmation(false);
   }
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -208,99 +142,86 @@ const handleConfirmAction = async () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Discord ID */}
+          {/* Login das Contas */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Discord ID do usuário alvo
+              Login das contas (strNexonID)
             </label>
             <input
               type="text"
-              name="discordId"
-              placeholder='Ex 123456789012345678'
-              value={formData.discordId}
+              name="loginAccounts"
+              placeholder="Ex: schmidt, nicki, player3"
+              value={formData.loginAccounts}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
+            <p className="mt-1 text-xs text-gray-400">
+              Separe múltiplos logins com vírgula (,)
+            </p>
           </div>
 
-          {/* Login da Conta */}
+          {/* IDs dos Produtos */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Login da conta (strNexonID)
+              IDs dos Produtos
             </label>
             <input
               type="text"
-              name="loginAccount"
-              placeholder="Digite o strNexonID da conta"
-              value={formData.loginAccount}
+              name="productIds"
+              placeholder="Ex: 101, 202, 303"
+              value={formData.productIds}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
-            
-            {/* Feedback visual de validação */}
-            {isValidatingPlayer && (
-              <p className="mt-2 text-sm text-yellow-400">
-                Validando jogador...
-              </p>
-            )}
-            {fetchedPlayerName && playerValidated && (
-              <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName}
-              </p>
-            )}
-            {errorMessage && (
-              <p className="mt-2 text-sm text-red-400">
-                ✗ {errorMessage}
-              </p>
-            )}
+            <p className="mt-1 text-xs text-gray-400">
+              Separe múltiplos IDs com vírgula (,)
+            </p>
           </div>
 
-          {/* ID do Produto */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              ID do Produto
+              Quantidade (por item)
             </label>
             <input
-              type="text"
-              name="productId"
-              value={formData.productId}
+              type="number"
+              name="count"
+              min="1"
+              placeholder="Ex: 1"
+              value={formData.count}
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
               required
             />
+            <p className="mt-1 text-xs text-gray-400">
+              Quantidade universal para todos os produtos
+            </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Quantidade
-            </label>
-            <input
-              type="text"
-              name="quantity"
-              placeholder='Ex: 1'
-              value={formData.quantity}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Mensagem Usuario
+              Mensagem
             </label>
             <textarea
-              name="userMessage"
-              value={formData.userMessage}
+              name="message"
+              value={formData.message}
               onChange={handleInputChange}
               rows={3}
-              placeholder='Digite uma mensagem para o usuário'
+              placeholder="Ex: Recompensa do Evento!"
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors resize-none"
               required
             />
           </div>
+
+          {/* Mensagem de erro */}
+          {errorMessage && (
+            <div className="bg-red-900/20 border border-red-600 rounded-lg p-3">
+              <p className="text-red-400 text-sm">
+                ✗ {errorMessage}
+              </p>
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="flex gap-3 pt-4">
@@ -324,9 +245,11 @@ const handleConfirmAction = async () => {
           isOpen={showConfirmation}
           onConfirm={handleConfirmAction}
           onCancel={handleCancelConfirmation}
-          title="Confirmar Ação"
-          description={`Tem certeza que deseja enviar ${formData.quantity}x ${formData.productId} para o jogador: ${fetchedPlayerName || formData.loginAccount} (Discord: ${formData.discordId})?`}
-          confirmActionText="Sim, Enviar"
+          title="Confirmar Envio"
+          description={`Tem certeza que deseja enviar ${formData.count}x dos produtos [${formData.productIds}] para os jogadores: ${formData.loginAccounts}?
+
+Mensagem: "${formData.message}"`}
+          confirmActionText="Sim, Enviar Produtos"
           cancelActionText="Cancelar"
         />
     </div>

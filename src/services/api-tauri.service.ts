@@ -626,6 +626,174 @@ class ApiTauriService {
     }
   }
 
+  async removeAccount(data: {
+    targetNexonId: string;
+    reason: string;
+    adminDiscordId: string;
+    targetOidUser?: number;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/remove-account`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao remover conta:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao remover conta'
+      };
+    }
+  }
+
+  async sendProductToList(data: {
+    nexonIdList: string;
+    productListString: string;
+    count: number;
+    message: string;
+    adminDiscordId: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/send-product-list`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao enviar produtos:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao enviar produtos'
+      };
+    }
+  }
+
+  async creditCashToList(data: {
+    nexonIdList: string;
+    cashAmount: number;
+    creditReason: string;
+    adminDiscordId: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/credit-cash-list`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao enviar cash:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao enviar cash'
+      };
+    }
+  }
+
+  // Deletar clã usando BSP_DeleteSingleClan
+  async deleteClan(data: {
+    oidGuild: number;
+    reason: string;
+    adminDiscordId: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/delete-clan`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao excluir clã:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao excluir clã'
+      };
+    }
+  }
+
+  // Definir rank de usuário usando BSP_SetUserRankByLevel
+  async setUserRank(data: {
+    discordId: string;
+    loginAccount: string;
+    targetGradeLevel: number;
+    reason: string;
+    adminDiscordId: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/set-user-rank`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao definir rank:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao definir rank'
+      };
+    }
+  }
+
   // Refresh token
   async refreshToken(refreshToken: string): Promise<{success: boolean; accessToken?: string; refreshToken?: string; error?: string}> {
     try {

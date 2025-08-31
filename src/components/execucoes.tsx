@@ -16,6 +16,7 @@ import SendCash from './modal/sendcash';
 import TransferClan from './modal/transferclan';
 import TransferDiscord from './modal/transferdiscord';
 import ChangePassword from './modal/changepassword';
+import RemoveAccount from './modal/removeaccount';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -82,7 +83,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox'] },
     { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item'] },
     { name: 'BANIR', options: getBanOptions() },
-    { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Exp'] },
+    { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Exp', 'Remover Conta'] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
     { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha'] }
   ];
@@ -251,6 +252,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
       )}
             {isModalOpen && selectedAction && selectedAction.option === 'Alterar Senha' && (
         <ChangePassword
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />  
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Remover Conta' && (
+        <RemoveAccount
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />  
