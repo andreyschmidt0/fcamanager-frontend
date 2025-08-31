@@ -15,12 +15,10 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const { user } = useAuth();
   const [currentExp, setCurrentExp] = useState<number>(0);
-  const [isLoadingExp, setIsLoadingExp] = useState(false);
   const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [playerValidated, setPlayerValidated] = useState(false);
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
-  const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     discordId: '',
     loginAccount: '',
@@ -33,7 +31,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
     if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
       setFetchedPlayerName('');
       setCurrentExp(0);
-      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
       return;
@@ -46,13 +43,11 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
         setCurrentExp(parseInt(result.player.EXP) || 0);
-        setValidatedOidUser(result.player.oidUser || null);
         setPlayerValidated(true);
         setErrorMessage('');
       } else {
         setFetchedPlayerName('');
         setCurrentExp(0);
-        setValidatedOidUser(null);
         setPlayerValidated(false);
         setErrorMessage(result.error || 'Erro na validação');
       }
@@ -60,7 +55,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
       setCurrentExp(0);
-      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
     } finally {
@@ -80,7 +74,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
-      setValidatedOidUser(null);
       
       // Se temos selectedPlayer, validar automaticamente
       if (selectedPlayer.discordId && selectedPlayer.nexonId) {
@@ -92,7 +85,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
-      setValidatedOidUser(null);
       setCurrentExp(0);
     }
   }, [selectedPlayer, isOpen]);
@@ -111,7 +103,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
       setCurrentExp(0);
-      setValidatedOidUser(null);
       setPlayerValidated(false);
       setErrorMessage('');
     }
@@ -134,7 +125,7 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     
     // Validar se temos um jogador validado antes de mostrar confirmação
-    if (!playerValidated || !fetchedPlayerName || fetchedPlayerName.trim() === '' || !validatedOidUser) {
+    if (!playerValidated || !fetchedPlayerName || fetchedPlayerName.trim() === '') {
       setErrorMessage('Por favor, preencha Discord ID e Login da conta e aguarde a validação.');
       return;
     }
@@ -157,15 +148,14 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
 const handleConfirmAction = async () => {
   
   // Garantir que temos uma validação dupla antes de prosseguir (como nos outros modais)
-  if (!playerValidated || !validatedOidUser) {
+  if (!playerValidated) {
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid || !validationResult.player?.oidUser) {
+      if (!validationResult.isValid) {
         setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
         setShowConfirmation(false);
         return;
       }
-      setValidatedOidUser(validationResult.player.oidUser);
     } catch (error) {
       console.error('Erro na validação dupla:', error);
       setErrorMessage('Erro ao validar jogador. Tente novamente.');
@@ -181,8 +171,7 @@ const handleConfirmAction = async () => {
       loginAccount: formData.loginAccount,
       targetGradeLevel: parseInt(formData.targetGradeLevel),
       reason: formData.reason,
-      adminDiscordId: user?.profile?.discordId || 'system',
-      targetOidUser: validatedOidUser!
+      adminDiscordId: user?.profile?.discordId || 'system'
     });
 
     if (result.success) {
@@ -258,7 +247,7 @@ const handleConfirmAction = async () => {
             )}
             {playerValidated && fetchedPlayerName && (
               <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
+                ✓ Jogador validado: {fetchedPlayerName}
               </p>
             )}
             {errorMessage && (
