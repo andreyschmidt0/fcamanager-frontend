@@ -26,10 +26,10 @@ const MainPage = () => {
               onClick={() => setMobileView('execucoes')}
               className={`flex-1 py-2 px-2 text-xs font-medium rounded transition-colors ${
                 mobileView === 'execucoes' 
-                  ? 'bg-green-600 text-white' 
-                  : 'text-gray-400 hover:text-white'
+                ? 'bg-green-600 text-white' 
+                : 'text-gray-400 hover:text-white'
               }`}
-            >
+              >
               EXECUÇÕES
             </button>
             <button

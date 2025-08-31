@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Shield, UserCheck, UserX, Eye, EyeOff, Settings, Search, Filter } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import apiService from '../../../services/api-tauri.service';
+import PermissionsManager from './PermissionsManager';
 
 interface GM {
   id: number;

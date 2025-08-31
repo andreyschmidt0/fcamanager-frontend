@@ -31,7 +31,7 @@ export const useGMRole = () => {
           return;
         }
 
-        // Verificar o role no SQLite
+        // Verificar o role no banco PostgreSQL
         const gmData = await apiService.getGMUser(discordId);
         setIsMaster(gmData.success && gmData.gm?.role === 'MASTER');
       } catch (error) {
