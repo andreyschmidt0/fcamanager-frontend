@@ -18,6 +18,7 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [playerValidated, setPlayerValidated] = useState(false);
+  const [targetGradeLevel, settargetGradeLevel] = useState(false);
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [formData, setFormData] = useState({
     discordId: '',
@@ -30,7 +31,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
     if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
       setFetchedPlayerName('');
-      setCurrentExp(0);
       setPlayerValidated(false);
       setErrorMessage('');
       return;
@@ -42,19 +42,16 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
-        setCurrentExp(parseInt(result.player.EXP) || 0);
         setPlayerValidated(true);
         setErrorMessage('');
       } else {
         setFetchedPlayerName('');
-        setCurrentExp(0);
         setPlayerValidated(false);
         setErrorMessage(result.error || 'Erro na validação');
       }
     } catch (error) {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
-      setCurrentExp(0);
       setPlayerValidated(false);
       setErrorMessage('Erro de conexão');
     } finally {
@@ -85,7 +82,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
       setFetchedPlayerName('');
       setErrorMessage('');
       setPlayerValidated(false);
-      setCurrentExp(0);
     }
   }, [selectedPlayer, isOpen]);
 
@@ -102,7 +98,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
     } else {
       // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
-      setCurrentExp(0);
       setPlayerValidated(false);
       setErrorMessage('');
     }
