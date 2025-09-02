@@ -1,5 +1,6 @@
 import { fetch } from '@tauri-apps/plugin-http';
 import { ErrorCapture } from '../components/debug/DebugModal';
+import SuccessModalManager from '../utils/SuccessModalManager';
 
 export interface PlayerProfileData {
   strDiscordId: string;
@@ -67,6 +68,11 @@ class ApiTauriService {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` })
     };
+  }
+
+  private showSuccessModal(title?: string, message?: string) {
+    const successManager = SuccessModalManager.getInstance();
+    successManager.showSuccess(title, message);
   }
 
   private async handleResponse<T>(response: Response): Promise<T> {
@@ -511,11 +517,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Senha Alterada', 'Senha do usuário foi alterada com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao alterar senha:', error);
       return {
@@ -545,11 +557,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Nickname Alterado', 'Nickname do usuário foi alterado com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao alterar nickname:', error);
       return {
@@ -579,11 +597,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Email Alterado', 'Email do usuário foi alterado com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao alterar email:', error);
       return {
@@ -594,10 +618,13 @@ class ApiTauriService {
   }
 
   async banUser(data: {
-    targetNexonId: string;
-    reason: string;
-    adminDiscordId: string;
-    targetOidUser?: number;
+    discordId: string;
+    loginAccount: string;
+    banDuration?: number;
+    banReason: string;
+    banScope?: string;
+    addMacToBlockList?: string;
+    excluirClans?: string;
   }): Promise<{
     success: boolean;
     message?: string;
@@ -612,16 +639,62 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Usuário Banido', 'Usuário foi banido com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao banir usuário:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro ao banir usuário'
+      };
+    }
+  }
+
+  async unbanUser(data: {
+    discordId: string;
+    loginAccount: string;
+    reason: string;
+    unbanScope: string;
+    clearMacBlockEntry: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/unban-user`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Usuário Desbanido', 'Usuário foi desbanido com sucesso!');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Erro ao desbanir usuário:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao desbanir usuário'
       };
     }
   }
@@ -645,11 +718,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Conta Removida', 'Conta do usuário foi removida com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao remover conta:', error);
       return {
@@ -679,11 +758,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Produtos Enviados', 'Produtos foram enviados com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao enviar produtos:', error);
       return {
@@ -712,11 +797,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Cash Enviado', 'Cash foi creditado com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao enviar cash:', error);
       return {
@@ -745,11 +836,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Clã Excluído', 'Clã foi excluído com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao excluir clã:', error);
       return {
@@ -779,11 +876,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Liderança Transferida', 'Liderança do clã foi transferida com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao transferir liderança do clã:', error);
       return {
@@ -814,11 +917,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Rank Definido', 'Rank do usuário foi alterado com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao definir rank:', error);
       return {
@@ -848,11 +957,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{
+      const result = await this.handleResponse<{
         success: boolean;
         message?: string;
         data?: any;
       }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Discord ID Alterado', 'Discord ID do usuário foi alterado com sucesso!');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Erro ao alterar Discord ID:', error);
       return {
@@ -880,7 +995,7 @@ class ApiTauriService {
       };
     }
   }
-}
 
+}
 // Exportar instância única
 export default new ApiTauriService();

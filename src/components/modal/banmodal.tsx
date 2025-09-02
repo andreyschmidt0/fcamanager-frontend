@@ -175,10 +175,13 @@ const handleConfirmAction = async () => {
   }
 
   const banData = {
-    targetNexonId: formData.loginAccount,
-    reason: formData.banReason,
-    adminDiscordId: user?.profile?.discordId || '',
-    targetOidUser: validatedOidUser!
+    discordId: formData.discordId,
+    loginAccount: formData.loginAccount,
+    banDuration: (parseInt(formData.banDuration) || 1) as number, // Padrão: 1 dia
+    banReason: formData.banReason,
+    banScope: formData.banScope || 'S', // 'S': Apenas a conta; 'M': Todas contas do MAC
+    addMacToBlockList: formData.blockMac || 'N', // 'S': Adicionar MAC à blocklist
+    excluirClans: formData.deleteClans || 'N' // 'S': Excluir clãs do usuário
   };
 
   try {

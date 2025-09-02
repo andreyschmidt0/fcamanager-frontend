@@ -170,9 +170,28 @@ const handleConfirmAction = async () => {
     }
   }
 
-  const adminName = user?.profile?.nickname || 'Admin';
+  const unbanData = {
+    discordId: formData.discordId,
+    loginAccount: formData.loginAccount,
+    reason: formData.unbanReason,
+    unbanScope: formData.unbanScope,
+    clearMacBlockEntry: formData.clearMacBlock
+  };
 
-  // Log agora é gerado automaticamente pelo sistema do jogo
+  try {
+    const result = await apiService.unbanUser(unbanData);
+    
+    if (result.success) {
+      console.log('Sucesso:', result.message);
+      // Aqui você pode adicionar uma notificação de sucesso se desejar
+    } else {
+      setErrorMessage(result.error || result.message || 'Erro desconhecido');
+    }
+    
+  } catch (error) {
+    console.error('Erro ao desbanir usuário:', error);
+    setErrorMessage('Erro de conexão ao tentar desbanir o usuário');
+  }
 
   setShowConfirmation(false);
   onClose();

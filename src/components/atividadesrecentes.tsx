@@ -13,7 +13,7 @@ interface GMUser {
 }
 
 const RecentActivities: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('Esta semana');
+  const [selectedPeriod, setSelectedPeriod] = useState('ESTE_MES');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedGM, setSelectedGM] = useState<string>('');
   const [showGMDropdown, setShowGMDropdown] = useState(false);
@@ -24,7 +24,15 @@ const RecentActivities: React.FC = () => {
   const { user } = useAuth();
   const { isMaster, loading } = useGMRole();
 
-  const periods = ['Hoje', 'Esta semana', 'Este mês', 'Este ano'];
+  const periods = [
+    { value: 'HOJE', label: 'Hoje' },
+    { value: 'ONTEM', label: 'Ontem' },
+    { value: 'ULTIMOS_7_DIAS', label: 'Últimos 7 dias' },
+    { value: 'ULTIMOS_30_DIAS', label: 'Últimos 30 dias' },
+    { value: 'ESTA_SEMANA', label: 'Esta semana' },
+    { value: 'ESTE_MES', label: 'Este mês' },
+    { value: 'ESTE_ANO', label: 'Este ano' }
+  ];
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -289,15 +297,19 @@ const RecentActivities: React.FC = () => {
                 onClick={handleTogglePeriodDropdown}
                 className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
               >
-                <span className="hidden sm:inline">{selectedPeriod}</span>
+                <span className="hidden sm:inline">
+                  {periods.find(p => p.value === selectedPeriod)?.label || selectedPeriod}
+                </span>
                 <span className="sm:hidden">
-                  {selectedPeriod === 'Esta semana'
+                  {selectedPeriod === 'ESTA_SEMANA'
                     ? 'Semana'
-                    : selectedPeriod === 'Este mês'
+                    : selectedPeriod === 'ESTE_MES'
                     ? 'Mês'
-                    : selectedPeriod === 'Este ano'
+                    : selectedPeriod === 'ESTE_ANO'
                     ? 'Ano'
-                    : 'Hoje'}
+                    : selectedPeriod === 'HOJE'
+                    ? 'Hoje'
+                    : '7 dias'}
                 </span>
                 <ChevronDown
                   size={16}
@@ -305,17 +317,17 @@ const RecentActivities: React.FC = () => {
                 />
               </button>
               {showDropdown && (
-                <div className="absolute right-0 mt-2 w-32 sm:w-40 bg-[#1d1e24] rounded-lg shadow-lg z-10">
+                <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-[#1d1e24] rounded-lg shadow-lg z-10">
                   {periods.map((period) => (
                     <button
-                      key={period}
+                      key={period.value}
                       onClick={() => {
-                        setSelectedPeriod(period);
+                        setSelectedPeriod(period.value);
                         setShowDropdown(false);
                       }}
                       className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
                     >
-                      {period}
+                      {period.label}
                     </button>
                   ))}
                 </div>

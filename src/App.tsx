@@ -6,6 +6,7 @@ import LoadingSpinner from './components/loading/loading';
 import ConfirmModal from './components/modal/confirm/confirmmodal';
 import DebugModal from './components/debug/DebugModal';
 import { ActivityLogProvider } from './contexts/ActivityLogContext';
+import { SuccessModalProvider } from './contexts/SuccessModalContext';
 import { useAuth } from './hooks/useAuth';
 import TokenManager from './utils/tokenManager';
 
@@ -54,32 +55,34 @@ function App() {
 
   return (
     <ActivityLogProvider>
-      {showLoading && (
-        <LoadingSpinner 
-          size="lg" 
-          text="Autenticando..." 
-          fullScreen={true}
-        />
-      )}
-  
-      {!isAuthenticated && !showLoading && !isLoading ? (
-        <LoginPage onLoginSuccess={handleLoginSuccess} />
-      ) : null}
-      {isAuthenticated && !showLoading && !isLoading ? (
-        <MainPage />
-      ) : null}
-      {isLoading && !showLoading ? (
-        <LoadingSpinner 
-          size="lg" 
-          text="Verificando autenticação..." 
-          fullScreen={true}
-        />
-      ) : null}
+      <SuccessModalProvider>
+        {showLoading && (
+          <LoadingSpinner 
+            size="lg" 
+            text="Autenticando..." 
+            fullScreen={true}
+          />
+        )}
+    
+        {!isAuthenticated && !showLoading && !isLoading ? (
+          <LoginPage onLoginSuccess={handleLoginSuccess} />
+        ) : null}
+        {isAuthenticated && !showLoading && !isLoading ? (
+          <MainPage />
+        ) : null}
+        {isLoading && !showLoading ? (
+          <LoadingSpinner 
+            size="lg" 
+            text="Verificando autenticação..." 
+            fullScreen={true}
+          />
+        ) : null}
 
-      <DebugModal 
-        isOpen={showDebugModal} 
-        onClose={() => setShowDebugModal(false)} 
-      />
+        <DebugModal 
+          isOpen={showDebugModal} 
+          onClose={() => setShowDebugModal(false)} 
+        />
+      </SuccessModalProvider>
     </ActivityLogProvider>
   );
 }

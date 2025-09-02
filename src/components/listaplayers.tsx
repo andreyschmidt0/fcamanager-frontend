@@ -61,7 +61,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
         ClanName: user.ClanName,
         discordId: user.strDiscordID || '0',
         nexonId: user.strNexonID || user.strLNexonID,
-        banStatus: user.Status === 'Banido' ? 'Sim' : 'Não',
+        banStatus: user.ie_banido === 'Banido' ? 'Sim' : 'Não',
         banEndDate: null,
         email: user.strEmail,
         lastMacAddress: user.strLastMacAddress || '',
