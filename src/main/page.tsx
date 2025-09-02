@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import SidebarMenu from '../components/execucoes';
-import PlayersList from '../components/listaplayers';
+import PlayersList from '../components/listaplayersandclans';
 import RecentActivities from '../components/atividadesrecentes';
 import { PlayerProvider } from '../contexts/PlayerContext';
 import { ClanProvider } from '../contexts/ClanContext';
@@ -19,7 +19,7 @@ const MainPage = () => {
         {/* Main container with flex layout */}
         <div className="h-screen bg-[#1d1e24] text-white flex flex-col overflow-hidden">
           <Header />
-          
+
           {/* Mobile Tab Navigation - Visible only on small screens */}
           <div className="lg:hidden flex justify-around bg-[#111216] border-b border-black p-2">
             <button

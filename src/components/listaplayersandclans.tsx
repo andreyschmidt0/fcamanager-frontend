@@ -16,7 +16,8 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const { selectedPlayer, setSelectedPlayer } = usePlayer();
   const { selectedClan, setSelectedClan } = useClan();
   const [viewMode, setViewMode] = useState<'players' | 'clans'>('players');
-  const [searchType, setSearchType] = useState<'nickname' | 'discordId' | 'macaddress' | 'ipaddress' | 'oiduser'>('nickname');
+  const [searchUserType, setSearchUserType] = useState<'nickname' | 'discordId' | 'macaddress' | 'ipaddress' | 'oiduser'>('nickname');
+  const [searchClanType, setSearchClanType] = useState<'clanName' | 'clanId'>('clanName');
   const [search, setSearch] = useState<string>('');
   const [players, setPlayers] = useState<Player[]>([]);
   const [clans, setClans] = useState<Clan[]>([]);
@@ -46,7 +47,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
     setLoading(true);
     try {
       const searchParams: { [key: string]: string } = {};
-      searchParams[searchType] = searchTerm;
+      searchParams[searchUserType] = searchTerm;
 
       const users = await apiService.searchUsers(searchParams);
       
@@ -85,8 +86,8 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   };
 
   // Função para buscar clans
-  const searchClans = async (clanname: string) => {
-    if (!clanname.trim()) {
+  const searchClans = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
       setClans([]);
       setHasSearched(false);
       return;
@@ -94,7 +95,16 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
     setLoading(true);
     try {
-      const clans = await apiService.searchClans(clanname);
+      let clans;
+      
+      if (searchClanType === 'clanId') {
+        // Buscar clan por ID
+        const clan = await apiService.getClanById(searchTerm);
+        clans = clan ? [clan] : [];
+      } else {
+        // Buscar clans por nome
+        clans = await apiService.searchClans(searchTerm);
+      }
       
       const mappedClans: Clan[] = clans.map((clan: any) => ({
         strName: clan.strName,
@@ -128,15 +138,23 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
     }, 800);
 
     return () => clearTimeout(timeout);
-  }, [search, viewMode, searchType]);
+  }, [search, viewMode, searchUserType, searchClanType]);
 
-  // Limpar pesquisa ao trocar tipo de busca
+  // Limpar pesquisa ao trocar tipo de busca de players
   useEffect(() => {
     setSearch('');
     setPlayers([]);
     setHasSearched(false);
     setSelectedPlayer(null);
-  }, [searchType]);
+  }, [searchUserType]);
+
+  // Limpar pesquisa ao trocar tipo de busca de clans
+  useEffect(() => {
+    setSearch('');
+    setClans([]);
+    setHasSearched(false);
+    setSelectedClan(null);
+  }, [searchClanType]);
 
   // Limpar resultados ao trocar de modo
   useEffect(() => {
@@ -166,64 +184,91 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
           </h2>
         </div>    
         
-            {/* Search Type Toggle - Only show for players mode */}
-            {viewMode === 'players' && (
-              <div className="px-4 pb-6" style={{ flexShrink: 0 }}>
-                <div className="flex gap-2 flex-wrap">
-                  <button 
-                    onClick={() => setSearchType('discordId')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                      searchType === 'discordId' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
-                    }`}
-                  >
-                    DISCORD ID
-                  </button>
-                                    <button 
-                    onClick={() => setSearchType('macaddress')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                      searchType === 'macaddress' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
-                    }`}
-                  >
-                    MACADDRESS
-                  </button>
-                                    <button 
-                    onClick={() => setSearchType('ipaddress')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                      searchType === 'ipaddress' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
-                    }`}
-                  >
-                    IPADDRESS
-                  </button>
-                   <button 
-                    onClick={() => setSearchType('oiduser')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                      searchType === 'oiduser' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
-                    }`}
-                  >
-                    OIDUSER
-                  </button>
-                  <button 
-                    onClick={() => setSearchType('nickname')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                      searchType === 'nickname' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
-                    }`}
-                  >
-                    NICKNAME
-                  </button>
-                </div>
-              </div>
-            )}
+        {/* Search Type Toggle - Only show for players mode */}
+        {viewMode === 'players' && (
+          <div className="px-4 pb-6" style={{ flexShrink: 0 }}>
+            <div className="flex gap-2 flex-wrap">
+              <button 
+                onClick={() => setSearchUserType('discordId')}
+                className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                  searchUserType === 'discordId' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                }`}
+              >
+                DISCORD ID
+              </button>
+              <button 
+                onClick={() => setSearchUserType('macaddress')}
+                className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                  searchUserType === 'macaddress' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                }`}
+              >
+                MACADDRESS
+              </button>
+              <button 
+                onClick={() => setSearchUserType('ipaddress')}
+                className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                  searchUserType === 'ipaddress' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                }`}
+              >
+                IPADDRESS
+              </button>
+              <button 
+                onClick={() => setSearchUserType('oiduser')}
+                className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                  searchUserType === 'oiduser' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                }`}
+              >
+                OIDUSER
+              </button>
+              <button 
+                onClick={() => setSearchUserType('nickname')}
+                className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                  searchUserType === 'nickname' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                }`}
+              >
+                NICKNAME
+              </button>
+            </div>
+          </div>
+        )}
 
+        {/* Search Type Toggle - Only show for clans mode */}
+        {viewMode === 'clans' && (
+          <div className="px-4 pb-6" style={{ flexShrink: 0 }}>
+            <div className="flex gap-2 flex-wrap">
+              <button 
+                onClick={() => setSearchClanType('clanName')}
+                className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                  searchClanType === 'clanName' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                }`}
+              >
+                NOME DO CLAN
+              </button>
+              <button 
+                onClick={() => setSearchClanType('clanId')}
+                className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                  searchClanType === 'clanId' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                }`}
+              >
+                ID DO CLAN
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="px-4 pb-2" style={{ flexShrink: 0 }}>
@@ -235,10 +280,18 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               type="search" 
               placeholder={
                 viewMode === 'players' 
-                  ? searchType === 'nickname'
+                  ? searchUserType === 'nickname'
                     ? "Digite o nickname do player..."
-                    : "Digite o Discord ID do player..."
-                  : "Digite o nickname do clan..."
+                    : searchUserType === 'discordId'
+                    ? "Digite o Discord ID do player..."
+                    : searchUserType === 'macaddress'
+                    ? "Digite o MAC Address do player..."
+                    : searchUserType === 'ipaddress'
+                    ? "Digite o IP Address do player..."
+                    : "Digite o OID User do player..."
+                  : searchClanType === 'clanName'
+                  ? "Digite o nome do clan..."
+                  : "Digite o ID do clan..."
               } 
               className="w-full bg-[#1d1e24] rounded-lg p-3 pl-10 text-white placeholder-gray-400 border border-gray-600 focus:border-green-500 focus:outline-none transition-colors" 
             />
@@ -283,7 +336,16 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <Search size={48} className="mb-4" />
                   <p className="text-lg">
-                    {searchType === 'nickname' ? 'Digite um nickname para buscar' : 'Digite um Discord ID para buscar'}
+                    {searchUserType === 'nickname' 
+                      ? 'Digite um nickname para buscar' 
+                      : searchUserType === 'discordId'
+                      ? 'Digite um Discord ID para buscar'
+                      : searchUserType === 'macaddress'
+                      ? 'Digite um MAC Address para buscar'
+                      : searchUserType === 'ipaddress'
+                      ? 'Digite um IP Address para buscar'
+                      : 'Digite um OID User para buscar'
+                    }
                   </p>
                   <p className="text-sm">Os resultados aparecerão aqui</p>
                 </div>
@@ -294,7 +356,16 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                   <X size={48} className="mb-4" />
                   <p className="text-lg">Nenhum player encontrado</p>
                   <p className="text-sm">
-                    {searchType === 'nickname' ? 'Tente buscar por outro nickname' : 'Tente buscar por outro Discord ID'}
+                    {searchUserType === 'nickname' 
+                      ? 'Tente buscar por outro nickname' 
+                      : searchUserType === 'discordId'
+                      ? 'Tente buscar por outro Discord ID'
+                      : searchUserType === 'macaddress'
+                      ? 'Tente buscar por outro MAC Address'
+                      : searchUserType === 'ipaddress'
+                      ? 'Tente buscar por outro IP Address'
+                      : 'Tente buscar por outro OID User'
+                    }
                   </p>
                 </div>
               )}
@@ -350,7 +421,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               {!hasSearched && !loading && clans.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <Search size={48} className="mb-4" />
-                  <p className="text-lg">Digite um nickname para buscar</p>
+                  <p className="text-lg">
+                    {searchClanType === 'clanName' ? 'Digite um nome de clan para buscar' : 'Digite um ID de clan para buscar'}
+                  </p>
                   <p className="text-sm">Os clans aparecerão aqui</p>
                 </div>
               )}
@@ -359,7 +432,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <X size={48} className="mb-4" />
                   <p className="text-lg">Nenhum clan encontrado</p>
-                  <p className="text-sm">Tente buscar por outro nickname</p>
+                  <p className="text-sm">
+                    {searchClanType === 'clanName' ? 'Tente buscar por outro nome de clan' : 'Tente buscar por outro ID de clan'}
+                  </p>
                 </div>
               )}
               

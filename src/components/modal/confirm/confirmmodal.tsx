@@ -9,6 +9,7 @@ interface ConfirmationModalProps {
   description?: string;
   confirmActionText?: string;
   cancelActionText?: string;
+  isLoading?: boolean;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -19,6 +20,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   description,
   confirmActionText = 'Confirmar',
   cancelActionText = 'Cancelar',
+  isLoading = false,
 }) => {
   if (!isOpen) return null;
 
@@ -51,15 +53,28 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors"
+              disabled={isLoading}
+              className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                isLoading 
+                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
+                  : 'bg-gray-600 hover:bg-gray-700 text-white'
+              }`}
             >
               {cancelActionText}
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
+              disabled={isLoading}
+              className={`flex-1 py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                isLoading 
+                  ? 'bg-red-800 text-red-300 cursor-not-allowed' 
+                  : 'bg-red-600 hover:bg-red-700 text-white'
+              }`}
             >
-              {confirmActionText}
+              {isLoading && (
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-300 border-t-transparent"></div>
+              )}
+              {isLoading ? 'Processando...' : confirmActionText}
             </button>
           </div>
         </div>

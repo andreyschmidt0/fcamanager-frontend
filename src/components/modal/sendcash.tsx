@@ -20,6 +20,7 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
   });
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -82,6 +83,9 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
+  if (isLoading) return; // Prevent multiple calls
+  
+  setIsLoading(true);
   try {
     // Chamar API para enviar cash
     const result = await apiService.creditCashToList({
@@ -95,6 +99,12 @@ const handleConfirmAction = async () => {
       setErrorMessage('');
       setShowConfirmation(false);
       onClose();
+      // Reset form
+      setFormData({
+        loginAccounts: '',
+        cashAmount: '',
+        creditReason: ''
+      });
     } else {
       setErrorMessage(result.error || 'Erro ao enviar cash');
       setShowConfirmation(false);
@@ -103,6 +113,8 @@ const handleConfirmAction = async () => {
     console.error("Erro ao enviar cash:", error);
     setErrorMessage('Erro de conexão ao enviar cash');
     setShowConfirmation(false);
+  } finally {
+    setIsLoading(false);
   }
 };
 
@@ -220,6 +232,7 @@ const handleConfirmAction = async () => {
 Razão: "${formData.creditReason}"`}
           confirmActionText="Sim, Enviar Cash"
           cancelActionText="Cancelar"
+          isLoading={isLoading}
         />
     </div>
   );

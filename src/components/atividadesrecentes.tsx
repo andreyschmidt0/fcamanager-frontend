@@ -74,8 +74,32 @@ const RecentActivities: React.FC = () => {
 
   // Buscar logs quando período, GM mudar, ou quando isMaster/loading mudarem
   useEffect(() => {
-    fetchLogs();
+    // Só executar se for Master e não estiver loading
+    if (isMaster && !loading) {
+      fetchLogs();
+    }
   }, [selectedPeriod, selectedGM, isMaster, loading]);
+
+  // Cache para o Discord ID para evitar múltiplas chamadas
+  const [cachedDiscordId, setCachedDiscordId] = useState<string | null>(null);
+
+  const getDiscordId = async (): Promise<string | null> => {
+    if (cachedDiscordId) {
+      return cachedDiscordId;
+    }
+
+    try {
+      const profileData = await apiService.getPlayerProfile(user?.profile?.nickname || '');
+      if (profileData?.strDiscordID) {
+        setCachedDiscordId(profileData.strDiscordID);
+        return profileData.strDiscordID;
+      }
+    } catch (error) {
+      console.error('Erro ao buscar Discord ID:', error);
+    }
+    
+    return null;
+  };
 
   const fetchLogs = async () => {
     if (!isMaster || loading) {
@@ -84,16 +108,12 @@ const RecentActivities: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // Primeiro buscar o Discord ID do usuário logado
-      const profileData = await apiService.getPlayerProfile(user?.profile?.nickname || '');
-      if (!profileData) {
-        throw new Error('Erro ao obter perfil do administrador');
+      const currentUserDiscordId = await getDiscordId();
+      if (!currentUserDiscordId) {
+        throw new Error('Erro ao obter Discord ID do administrador');
       }
-      
-      const currentUserDiscordId = profileData.strDiscordID;
 
       const logs = await apiService.getLogs(selectedPeriod, selectedGM || undefined, 1000, currentUserDiscordId);
-
       setDatabaseLogs(logs);
     } catch (error) {
       console.error('Erro ao buscar logs:', error);
@@ -105,15 +125,11 @@ const RecentActivities: React.FC = () => {
 
   const fetchGMUsers = async () => {
     try {
-      // Primeiro buscar o Discord ID do usuário logado
-      const profileData = await apiService.getPlayerProfile(user?.profile?.nickname || '');
-      if (!profileData) {
+      const discordId = await getDiscordId();
+      if (!discordId) {
         return;
       }
       
-      const discordId = profileData.strDiscordID;
-      
-      // Agora tentar buscar GMs usando o Discord ID
       const data = await apiService.getGMList(discordId);
       if (data && data.isAuthorized) {
         setGMUsers(data.gms || data.gmUsers || []);
