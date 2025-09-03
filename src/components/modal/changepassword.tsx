@@ -27,6 +27,7 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ isOpen, onClose }) => {
   const [playerValidated, setPlayerValidated] = useState(false);
   
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Função para validação cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
@@ -146,28 +147,30 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
+  if (isLoading) return; // Prevent multiple calls
   
-  // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
-    try {
-      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid || !validationResult.player?.oidUser) {
-        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+  setIsLoading(true);
+  try {
+    // Validação dupla: Re-validar jogador antes de executar ação
+    if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
+      try {
+        const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+        if (!validationResult.isValid || !validationResult.player?.oidUser) {
+          setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+          setShowConfirmation(false);
+          return;
+        }
+        // Atualizar dados validados
+        setValidatedOidUser(validationResult.player.oidUser);
+        setFetchedPlayerName(validationResult.player.NickName || '');
+      } catch (error) {
+        console.error('Erro na validação dupla:', error);
+        setErrorMessage('Erro ao validar jogador. Tente novamente.');
         setShowConfirmation(false);
         return;
       }
-      // Atualizar dados validados
-      setValidatedOidUser(validationResult.player.oidUser);
-      setFetchedPlayerName(validationResult.player.NickName || '');
-    } catch (error) {
-      console.error('Erro na validação dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
-      setShowConfirmation(false);
-      return;
     }
-  }
 
-  try {
     // Chamar API para alterar senha
     const result = await apiService.changePassword({
       targetNexonId: formData.loginAccount,
@@ -188,6 +191,8 @@ const handleConfirmAction = async () => {
     console.error("Erro ao alterar senha:", error);
     setErrorMessage('Erro de conexão ao alterar senha');
     setShowConfirmation(false);
+  } finally {
+    setIsLoading(false);
   }
 };
 
@@ -306,6 +311,7 @@ const handleConfirmAction = async () => {
         description={`Tem certeza que deseja alterar a senha do jogador: ${fetchedPlayerName || formData.loginAccount} (Discord: ${formData.discordId})?`}
         confirmActionText="Sim, Alterar Senha"
         cancelActionText="Cancelar"
+        isLoading={isLoading}
       />
     </div>
   );

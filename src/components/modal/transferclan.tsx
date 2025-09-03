@@ -26,6 +26,7 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
   const [playerValidated, setPlayerValidated] = useState(false);
   const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   const [validatedClanName, setValidatedClanName] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Função para validação cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {

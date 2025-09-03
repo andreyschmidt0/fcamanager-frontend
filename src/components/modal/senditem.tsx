@@ -24,6 +24,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -92,6 +93,9 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
+  if (isLoading) return; // Prevent double-clicks
+  
+  setIsLoading(true);
   try {
     // Chamar API para enviar produtos
     const result = await apiService.sendProductToList({
@@ -106,6 +110,13 @@ const handleConfirmAction = async () => {
       setErrorMessage('');
       setShowConfirmation(false);
       onClose();
+      // Reset form
+      setFormData({
+        loginAccounts: '',
+        productIds: '',
+        count: '',
+        message: ''
+      });
     } else {
       setErrorMessage(result.error || 'Erro ao enviar produtos');
       setShowConfirmation(false);
@@ -114,6 +125,8 @@ const handleConfirmAction = async () => {
     console.error("Erro ao enviar produtos:", error);
     setErrorMessage('Erro de conexão ao enviar produtos');
     setShowConfirmation(false);
+  } finally {
+    setIsLoading(false);
   }
 };
 
@@ -251,6 +264,7 @@ const handleConfirmAction = async () => {
 Mensagem: "${formData.message}"`}
           confirmActionText="Sim, Enviar Produtos"
           cancelActionText="Cancelar"
+          isLoading={isLoading}
         />
     </div>
   );

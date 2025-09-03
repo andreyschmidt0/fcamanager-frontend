@@ -4,7 +4,6 @@ import { usePlayer } from '../../contexts/PlayerContext';
 import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
 import apiService from '../../services/api-tauri.service';
-import { Player } from '../../contexts/PlayerContext';
 
 interface RemoveAccountProps {
   isOpen: boolean;
@@ -20,7 +19,7 @@ const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
     reason: ''
   });
   
-  // Estados para valida��o
+  // Estados para validação
   const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
   const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -28,8 +27,9 @@ const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
   const [playerValidated, setPlayerValidated] = useState(false);
   
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fun��o para valida��o cross-check de Discord ID + Login
+  // Função para validação cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
     if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
       setFetchedPlayerName('');
@@ -51,14 +51,14 @@ const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
         setFetchedPlayerName('');
         setValidatedOidUser(null);
         setPlayerValidated(false);
-        setErrorMessage(result.error || 'Erro na valida��o');
+        setErrorMessage(result.error || 'Erro na validação');
       }
     } catch (error) {
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
       setValidatedOidUser(null);
       setPlayerValidated(false);
-      setErrorMessage('Erro de conex�o');
+      setErrorMessage('Erro de conexão');
     } finally {
       setIsValidatingPlayer(false);
     }
@@ -72,7 +72,7 @@ const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
         loginAccount: selectedPlayer.nexonId || ''
       }));
       
-      // Limpar estados de valida��o quando modal abrir com selectedPlayer
+      // Limpar estados de validação quando modal abrir com selectedPlayer
       setFetchedPlayerName('');
       setValidatedOidUser(null);
       setErrorMessage('');
@@ -96,24 +96,16 @@ const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
     }
   }, [selectedPlayer, isOpen]);
 
-  // useEffect com debounce para valida��o autom�tica quando campos s�o digitados
+  // useEffect com debounce para validação automática quando campos são digitados
   useEffect(() => {
-    if (formData.discordId && formData.discordId.trim() !== '' && 
-        formData.loginAccount && formData.loginAccount.trim() !== '') {
-      
+    if (!selectedPlayer && formData.discordId && formData.loginAccount) {
       const timeoutId = setTimeout(() => {
         validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
       }, 500); // Debounce de 500ms
 
       return () => clearTimeout(timeoutId);
-    } else {
-      // Se um dos campos estiver vazio, limpar valida��o
-      setFetchedPlayerName('');
-      setValidatedOidUser(null);
-      setPlayerValidated(false);
-      setErrorMessage('');
     }
-  }, [formData.discordId, formData.loginAccount]);
+  }, [formData.discordId, formData.loginAccount, selectedPlayer]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -121,8 +113,7 @@ const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
       ...prev,
       [name]: value
     }));
-    
-    // Limpar mensagem de erro quando usu�rio digitar
+    // Limpar mensagem de erro quando usuário digitar
     if (errorMessage) {
       setErrorMessage('');
     }
@@ -131,72 +122,72 @@ const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar se o jogador foi validado antes de mostrar confirma��o
-    if (!playerValidated || !fetchedPlayerName) {
-      setErrorMessage('Por favor, aguarde a valida��o do jogador ser conclu�da.');
-      return;
-    }
-    
-    // Validar se ainda est� validando
-    if (isValidatingPlayer) {
-      setErrorMessage('Aguarde a valida��o ser conclu�da antes de remover a conta.');
+    // Validar se temos um jogador válido antes de mostrar confirmação
+    if (!selectedPlayer && (!fetchedPlayerName || fetchedPlayerName.trim() === '')) {
+      setErrorMessage('Por favor, insira um Discord ID e Login válidos.');
       return;
     }
 
-    // Validar se a raz�o foi preenchida
+    // Validar se a razão foi preenchida
     if (!formData.reason || formData.reason.trim() === '') {
-      setErrorMessage('Por favor, informe o motivo da remo��o da conta.');
+      setErrorMessage('Por favor, informe a razão da remoção da conta.');
       return;
     }
     
     setShowConfirmation(true);
   };
 
-const handleConfirmAction = async () => {
-  
-  // Valida��o dupla: Re-validar jogador antes de executar a��o
-  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
+  const handleConfirmAction = async () => {
+    if (isLoading) return; // Prevent double-clicks
+    
+    setIsLoading(true);
     try {
-      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid || !validationResult.player?.oidUser) {
-        setErrorMessage('Jogador n�o p�de ser validado. Verifique os dados informados.');
-        setShowConfirmation(false);
-        return;
+      // Validação dupla: Re-validar jogador antes de executar ação
+      if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
+        try {
+          const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+          if (!validationResult.isValid || !validationResult.player?.oidUser) {
+            setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+            setShowConfirmation(false);
+            return;
+          }
+          // Atualizar dados validados
+          setValidatedOidUser(validationResult.player.oidUser);
+          setFetchedPlayerName(validationResult.player.NickName || '');
+        } catch (error) {
+          console.error('Erro na validação dupla:', error);
+          setErrorMessage('Erro ao validar jogador. Tente novamente.');
+          setShowConfirmation(false);
+          return;
+        }
       }
-      // Atualizar dados validados
-      setValidatedOidUser(validationResult.player.oidUser);
-      setFetchedPlayerName(validationResult.player.NickName || '');
-    } catch (error) {
-      console.error('Erro na valida��o dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
-      setShowConfirmation(false);
-      return;
-    }
-  }
 
-  try {
-    // Chamar API para remover conta
-    const result = await apiService.removeAccount({
-      targetNexonId: formData.loginAccount,
-      reason: formData.reason,
-      adminDiscordId: user?.profile?.discordId || 'system',
-      targetOidUser: validatedOidUser!
-    });
+      try {
+        // Chamar API para remover conta
+        const result = await apiService.removeAccount({
+          targetNexonId: formData.loginAccount,
+          reason: formData.reason,
+          adminDiscordId: user?.profile?.discordId || 'system',
+          targetOidUser: validatedOidUser!
+        });
 
-    if (result.success) {
-      setErrorMessage('');
-      setShowConfirmation(false);
-      onClose();
-    } else {
-      setErrorMessage(result.error || 'Erro ao remover conta');
-      setShowConfirmation(false);
+        if (result.success) {
+          setErrorMessage('');
+          setShowConfirmation(false);
+          onClose();
+        } else {
+          setErrorMessage(result.error || 'Erro ao remover conta');
+          setShowConfirmation(false);
+        }
+      } catch (error) {
+        console.error("Erro ao remover conta:", error);
+        setErrorMessage('Erro de conexão ao remover conta');
+        setShowConfirmation(false);
+      }
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error("Erro ao remover conta:", error);
-    setErrorMessage('Erro de conex�o ao remover conta');
-    setShowConfirmation(false);
-  }
-};
+  };
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);
@@ -252,7 +243,7 @@ const handleConfirmAction = async () => {
               required
             />
             
-            {/* Feedback visual de valida��o */}
+            {/* Feedback visual de validação */}
             {isValidatingPlayer && (
               <p className="mt-2 text-sm text-yellow-400">
                 Validando jogador...
@@ -310,7 +301,7 @@ const handleConfirmAction = async () => {
         onConfirm={handleConfirmAction}
         onCancel={handleCancelConfirmation}
         title="Confirmar Remoção de Conta"
-        description={'Tem certeza que deseja excluir a conta?'}
+        description="Tem certeza que deseja excluir a conta?"
         confirmActionText="Sim, Remover Permanentemente"
         cancelActionText="Cancelar"
       />

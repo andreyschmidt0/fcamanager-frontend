@@ -5,12 +5,12 @@ import ConfirmationModal from './confirm/confirmmodal';
 import { useAuth } from '../../hooks/useAuth';
 import apiService from '../../services/api-tauri.service';
 
-interface removeclanProps {
+interface RemoveClanProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
+const RemoveClan: React.FC<RemoveClanProps> = ({ isOpen, onClose }) => {
   const { selectedClan } = useClan();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
@@ -18,6 +18,7 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
     reason: ''
   });
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [fetchedClanName, setFetchedClanName] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -105,47 +106,53 @@ const removeclan: React.FC<removeclanProps> = ({ isOpen, onClose }) => {
     setShowConfirmation(true);
   };
 
-const handleConfirmAction = async () => {
-  
-  // Validar se o clã existe antes de prosseguir
-  if (!selectedClan && (!fetchedClanName || fetchedClanName.trim() === '')) {
+  const handleConfirmAction = async () => {
+    if (isLoading) return; // Prevent double-clicks
+    
+    setIsLoading(true);
     try {
-      const clan = await apiService.getClanById(formData.oidGuild);
-      if (!clan || !clan.strName) {
-        setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
-        setShowConfirmation(false);
-        return;
+      // Validar se o clã existe antes de prosseguir
+      if (!selectedClan && (!fetchedClanName || fetchedClanName.trim() === '')) {
+        try {
+          const clan = await apiService.getClanById(formData.oidGuild);
+          if (!clan || !clan.strName) {
+            setErrorMessage('Clã não encontrado com este ID. Verifique o ID informado.');
+            setShowConfirmation(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Erro ao validar clã:', error);
+          setErrorMessage('Erro ao validar clã. Tente novamente.');
+          setShowConfirmation(false);
+          return;
+        }
       }
-    } catch (error) {
-      console.error('Erro ao validar clã:', error);
-      setErrorMessage('Erro ao validar clã. Tente novamente.');
-      setShowConfirmation(false);
-      return;
-    }
-  }
 
-  try {
-    // Chamar API para deletar clã
-    const result = await apiService.deleteClan({
-      oidGuild: parseInt(formData.oidGuild),
-      reason: formData.reason,
-      adminDiscordId: user?.profile?.discordId || 'system'
-    });
+      try {
+        // Chamar API para deletar clã
+        const result = await apiService.deleteClan({
+          oidGuild: parseInt(formData.oidGuild),
+          reason: formData.reason,
+          adminDiscordId: user?.profile?.discordId || 'system'
+        });
 
-    if (result.success) {
-      setErrorMessage('');
-      setShowConfirmation(false);
-      onClose();
-    } else {
-      setErrorMessage(result.error || 'Erro ao deletar clã');
-      setShowConfirmation(false);
+        if (result.success) {
+          setErrorMessage('');
+          setShowConfirmation(false);
+          onClose();
+        } else {
+          setErrorMessage(result.error || 'Erro ao deletar clã');
+          setShowConfirmation(false);
+        }
+      } catch (error) {
+        console.error("Erro ao deletar clã:", error);
+        setErrorMessage('Erro de conexão ao deletar clã');
+        setShowConfirmation(false);
+      }
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error("Erro ao deletar clã:", error);
-    setErrorMessage('Erro de conexão ao deletar clã');
-    setShowConfirmation(false);
-  }
-};
+  };
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);
@@ -237,9 +244,10 @@ Razão: "${formData.reason}"
 Esta ação é IRREVERSÍVEL e o clã será excluído definitivamente.`}
         confirmActionText="Sim, Deletar Permanentemente"
         cancelActionText="Cancelar"
+        isLoading={isLoading}
       />
     </div>
   );
 };
 
-export default removeclan;
+export default RemoveClan;

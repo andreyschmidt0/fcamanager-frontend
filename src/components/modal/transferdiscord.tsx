@@ -124,6 +124,7 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
   };
 
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,53 +145,57 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
   };
 
 const handleConfirmAction = async () => {
+  if (isLoading) return; // Prevent multiple calls
   
-  // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
-    try {
-      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid || !validationResult.player?.oidUser) {
-        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+  setIsLoading(true);
+  try {
+    // Validação dupla: Re-validar jogador antes de executar ação
+    if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
+      try {
+        const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+        if (!validationResult.isValid || !validationResult.player?.oidUser) {
+          setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+          setShowConfirmation(false);
+          return;
+        }
+        setValidatedOidUser(validationResult.player.oidUser);
+      } catch (error) {
+        console.error('Erro na validação dupla:', error);
+        setErrorMessage('Erro ao validar jogador. Tente novamente.');
         setShowConfirmation(false);
         return;
       }
-      setValidatedOidUser(validationResult.player.oidUser);
-    } catch (error) {
-      console.error('Erro na validação dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
-      setShowConfirmation(false);
-      return;
     }
-  }
-  
-  const gmOidUser = user?.id || 2;
+    
+    const gmOidUser = user?.id || 2;
 
-  const changeDiscordData = {
-    gmOidUser: gmOidUser, // oidUser do GM executando a ação
-    targetOidUser: validatedOidUser!, // oidUser do usuário que terá o Discord alterado
-    newDiscordID: formData.newDiscordID, // Discord ID novo
-    adminDiscordId: user?.profile?.discordId || 'system'
-  };
+    const changeDiscordData = {
+      gmOidUser: gmOidUser, // oidUser do GM executando a ação
+      targetOidUser: validatedOidUser!, // oidUser do usuário que terá o Discord alterado
+      newDiscordID: formData.newDiscordID, // Discord ID novo
+      adminDiscordId: user?.profile?.discordId || 'system'
+    };
 
-  try {
     const result = await apiService.changeUserDiscordId(changeDiscordData);
     
     if (result.success) {
       // Exibir mensagem de sucesso para o usuário
       console.log('Sucesso:', result.message);
-      // Aqui você pode adicionar uma notificação de sucesso se desejar
+      setShowConfirmation(false);
+      onClose();
     } else {
       // Exibir mensagem de erro
       setErrorMessage(result.error || result.message || 'Erro desconhecido');
+      setShowConfirmation(false);
     }
     
   } catch (error) {
     console.error('Erro ao alterar Discord ID:', error);
     setErrorMessage('Erro de conexão ao tentar alterar o Discord ID');
+    setShowConfirmation(false);
+  } finally {
+    setIsLoading(false);
   }
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -322,6 +327,7 @@ const handleConfirmAction = async () => {
           description={`Você tem certeza que deseja alterar o Discord ID do jogador ${fetchedPlayerName} (Discord atual: ${formData.discordId}, Login: ${formData.loginAccount}) para o novo Discord ID: ${formData.newDiscordID}?`}
           confirmActionText="Sim, alterar Discord ID"
           cancelActionText="Cancelar"
+          isLoading={isLoading}
         />
     </div>
   );

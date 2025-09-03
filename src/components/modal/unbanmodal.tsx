@@ -65,6 +65,7 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
   const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (selectedPlayer && isOpen) {
@@ -151,8 +152,11 @@ const UnbanModal: React.FC<UnbanModalProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
+  if (isLoading) return; // Prevent double-clicks
   
-  // Validação dupla: Re-validar jogador antes de executar ação
+  setIsLoading(true);
+  try {
+    // Validação dupla: Re-validar jogador antes de executar ação
   if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
@@ -161,40 +165,41 @@ const handleConfirmAction = async () => {
         setShowConfirmation(false);
         return;
       }
-      setValidatedOidUser(validationResult.player.oidUser);
-    } catch (error) {
-      console.error('Erro na validação dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
-      setShowConfirmation(false);
-      return;
+        setValidatedOidUser(validationResult.player.oidUser);
+      } catch (error) {
+        console.error('Erro na validação dupla:', error);
+        setErrorMessage('Erro ao validar jogador. Tente novamente.');
+        setShowConfirmation(false);
+        return;
+      }
     }
-  }
 
-  const unbanData = {
-    discordId: formData.discordId,
-    loginAccount: formData.loginAccount,
-    reason: formData.unbanReason,
-    unbanScope: formData.unbanScope,
-    clearMacBlockEntry: formData.clearMacBlock
-  };
+    const unbanData = {
+      discordId: formData.discordId,
+      loginAccount: formData.loginAccount,
+      reason: formData.unbanReason,
+      unbanScope: formData.unbanScope,
+      clearMacBlockEntry: formData.clearMacBlock
+    };
 
-  try {
     const result = await apiService.unbanUser(unbanData);
     
     if (result.success) {
       console.log('Sucesso:', result.message);
-      // Aqui você pode adicionar uma notificação de sucesso se desejar
+      setShowConfirmation(false);
+      onClose();
     } else {
       setErrorMessage(result.error || result.message || 'Erro desconhecido');
+      setShowConfirmation(false);
     }
     
   } catch (error) {
     console.error('Erro ao desbanir usuário:', error);
     setErrorMessage('Erro de conexão ao tentar desbanir o usuário');
+    setShowConfirmation(false);
+  } finally {
+    setIsLoading(false);
   }
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -342,6 +347,7 @@ const handleConfirmAction = async () => {
           description={`Tem certeza que deseja desbanir o jogador: ${fetchedPlayerName || formData.loginAccount} (Discord: ${formData.discordId})?`}
           confirmActionText="Sim, Desbanir"
           cancelActionText="Cancelar"
+          isLoading={isLoading}
         />
     </div>
   );

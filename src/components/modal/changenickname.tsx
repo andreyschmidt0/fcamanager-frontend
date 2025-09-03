@@ -27,6 +27,7 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
   const [playerValidated, setPlayerValidated] = useState(false);
   
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Função para validação cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
@@ -156,29 +157,31 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
+  if (isLoading) return; // Prevent multiple calls
   
-  // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
-    console.log('[CHANGENICKNAME] 🔒 Validação dupla no handleConfirmAction');
-    try {
-      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid || !validationResult.player?.oidUser) {
-        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+  setIsLoading(true);
+  try {
+    // Validação dupla: Re-validar jogador antes de executar ação
+    if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
+      console.log('[CHANGENICKNAME] 🔒 Validação dupla no handleConfirmAction');
+      try {
+        const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+        if (!validationResult.isValid || !validationResult.player?.oidUser) {
+          setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+          setShowConfirmation(false);
+          return;
+        }
+        // Atualizar dados validados
+        setValidatedOidUser(validationResult.player.oidUser);
+        setFetchedPlayerName(validationResult.player.NickName || '');
+      } catch (error) {
+        console.error('Erro na validação dupla:', error);
+        setErrorMessage('Erro ao validar jogador. Tente novamente.');
         setShowConfirmation(false);
         return;
       }
-      // Atualizar dados validados
-      setValidatedOidUser(validationResult.player.oidUser);
-      setFetchedPlayerName(validationResult.player.NickName || '');
-    } catch (error) {
-      console.error('Erro na validação dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
-      setShowConfirmation(false);
-      return;
     }
-  }
 
-  try {
     // Chamar API para alterar nickname
     const result = await apiService.changeNickname({
       targetNexonId: formData.loginAccount,
@@ -199,6 +202,8 @@ const handleConfirmAction = async () => {
     console.error("Erro ao alterar nickname:", error);
     setErrorMessage('Erro de conexão ao alterar nickname');
     setShowConfirmation(false);
+  } finally {
+    setIsLoading(false);
   }
 };
 
@@ -316,6 +321,7 @@ const handleConfirmAction = async () => {
         description={`Tem certeza que deseja alterar o nickname do jogador: ${fetchedPlayerName || formData.loginAccount} (Discord: ${formData.discordId}) para: ${formData.new_value}?`}
         confirmActionText="Sim, Alterar"
         cancelActionText="Cancelar"
+        isLoading={isLoading}
       />
     </div>
   );

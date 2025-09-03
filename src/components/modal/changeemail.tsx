@@ -28,6 +28,7 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   const [playerValidated, setPlayerValidated] = useState(false);
   
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Função para validação cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
@@ -147,28 +148,30 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
+  if (isLoading) return; // Prevent multiple calls
   
-  // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
-    try {
-      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid || !validationResult.player?.oidUser) {
-        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+  setIsLoading(true);
+  try {
+    // Validação dupla: Re-validar jogador antes de executar ação
+    if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
+      try {
+        const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+        if (!validationResult.isValid || !validationResult.player?.oidUser) {
+          setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+          setShowConfirmation(false);
+          return;
+        }
+        // Atualizar dados validados
+        setValidatedOidUser(validationResult.player.oidUser);
+        setFetchedPlayerName(validationResult.player.NickName || '');
+      } catch (error) {
+        console.error('Erro na validação dupla:', error);
+        setErrorMessage('Erro ao validar jogador. Tente novamente.');
         setShowConfirmation(false);
         return;
       }
-      // Atualizar dados validados
-      setValidatedOidUser(validationResult.player.oidUser);
-      setFetchedPlayerName(validationResult.player.NickName || '');
-    } catch (error) {
-      console.error('Erro na validação dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
-      setShowConfirmation(false);
-      return;
     }
-  }
 
-  try {
     // Chamar API para alterar email
     const result = await apiService.changeEmail({
       targetNexonId: formData.loginAccount,
@@ -189,6 +192,8 @@ const handleConfirmAction = async () => {
     console.error("Erro ao alterar email:", error);
     setErrorMessage('Erro de conexão ao alterar email');
     setShowConfirmation(false);
+  } finally {
+    setIsLoading(false);
   }
 };
 
@@ -307,6 +312,7 @@ const handleConfirmAction = async () => {
         description={`Tem certeza que deseja alterar o email do jogador: ${fetchedPlayerName || formData.loginAccount} (Discord: ${formData.discordId}) para: ${formData.newemail}?`}
         confirmActionText="Sim, Alterar"
         cancelActionText="Cancelar"
+        isLoading={isLoading}
       />
     </div>
   );

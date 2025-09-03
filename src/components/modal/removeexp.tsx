@@ -13,6 +13,7 @@ interface RemoveExpProps {
 const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
   const { selectedPlayer } = usePlayer();
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const [currentExp, setCurrentExp] = useState<number>(0);
   const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
@@ -103,7 +104,6 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
     }
   }, [formData.discordId, formData.loginAccount]);
 
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -140,53 +140,57 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
     setShowConfirmation(true);
   };
 
-const handleConfirmAction = async () => {
-  
-  // Garantir que temos uma validação dupla antes de prosseguir (como nos outros modais)
-  if (!playerValidated) {
+  const handleConfirmAction = async () => {
+    if (isLoading) return; // Prevent multiple calls
+    
+    setIsLoading(true);
     try {
-      const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      if (!validationResult.isValid) {
-        setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+      // Garantir que temos uma validação dupla antes de prosseguir (como nos outros modais)
+      if (!playerValidated) {
+        try {
+          const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
+          if (!validationResult.isValid) {
+            setErrorMessage('Jogador não pôde ser validado. Verifique os dados informados.');
+            setShowConfirmation(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Erro na validação dupla:', error);
+          setErrorMessage('Erro ao validar jogador. Tente novamente.');
+          setShowConfirmation(false);
+          return;
+        }
+      }
+
+      // Chamar API para aplicar downgrade de rank
+      const result = await apiService.setUserRank({
+        discordId: formData.discordId,
+        loginAccount: formData.loginAccount,
+        targetGradeLevel: parseInt(formData.targetGradeLevel),
+        reason: formData.reason,
+        adminDiscordId: user?.profile?.discordId || 'system'
+      });
+
+      if (result.success) {
+        setErrorMessage('');
         setShowConfirmation(false);
-        return;
+        onClose();
+      } else {
+        setErrorMessage(result.error || 'Erro ao aplicar downgrade');
+        setShowConfirmation(false);
       }
     } catch (error) {
-      console.error('Erro na validação dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
+      console.error('Erro ao aplicar downgrade:', error);
+      setErrorMessage('Erro de conexão ao aplicar downgrade');
       setShowConfirmation(false);
-      return;
+    } finally {
+      setIsLoading(false);
     }
-  }
-
-  try {
-    // Chamar API para aplicar downgrade de rank
-    const result = await apiService.setUserRank({
-      discordId: formData.discordId,
-      loginAccount: formData.loginAccount,
-      targetGradeLevel: parseInt(formData.targetGradeLevel),
-      reason: formData.reason,
-      adminDiscordId: user?.profile?.discordId || 'system'
-    });
-
-    if (result.success) {
-      setErrorMessage('');
-      setShowConfirmation(false);
-      onClose();
-    } else {
-      setErrorMessage(result.error || 'Erro ao aplicar downgrade');
-      setShowConfirmation(false);
-    }
-  } catch (error) {
-    console.error('Erro ao aplicar downgrade:', error);
-    setErrorMessage('Erro de conexão ao aplicar downgrade');
-    setShowConfirmation(false);
-  }
-};
+  };
   
-    const handleCancelConfirmation = () => {
-      setShowConfirmation(false);
-    };
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
+  };
 
   if (!isOpen) return null;
 
@@ -302,15 +306,17 @@ const handleConfirmAction = async () => {
           </div>
         </form>
       </div>
-          <ConfirmationModal
-          isOpen={showConfirmation}
-          onConfirm={handleConfirmAction}
-          onCancel={handleCancelConfirmation}
-          title="Confirmar Downgrade de Rank"
-          description={`Tem certeza que deseja remover exp?`}
-          confirmActionText="Sim, Aplicar Downgrade"
-          cancelActionText="Cancelar"
-        />
+      
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelConfirmation}
+        title="Confirmar Downgrade de Rank"
+        description="Tem certeza que deseja remover exp?"
+        confirmActionText="Sim, Aplicar Downgrade"
+        cancelActionText="Cancelar"
+        isLoading={isLoading}
+      />
     </div>
   );
 };

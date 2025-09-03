@@ -31,6 +31,7 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
   const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Função para validação cross-check de Discord ID + Login
   const validatePlayerCrossCheck = async (discordId: string, login: string) => {
@@ -155,9 +156,12 @@ const BanModal: React.FC<BanModalProps> = ({ isOpen, onClose }) => {
   };
 
 const handleConfirmAction = async () => {
+  if (isLoading) return; // Prevent double-clicks
   
-  // Validação dupla: Re-validar jogador antes de executar ação
-  if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
+  setIsLoading(true);
+  try {
+    // Validação dupla: Re-validar jogador antes de executar ação
+    if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
     try {
       const validationResult = await apiService.validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
       if (!validationResult.isValid || !validationResult.player?.oidUser) {
@@ -165,44 +169,45 @@ const handleConfirmAction = async () => {
         setShowConfirmation(false);
         return;
       }
-      setValidatedOidUser(validationResult.player.oidUser);
-    } catch (error) {
-      console.error('Erro na validação dupla:', error);
-      setErrorMessage('Erro ao validar jogador. Tente novamente.');
-      setShowConfirmation(false);
-      return;
+        setValidatedOidUser(validationResult.player.oidUser);
+      } catch (error) {
+        console.error('Erro na validação dupla:', error);
+        setErrorMessage('Erro ao validar jogador. Tente novamente.');
+        setShowConfirmation(false);
+        return;
+      }
     }
-  }
 
-  const banData = {
-    discordId: formData.discordId,
-    loginAccount: formData.loginAccount,
-    banDuration: (parseInt(formData.banDuration) || 1) as number, // Padrão: 1 dia
-    banReason: formData.banReason,
-    banScope: formData.banScope || 'S', // 'S': Apenas a conta; 'M': Todas contas do MAC
-    addMacToBlockList: formData.blockMac || 'N', // 'S': Adicionar MAC à blocklist
-    excluirClans: formData.deleteClans || 'N' // 'S': Excluir clãs do usuário
-  };
+    const banData = {
+      discordId: formData.discordId,
+      loginAccount: formData.loginAccount,
+      banDuration: (parseInt(formData.banDuration) || 1) as number, // Padrão: 1 dia
+      banReason: formData.banReason,
+      banScope: formData.banScope || 'S', // 'S': Apenas a conta; 'M': Todas contas do MAC
+      addMacToBlockList: formData.blockMac || 'N', // 'S': Adicionar MAC à blocklist
+      excluirClans: formData.deleteClans || 'N' // 'S': Excluir clãs do usuário
+    };
 
-  try {
     const result = await apiService.banUser(banData);
     
     if (result.success) {
       // Exibir mensagem de sucesso para o usuário
       console.log('Sucesso:', result.message);
-      // Aqui você pode adicionar uma notificação de sucesso se desejar
+      setShowConfirmation(false);
+      onClose();
     } else {
       // Exibir mensagem de erro
       setErrorMessage(result.error || result.message || 'Erro desconhecido');
+      setShowConfirmation(false);
     }
     
   } catch (error) {
     console.error('Erro ao banir usuário:', error);
     setErrorMessage('Erro de conexão ao tentar banir o usuário');
+    setShowConfirmation(false);
+  } finally {
+    setIsLoading(false);
   }
-
-  setShowConfirmation(false);
-  onClose();
 };
 
   const handleCancelConfirmation = () => {
@@ -387,6 +392,7 @@ const handleConfirmAction = async () => {
           description={`Tem certeza que deseja banir o jogador: ${fetchedPlayerName || formData.loginAccount} (Discord: ${formData.discordId}) por ${formData.banDuration === '999' ? 'tempo permanente' : `${formData.banDuration} dias`}?`}
           confirmActionText="Sim, Banir"
           cancelActionText="Cancelar"
+          isLoading={isLoading}
         />
     </div>
   );
