@@ -102,7 +102,6 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     // Não executar debounce se temos selectedPlayer (para evitar validação dupla)
     if (selectedPlayer && selectedPlayer.discordId && selectedPlayer.nexonId) {
-      console.log('[TRANSFERCLAN] ⏭️ Pulando debounce - selectedPlayer detectado');
       return;
     }
 

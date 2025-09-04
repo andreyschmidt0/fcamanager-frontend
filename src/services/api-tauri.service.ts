@@ -104,6 +104,9 @@ class ApiTauriService {
         localStorage.removeItem('currentUser');
         localStorage.removeItem('tokenExpiryTime');
         
+        // Emitir evento customizado para notificar sobre token expirado
+        window.dispatchEvent(new CustomEvent('tokenExpired'));
+        
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
@@ -973,6 +976,36 @@ class ApiTauriService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro ao alterar Discord ID'
+      };
+    }
+  }
+
+  // Buscar histórico de ban do jogador
+  async getBanHistory(targetOidUser: number): Promise<{
+    success: boolean;
+    data?: any[];
+    error?: string;
+    message?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/ban-history/${targetOidUser}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        data?: any[];
+        message?: string;
+      }>(response);
+      
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar histórico de ban:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar histórico de ban'
       };
     }
   }

@@ -8,7 +8,6 @@ class TauriHttpService {
   async testConnection(): Promise<{success: boolean, details: string}> {
     // Try primary URL first
     try {
-      console.log('Testing connection with Tauri HTTP (primary)...');
       
       const response = await fetch(`${this.primaryURL.replace('/api', '')}/health`, {
         method: 'GET',
@@ -25,7 +24,6 @@ class TauriHttpService {
         details: `Primary URL - Status: ${response.status}, Response: ${text}`
       };
     } catch (primaryError) {
-      console.log('Primary URL failed, trying fallback...');
       
       // Try fallback URL
       try {

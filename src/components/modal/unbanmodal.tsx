@@ -185,7 +185,6 @@ const handleConfirmAction = async () => {
     const result = await apiService.unbanUser(unbanData);
     
     if (result.success) {
-      console.log('Sucesso:', result.message);
       setShowConfirmation(false);
       onClose();
     } else {
