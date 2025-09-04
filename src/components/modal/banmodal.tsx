@@ -192,7 +192,6 @@ const handleConfirmAction = async () => {
     
     if (result.success) {
       // Exibir mensagem de sucesso para o usuário
-      console.log('Sucesso:', result.message);
       setShowConfirmation(false);
       onClose();
     } else {

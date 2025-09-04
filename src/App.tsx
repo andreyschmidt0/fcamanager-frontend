@@ -5,6 +5,7 @@ import './index.css';
 import LoadingSpinner from './components/loading/loading';
 import ConfirmModal from './components/modal/confirm/confirmmodal';
 import DebugModal from './components/debug/DebugModal';
+import SessionExpiredModal from './components/modal/SessionExpiredModal';
 import { ActivityLogProvider } from './contexts/ActivityLogContext';
 import { SuccessModalProvider } from './contexts/SuccessModalContext';
 import { useAuth } from './hooks/useAuth';
@@ -13,6 +14,7 @@ import TokenManager from './utils/tokenManager';
 function App() {
   const [showLoading, setShowLoading] = useState(false);
   const [showDebugModal, setShowDebugModal] = useState(false);
+  const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
   const { user, isLoading, isAuthenticated } = useAuth();
   const tokenManager = TokenManager.getInstance();
 
@@ -27,6 +29,21 @@ function App() {
       tokenManager.stopTokenRefresh();
     };
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    // Escutar evento de token expirado
+    const handleTokenExpired = () => {
+      // Só mostrar modal se não estivermos na página de login
+      if (window.location.pathname !== '/login') {
+        setShowSessionExpiredModal(true);
+      }
+    };
+
+    window.addEventListener('tokenExpired', handleTokenExpired);
+    return () => {
+      window.removeEventListener('tokenExpired', handleTokenExpired);
+    };
+  }, []);
 
   useEffect(() => {
     // Keyboard shortcut for debug modal (Ctrl + D)
@@ -51,6 +68,21 @@ function App() {
       window.dispatchEvent(new Event('user-updated'));
       // Token refresh será iniciado automaticamente pelo useEffect quando isAuthenticated mudar
     }, 1500); // 1.5 segundos de loading, ajuste conforme necessário
+  };
+
+  const handleRelogin = () => {
+    setShowSessionExpiredModal(false);
+    
+    // Limpar todos os dados de autenticação
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('tokenExpiryTime');
+    
+    // Forçar atualização do contexto de auth
+    window.dispatchEvent(new Event('user-updated'));
+    
+    // A página já vai redirecionar automaticamente para login pois isAuthenticated será false
   };
 
   return (
@@ -81,6 +113,11 @@ function App() {
         <DebugModal 
           isOpen={showDebugModal} 
           onClose={() => setShowDebugModal(false)} 
+        />
+
+        <SessionExpiredModal 
+          isOpen={showSessionExpiredModal}
+          onRelogin={handleRelogin}
         />
       </SuccessModalProvider>
     </ActivityLogProvider>
