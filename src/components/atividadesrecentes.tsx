@@ -72,13 +72,23 @@ const RecentActivities: React.FC = () => {
     }
   }, [isMaster, loading]);
 
-  // Buscar logs quando período, GM mudar, ou quando isMaster/loading mudarem
+  // Auto-carregamento inicial após login
   useEffect(() => {
-    // Só executar se for Master e não estiver loading
     if (isMaster && !loading) {
-      fetchLogs();
+      fetchLogs(); // Carrega logs automaticamente após login
     }
-  }, [selectedPeriod, selectedGM, isMaster, loading]);
+  }, [isMaster, loading]);
+
+  // Buscar logs quando período ou GM mudarem (com debounce)
+  useEffect(() => {
+    if (!isMaster || loading) return;
+    
+    const timeout = setTimeout(() => {
+      fetchLogs();
+    }, 300); // Debounce de 300ms
+
+    return () => clearTimeout(timeout);
+  }, [selectedPeriod, selectedGM]);
 
   // Cache para o Discord ID para evitar múltiplas chamadas
   const [cachedDiscordId, setCachedDiscordId] = useState<string | null>(null);
@@ -108,12 +118,8 @@ const RecentActivities: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const currentUserDiscordId = await getDiscordId();
-      if (!currentUserDiscordId) {
-        throw new Error('Erro ao obter Discord ID do administrador');
-      }
-
-      const logs = await apiService.getLogs(selectedPeriod, selectedGM || undefined, 1000, currentUserDiscordId);
+      // Usar JWT direto - não precisa buscar Discord ID separadamente
+      const logs = await apiService.getLogs(selectedPeriod, selectedGM || undefined, 150);
       setDatabaseLogs(logs);
     } catch (error) {
       console.error('Erro ao buscar logs:', error);

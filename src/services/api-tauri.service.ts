@@ -298,18 +298,17 @@ class ApiTauriService {
   }
 
 
-  async getLogs(period?: string, gmNickname?: string, limit?: number, discordId?: string): Promise<any[]> {
+  async getLogs(period?: string, gmNickname?: string, limit?: number): Promise<any[]> {
     try {
       const params = new URLSearchParams();
       if (period) params.append('period', period);
       if (gmNickname) params.append('gmNickname', gmNickname);
       if (limit) params.append('limit', limit.toString());
-      if (discordId) params.append('discordId', discordId);
       
       const response = await fetch(`${API_BASE}/logs?${params.toString()}`, {
         method: 'GET',
         headers: this.getAuthHeaders(),
-        connectTimeout: 30000
+        connectTimeout: 15000
       });
 
       const data = await this.handleResponse<{ logs: any[] }>(response);
