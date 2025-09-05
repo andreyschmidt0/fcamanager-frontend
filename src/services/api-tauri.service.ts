@@ -1009,6 +1009,34 @@ class ApiTauriService {
     }
   }
 
+
+  // Search player inventory with filters
+  async searchInventory(oidUser: string, useType?: string, itemName?: string): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      params.append('oidUser', oidUser);
+      
+      if (useType !== undefined && useType !== '') {
+        params.append('useType', useType);
+      }
+      
+      if (itemName && itemName.trim() !== '') {
+        params.append('itemName', itemName.trim());
+      }
+
+      const response = await fetch(`${API_BASE}/users/inventory?${params.toString()}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<any[]>(response);
+    } catch (error) {
+      console.error('Erro ao buscar inventário:', error);
+      return [];
+    }
+  }
+
   // Refresh token
   async refreshToken(refreshToken: string): Promise<{success: boolean; accessToken?: string; refreshToken?: string; error?: string}> {
     try {
