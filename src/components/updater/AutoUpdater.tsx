@@ -169,44 +169,25 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
     }
   };
 
+  // Componente invisível - só executa verificação automática
   return (
-    <div className="flex items-center gap-2">
-      {/* Botão de verificação manual */}
-      <button
-        onClick={checkForUpdates}
-        disabled={isChecking || isDownloading}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-          updateStatus === 'available' 
-            ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-        }`}
-        title={error || getStatusText()}
-      >
-        {getStatusIcon()}
-        <span className={`hidden sm:inline ${getStatusColor()}`}>
-          {getStatusText()}
-        </span>
-      </button>
-
-      {/* Botão de download se update disponível */}
-      {updateAvailable && updateStatus === 'available' && (
-        <button
-          onClick={() => downloadAndInstall(updateAvailable)}
-          disabled={isDownloading}
-          className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition-colors"
-        >
-          <Download size={16} />
-          <span className="hidden sm:inline">Baixar</span>
-        </button>
-      )}
-
-      {/* Progress bar durante download */}
+    <div>
+      {/* Progress bar durante download - só aparece quando está baixando */}
       {updateStatus === 'downloading' && (
-        <div className="w-32 bg-gray-700 rounded-full h-2">
-          <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${downloadProgress}%` }}
-          />
+        <div className="fixed top-4 right-4 z-50 bg-gray-800 rounded-lg p-4 shadow-lg">
+          <div className="flex items-center gap-3 text-white">
+            <RefreshCw className="animate-spin" size={20} />
+            <div>
+              <div className="text-sm font-medium">Baixando atualização...</div>
+              <div className="w-48 bg-gray-700 rounded-full h-2 mt-1">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${downloadProgress}%` }}
+                />
+              </div>
+              <div className="text-xs text-gray-400 mt-1">{downloadProgress}%</div>
+            </div>
+          </div>
         </div>
       )}
     </div>

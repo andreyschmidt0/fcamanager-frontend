@@ -111,11 +111,9 @@ function App() {
           />
         ) : null}
 
-        {/* Auto-updater component - shows in header when authenticated */}
+        {/* Auto-updater component - verifica updates automaticamente */}
         {isAuthenticated && (
-          <div className="fixed top-4 right-4 z-50">
-            <AutoUpdater checkOnStart={true} />
-          </div>
+          <AutoUpdater checkOnStart={true} />
         )}
 
         <DebugModal 
