@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.tauri.app/config/2.0.0",
+  "identifier": "main-capability",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:default",
+    "http:default",
+    {
+      "identifier": "updater:default"
+    },
+    {
+      "identifier": "updater:allow-check"
+    },
+    {
+      "identifier": "updater:allow-download-and-install"
+    },
+    {
+      "identifier": "dialog:default"
+    },
+    {
+      "identifier": "dialog:allow-ask"
+    },
+    {
+      "identifier": "process:default"
+    },
+    {
+      "identifier": "process:allow-restart"
+    }
+  ]
+}

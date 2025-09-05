@@ -6,6 +6,7 @@ import LoadingSpinner from './components/loading/loading';
 import ConfirmModal from './components/modal/confirm/confirmmodal';
 import DebugModal from './components/debug/DebugModal';
 import SessionExpiredModal from './components/modal/SessionExpiredModal';
+import AutoUpdater from './components/updater/AutoUpdater';
 import { ActivityLogProvider } from './contexts/ActivityLogContext';
 import { SuccessModalProvider } from './contexts/SuccessModalContext';
 import { useAuth } from './hooks/useAuth';
@@ -109,6 +110,13 @@ function App() {
             fullScreen={true}
           />
         ) : null}
+
+        {/* Auto-updater component - shows in header when authenticated */}
+        {isAuthenticated && (
+          <div className="fixed top-4 right-4 z-50">
+            <AutoUpdater checkOnStart={true} />
+          </div>
+        )}
 
         <DebugModal 
           isOpen={showDebugModal} 

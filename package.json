@@ -7,6 +7,9 @@
     "@tauri-apps/api": "^2.7.0",
     "@tauri-apps/plugin-http": "^2.5.2",
     "@tauri-apps/plugin-shell": "^2.3.0",
+    "@tauri-apps/plugin-updater": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-process": "^2.0.0",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.539.0",
@@ -24,7 +27,8 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "icons": "tauri icon"
+    "icons": "tauri icon",
+    "generate-keys": "tauri signer generate -w ./keys/fca-manager.key"
   },
   "browserslist": {
     "production": [
