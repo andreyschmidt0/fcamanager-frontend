@@ -11,6 +11,7 @@ import { ActivityLogProvider } from './contexts/ActivityLogContext';
 import { SuccessModalProvider } from './contexts/SuccessModalContext';
 import { useAuth } from './hooks/useAuth';
 import TokenManager from './utils/tokenManager';
+import AuthStateManager from './utils/authState';
 
 function App() {
   const [showLoading, setShowLoading] = useState(false);
@@ -19,6 +20,10 @@ function App() {
   const [appVersion, setAppVersion] = useState<string>('');
   const { user, isLoading, isAuthenticated } = useAuth();
   const tokenManager = TokenManager.getInstance();
+  const authStateManager = AuthStateManager.getInstance();
+  
+  // Debounce para evitar múltiplos modais de sessão expirada
+  const [sessionExpiredDebounce, setSessionExpiredDebounce] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Iniciar gerenciamento automático de tokens quando o app carrega
@@ -35,26 +40,47 @@ function App() {
   useEffect(() => {
     // Escutar evento de token expirado
     const handleTokenExpired = () => {
-      // Só mostrar modal se não estivermos na página de login
-      if (window.location.pathname !== '/login') {
-        setShowSessionExpiredModal(true);
+      // Limpar debounce anterior se existir
+      if (sessionExpiredDebounce) {
+        clearTimeout(sessionExpiredDebounce);
       }
+      
+      // Criar novo debounce para evitar múltiplos modais
+      const newDebounce = setTimeout(() => {
+        // Verificações adicionais antes de mostrar modal
+        if (authStateManager.shouldShowSessionExpiredModal() && 
+            !showSessionExpiredModal && 
+            isAuthenticated) {
+          setShowSessionExpiredModal(true);
+        }
+      }, 500); // Debounce de 500ms
+      
+      setSessionExpiredDebounce(newDebounce);
     };
 
     window.addEventListener('tokenExpired', handleTokenExpired);
     return () => {
       window.removeEventListener('tokenExpired', handleTokenExpired);
+      if (sessionExpiredDebounce) {
+        clearTimeout(sessionExpiredDebounce);
+      }
     };
-  }, []);
+  }, [sessionExpiredDebounce, showSessionExpiredModal, isAuthenticated, authStateManager]);
 
   useEffect(() => {
     // Buscar versão do app quando autenticado
     if (isAuthenticated) {
+      // Marcar app como pronto quando usuário está autenticado
+      authStateManager.setAppReady(true);
+      
       import('@tauri-apps/api/app').then(({ getVersion }) => {
         getVersion().then(setAppVersion).catch(() => setAppVersion(''));
       }).catch(() => setAppVersion(''));
+    } else {
+      // Marcar app como não pronto quando não autenticado
+      authStateManager.setAppReady(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authStateManager]);
 
   useEffect(() => {
     // Keyboard shortcut for debug modal (Ctrl + D)

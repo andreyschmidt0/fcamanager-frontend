@@ -1,4 +1,5 @@
 import apiService from './api-tauri.service';
+import AuthStateManager from '../utils/authState';
 
 export interface AuthResult {
     success: boolean;
@@ -208,6 +209,8 @@ class AuthService {
     async refreshAccessToken(): Promise<boolean> {
         if (!this.refreshToken) return false;
         
+        const authStateManager = AuthStateManager.getInstance();
+        
         try {
             const result = await apiService.refreshToken(this.refreshToken);
             
@@ -226,6 +229,13 @@ class AuthService {
                 return true;
             }
         } catch (error) {
+            // Durante inicialização, falhar silenciosamente
+            if (authStateManager.isInInitialization()) {
+                this.clearSession();
+                return false;
+            }
+            
+            // Em uso normal, registrar erro
             console.error('Erro ao renovar token:', error);
             this.clearSession();
         }
@@ -236,11 +246,23 @@ class AuthService {
     async ensureValidToken(): Promise<boolean> {
         if (!this.isAuthenticated()) return false;
         
-        if (this.isTokenExpired()) {
-            return await this.refreshAccessToken();
+        // Se o token ainda é válido, retornar true imediatamente
+        if (!this.isTokenExpired()) {
+            return true;
         }
         
-        return true;
+        // Token expirado - tentar renovar
+        const authStateManager = AuthStateManager.getInstance();
+        
+        // Durante inicialização, só tentar renovar se temos refresh token válido
+        if (authStateManager.isInInitialization()) {
+            if (!this.refreshToken) {
+                this.clearSession();
+                return false;
+            }
+        }
+        
+        return await this.refreshAccessToken();
     }
 
     // Método adicional para testar conexão com backend

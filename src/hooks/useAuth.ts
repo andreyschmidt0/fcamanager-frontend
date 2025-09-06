@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import AuthService from '../services/auth';
+import AuthStateManager from '../utils/authState';
 
 interface AuthUser {
   id: number;
@@ -18,21 +19,50 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const authService = AuthService.getInstance();
+  const authStateManager = AuthStateManager.getInstance();
 
   useEffect(() => {
     const initAuth = async () => {
-      // Verificar se o token é válido e renovar se necessário
-      const isValid = await authService.ensureValidToken();
+      // Marcar que estamos iniciando autenticação
+      authStateManager.setInitializing(true);
       
-      if (isValid) {
-        const currentUser = authService.getCurrentUser();
-        setUser(currentUser);
+      // Verificar se existe dados de autenticação
+      const hasAuthData = authService.isAuthenticated();
+      
+      if (hasAuthData) {
+        // Se o token não estiver expirado, usar diretamente
+        if (!authService.isTokenExpired()) {
+          const currentUser = authService.getCurrentUser();
+          setUser(currentUser);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Se expirou mas temos refresh token, tentar renovar
+        const refreshToken = authService.getRefreshToken();
+        if (refreshToken) {
+          const isValid = await authService.ensureValidToken();
+          
+          if (isValid) {
+            const currentUser = authService.getCurrentUser();
+            setUser(currentUser);
+          } else {
+            // Falhou ao renovar - logout silencioso na inicialização
+            authService.logout();
+            setUser(null);
+          }
+        } else {
+          // Sem refresh token - logout silencioso
+          authService.logout();
+          setUser(null);
+        }
       } else {
-        // Token inválido ou expirado, fazer logout
-        authService.logout();
+        // Sem dados de auth
         setUser(null);
       }
       
+      // Marcar fim da inicialização
+      authStateManager.setInitializing(false);
       setIsLoading(false);
     };
 

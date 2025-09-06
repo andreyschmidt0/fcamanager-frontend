@@ -1,6 +1,7 @@
 import { fetch } from '@tauri-apps/plugin-http';
 import { ErrorCapture } from '../components/debug/DebugModal';
 import SuccessModalManager from '../utils/SuccessModalManager';
+import AuthStateManager from '../utils/authState';
 
 export interface PlayerProfileData {
   strDiscordId: string;
@@ -104,11 +105,21 @@ class ApiTauriService {
         localStorage.removeItem('currentUser');
         localStorage.removeItem('tokenExpiryTime');
         
-        // Emitir evento customizado para notificar sobre token expirado
-        window.dispatchEvent(new CustomEvent('tokenExpired'));
+        const authStateManager = AuthStateManager.getInstance();
         
+        // Só emitir evento e mostrar modal se não estivermos inicializando
+        if (authStateManager.shouldShowSessionExpiredModal()) {
+          window.dispatchEvent(new CustomEvent('tokenExpired'));
+        }
+        
+        // Sempre redirecionar se não estivermos na página de login
         if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
+          // Se estamos inicializando, fazer redirect silencioso
+          if (authStateManager.isInInitialization()) {
+            window.location.replace('/login');
+          } else {
+            window.location.href = '/login';
+          }
         }
       }
 
