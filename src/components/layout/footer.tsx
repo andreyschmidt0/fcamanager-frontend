@@ -9,7 +9,7 @@ export default function Footer() {
             </div>
             <p className="text-gray-400 mb-6">
               Federação do C.A<br />
-              Onde excelência e eSports se encontram
+              Onde excelência e eSports se encontram.
             </p>
           </div>
   
