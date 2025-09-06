@@ -97,7 +97,7 @@ class ApiTauriService {
         method: 'TAURI-HTTP'
       });
 
-      if (response.status === 401) {
+      if (response.status === 401 || response.status === 403) {
         // Token expirado ou inválido
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');

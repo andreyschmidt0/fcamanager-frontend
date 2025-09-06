@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Filter } from 'lucide-react';
 
 interface InventoryItem {
@@ -37,6 +37,8 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
     useType: useType || '',
     itemName: itemName || ''
   });
+  const [searchTerm, setSearchTerm] = useState(itemName || '');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(itemName || '');
 
   // Função para aplicar filtros
   const applyFilters = (data: InventoryItem[], statusFilter: string, nameFilter: string) => {
@@ -58,6 +60,23 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
     return filtered;
   };
 
+  // Debounce para o termo de pesquisa
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms de delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Atualizar localFilters quando debouncedSearchTerm mudar
+  useEffect(() => {
+    setLocalFilters(prev => ({
+      ...prev,
+      itemName: debouncedSearchTerm
+    }));
+  }, [debouncedSearchTerm]);
+
   // Aplicar filtros quando dados ou filtros mudarem
   useEffect(() => {
     const filtered = applyFilters(inventoryData, localFilters.useType, localFilters.itemName);
@@ -67,18 +86,25 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
   // Resetar filtros quando modal abrir
   useEffect(() => {
     if (isOpen) {
+      const initialItemName = itemName || '';
+      setSearchTerm(initialItemName);
+      setDebouncedSearchTerm(initialItemName);
       setLocalFilters({
         useType: useType || '',
-        itemName: itemName || ''
+        itemName: initialItemName
       });
     }
   }, [isOpen, useType, itemName]);
 
   const handleFilterChange = (filterType: string, value: string) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      [filterType]: value
-    }));
+    if (filterType === 'itemName') {
+      setSearchTerm(value);
+    } else {
+      setLocalFilters(prev => ({
+        ...prev,
+        [filterType]: value
+      }));
+    }
   };
 
   const getFilterText = () => {
@@ -96,11 +122,11 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col">
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
           <h2 className="absolute left-1/2 w-[80%] text-center -translate-x-1/2 text-2xl font-bold text-white font-neofara tracking-wider">
-            INVENTÁRIO - {playerName.toUpperCase()}{getFilterText()}
+            INVENTÁRIO - {playerName.toUpperCase()}
           </h2>
           <button
             onClick={onClose}
@@ -110,25 +136,26 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 flex-1 flex flex-col overflow-hidden">
           {/* Filtros */}
-          <div className="mb-6 p-4 bg-[#1d1e24] rounded-lg border border-gray-600">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter size={18} className="text-green-400" />
-              <h3 className="text-lg font-semibold text-white">
-                Filtros de Busca
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mb-6 p-3 bg-[#1d1e24] rounded-lg border border-gray-600 flex-shrink-0">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Filter size={18} className="text-green-400" />
+                <h3 className="text-lg font-semibold text-white">
+                  Filtros de Busca
+                </h3>
+              </div>
+              
               {/* Status Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Status dos itens
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-400 whitespace-nowrap">
+                  Status:
                 </label>
                 <select
                   value={localFilters.useType}
                   onChange={(e) => handleFilterChange('useType', e.target.value)}
-                  className="w-full px-3 py-2 bg-[#2a2b32] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                  className="px-2 py-1 bg-[#2a2b32] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors text-sm min-w-[100px]"
                 >
                   <option value="">Todos</option>
                   <option value="0">Inativos</option>
@@ -137,37 +164,37 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
               </div>
               
               {/* Item Name Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Nome do item
+              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                <label className="text-sm font-medium text-gray-400 whitespace-nowrap">
+                  Nome:
                 </label>
                 <input
                   type="text"
-                  value={localFilters.itemName}
+                  value={searchTerm}
                   onChange={(e) => handleFilterChange('itemName', e.target.value)}
                   placeholder="Ex: L96A1"
-                  className="w-full px-3 py-2 bg-[#2a2b32] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                  className="flex-1 px-2 py-1 bg-[#2a2b32] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors text-sm"
                 />
               </div>
             </div>
           </div>
 
           {/* Results */}
-          {filteredData.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
-              <div className="text-8xl mb-6">📦</div>
-              <h3 className="text-2xl font-semibold mb-3">
-                {inventoryData.length === 0 ? 'Nenhum item encontrado' : 'Nenhum item corresponde aos filtros'}
-              </h3>
-              <p className="text-lg">
-                {inventoryData.length === 0 
-                  ? 'O inventário está vazio.' 
-                  : 'Tente ajustar os filtros para ver mais resultados.'
-                }
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {filteredData.length === 0 ? (
+              <div className="text-center py-16 text-gray-400 flex-1 flex flex-col justify-center">
+                <h3 className="text-2xl font-semibold mb-3">
+                  {inventoryData.length === 0 ? 'Nenhum item encontrado' : 'Nenhum item corresponde aos filtros'}
+                </h3>
+                <p className="text-lg">
+                  {inventoryData.length === 0 
+                    ? 'O inventário está vazio.' 
+                    : 'Tente ajustar os filtros para ver mais resultados.'
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
               {filteredData.map((item) => (
                 <div
                   key={item.InventorySeqNo}
@@ -218,11 +245,12 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
                   </div>
                 </div>
               ))}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
 
           {/* Close Button */}
-          <div className="mt-6 pt-4 border-t border-gray-600">
+          <div className="mt-6 pt-4 border-t border-gray-600 flex-shrink-0">
             <button
               type="button"
               onClick={onClose}

@@ -200,7 +200,7 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
       <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="relative flex items-center h-20 border-b border-gray-600">
-          <h2 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
+        <h2 className="absolute left-1/2 w-[80%] text-center -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
             CONSULTAR INVENTÁRIO
           </h2>
           <button
