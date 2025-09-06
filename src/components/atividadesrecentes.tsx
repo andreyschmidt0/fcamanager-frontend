@@ -292,7 +292,7 @@ const RecentActivities: React.FC = () => {
                         setSelectedGM('');
                         setShowGMDropdown(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors text-gray-400"
+                      className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors text-red-400"
                     >
                       Todos os GMs
                     </button>
