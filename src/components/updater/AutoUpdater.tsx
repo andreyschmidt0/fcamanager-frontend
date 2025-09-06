@@ -1,217 +1,62 @@
-import React, { useState, useEffect } from 'react';
-import { check, Update } from '@tauri-apps/plugin-updater';
-import { relaunch } from '@tauri-apps/plugin-process';
+import React, { useEffect, useRef } from 'react';
 import { ask } from '@tauri-apps/plugin-dialog';
-import { Download, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { UpdaterDebug } from '../debug/DebugModal';
+import { Download, RefreshCw, CheckCircle, AlertCircle, Bug } from 'lucide-react';
+import { useAutoUpdater } from '../../hooks/useAutoUpdater';
 
 interface AutoUpdaterProps {
   checkOnStart?: boolean;
 }
 
 const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
-  const [isChecking, setIsChecking] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [updateAvailable, setUpdateAvailable] = useState<Update | null>(null);
-  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'>('idle');
-  const [error, setError] = useState<string>('');
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const updaterDebug = UpdaterDebug.getInstance();
+  const {
+    updateStatus,
+    updateAvailable,
+    isChecking,
+    isDownloading,
+    downloadProgress,
+    error,
+    diagnosticResult,
+    checkForUpdates,
+    downloadAndInstall,
+    runDiagnostics
+  } = useAutoUpdater();
 
-  // Verificar updates na inicialização se solicitado
+  const hasCheckedOnStart = useRef(false);
+
+  // Verificar updates na inicialização se solicitado (apenas uma vez)
   useEffect(() => {
-    if (checkOnStart) {
-      setTimeout(() => {
+    if (checkOnStart && !hasCheckedOnStart.current) {
+      hasCheckedOnStart.current = true;
+      const timer = setTimeout(() => {
         checkForUpdates();
       }, 3000); // Delay de 3s para não interferir no startup
-    }
-  }, [checkOnStart]);
-
-  const checkForUpdates = async () => {
-    if (isChecking) return;
-
-    setIsChecking(true);
-    setUpdateStatus('checking');
-    setError('');
-
-    updaterDebug.addLog({
-      event: 'Update Check Started',
-      details: `Checking for updates... (checkOnStart: ${checkOnStart})`,
-      type: 'info'
-    });
-
-    try {
-      const update = await check();
       
-      if (update?.available) {
-        setUpdateAvailable(update);
-        setUpdateStatus('available');
-        
-        updaterDebug.addLog({
-          event: 'Update Available',
-          details: `New version available: ${update.version}. Body: ${update.body}`,
-          type: 'success',
-          version: update.version
-        });
-        
-        // Mostrar notificação automática se solicitado
-        if (checkOnStart) {
-          showUpdateDialog(update);
-        }
-      } else {
-        setUpdateStatus('idle');
-        updaterDebug.addLog({
-          event: 'No Updates Found',
-          details: 'Application is up to date',
-          type: 'info'
-        });
-        
-        if (!checkOnStart) {
-          // Mostrar feedback apenas se foi check manual
-          setUpdateStatus('idle');
-        }
-      }
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro ao verificar atualizações';
-      setError(errorMsg);
-      setUpdateStatus('error');
-      
-      updaterDebug.addLog({
-        event: 'Update Check Failed',
-        details: `Error checking for updates: ${errorMsg}`,
-        type: 'error'
-      });
-    } finally {
-      setIsChecking(false);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [checkOnStart, checkForUpdates]);
 
-  const showUpdateDialog = async (update: Update) => {
-    updaterDebug.addLog({
-      event: 'Update Dialog Shown',
-      details: `Showing update dialog for version ${update.version}`,
-      type: 'info',
-      version: update.version
-    });
+  const showUpdateDialog = async () => {
+    if (!updateAvailable) return;
 
     const shouldUpdate = await ask(
-      `Nova versão ${update.version} disponível!\n\n${update.body}\n\nDeseja atualizar agora?`,
+      `Nova versão ${updateAvailable.version} disponível!\n\n${updateAvailable.body || 'Melhorias e correções de bugs.'}\n\nDeseja atualizar agora?`,
       {
         title: 'Atualização Disponível',
         kind: 'info'
       }
     );
 
-    updaterDebug.addLog({
-      event: 'Update Dialog Response',
-      details: `User ${shouldUpdate ? 'accepted' : 'declined'} the update`,
-      type: shouldUpdate ? 'info' : 'warning',
-      version: update.version
-    });
-
     if (shouldUpdate) {
-      downloadAndInstall(update);
+      downloadAndInstall(updateAvailable);
     }
   };
 
-  const downloadAndInstall = async (update: Update) => {
-    setIsDownloading(true);
-    setUpdateStatus('downloading');
-    setDownloadProgress(0);
-
-    updaterDebug.addLog({
-      event: 'Download Started',
-      details: `Starting download for version ${update.version}`,
-      type: 'info',
-      version: update.version,
-      progress: 0
-    });
-
-    try {
-      // Download com callback de progresso
-      let downloaded = 0;
-      let total = 100; // Placeholder - o Tauri não fornece progresso real ainda
-
-      await update.downloadAndInstall((event) => {
-        switch (event.event) {
-          case 'Started':
-            setDownloadProgress(0);
-            updaterDebug.addLog({
-              event: 'Download Progress',
-              details: 'Download started',
-              type: 'info',
-              version: update.version,
-              progress: 0
-            });
-            break;
-          case 'Progress':
-            // Simular progresso - o Tauri v2 pode não ter progresso real
-            downloaded += 10;
-            const progress = Math.min(downloaded, 90);
-            setDownloadProgress(progress);
-            updaterDebug.addLog({
-              event: 'Download Progress',
-              details: `Download progress: ${progress}%`,
-              type: 'info',
-              version: update.version,
-              progress: progress
-            });
-            break;
-          case 'Finished':
-            setDownloadProgress(100);
-            setUpdateStatus('ready');
-            updaterDebug.addLog({
-              event: 'Download Completed',
-              details: 'Download and installation completed successfully',
-              type: 'success',
-              version: update.version,
-              progress: 100
-            });
-            break;
-        }
-      });
-
-      // Perguntar se quer reiniciar agora
-      const shouldRestart = await ask(
-        'Atualização baixada com sucesso! Deseja reiniciar o aplicativo agora?',
-        {
-          title: 'Atualização Pronta',
-          kind: 'info'
-        }
-      );
-
-      updaterDebug.addLog({
-        event: 'Restart Dialog Response',
-        details: `User ${shouldRestart ? 'accepted' : 'declined'} restart`,
-        type: shouldRestart ? 'info' : 'warning',
-        version: update.version
-      });
-
-      if (shouldRestart) {
-        updaterDebug.addLog({
-          event: 'Application Restart',
-          details: 'Restarting application to apply update',
-          type: 'info',
-          version: update.version
-        });
-        await relaunch();
-      }
-
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro ao baixar atualização';
-      setError(errorMsg);
-      setUpdateStatus('error');
-      
-      updaterDebug.addLog({
-        event: 'Download Failed',
-        details: `Download failed: ${errorMsg}`,
-        type: 'error',
-        version: update.version
-      });
-    } finally {
-      setIsDownloading(false);
+  // Auto-show dialog when update is available and checkOnStart is true
+  useEffect(() => {
+    if (checkOnStart && updateAvailable && updateStatus === 'available') {
+      showUpdateDialog();
     }
-  };
+  }, [updateAvailable, updateStatus, checkOnStart]);
 
   const getStatusIcon = () => {
     switch (updateStatus) {
@@ -280,6 +125,56 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
               </div>
               <div className="text-xs text-gray-400 mt-1">{downloadProgress}%</div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error notification with diagnostic button - só aparece quando há erro */}
+      {updateStatus === 'error' && error && (
+        <div className="fixed bottom-4 right-4 z-50 bg-red-900/90 border border-red-600 rounded-lg p-4 shadow-lg max-w-md">
+          <div className="flex items-start gap-3 text-white">
+            <AlertCircle className="text-red-400 mt-0.5" size={20} />
+            <div className="flex-1">
+              <div className="text-sm font-medium text-red-200">Erro na Verificação de Updates</div>
+              <div className="text-xs text-red-300 mt-1 whitespace-pre-wrap">{error}</div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={checkForUpdates}
+                  disabled={isChecking}
+                  className="text-xs bg-red-600 hover:bg-red-500 disabled:opacity-50 px-3 py-1 rounded text-white"
+                >
+                  {isChecking ? 'Tentando...' : 'Tentar Novamente'}
+                </button>
+                <button
+                  onClick={runDiagnostics}
+                  className="text-xs bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded text-white flex items-center gap-1"
+                >
+                  <Bug size={12} />
+                  Diagnóstico
+                </button>
+              </div>
+              {diagnosticResult && (
+                <div className="mt-2 text-xs">
+                  <div className={`px-2 py-1 rounded text-xs ${
+                    diagnosticResult.success ? 'bg-green-900 text-green-200' : 'bg-red-800 text-red-200'
+                  }`}>
+                    {diagnosticResult.summary}
+                  </div>
+                  {diagnosticResult.recommendations.length > 0 && (
+                    <div className="mt-1 text-red-300">
+                      💡 {diagnosticResult.recommendations[0]}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-red-400 hover:text-red-300"
+              title="Fechar"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}

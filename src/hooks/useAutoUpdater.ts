@@ -3,6 +3,7 @@ import { check, Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { ask } from '@tauri-apps/plugin-dialog';
 import { UpdaterDebug } from '../components/debug/DebugModal';
+import { UpdateDiagnostics, DiagnosticResult } from '../utils/update-diagnostics';
 
 export type UpdateStatus = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error';
 
@@ -13,9 +14,11 @@ export interface UseAutoUpdaterReturn {
   isDownloading: boolean;
   downloadProgress: number;
   error: string;
+  diagnosticResult: DiagnosticResult | null;
   checkForUpdates: () => Promise<void>;
   downloadAndInstall: (update?: Update) => Promise<void>;
   restartApp: () => Promise<void>;
+  runDiagnostics: () => Promise<void>;
 }
 
 export const useAutoUpdater = (): UseAutoUpdaterReturn => {
@@ -25,169 +28,427 @@ export const useAutoUpdater = (): UseAutoUpdaterReturn => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [error, setError] = useState('');
+  const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
   
-  // Instância do debugger de updater
+  // Instâncias dos sistemas de debug e diagnóstico
   const updaterDebug = UpdaterDebug.getInstance();
+  const updateDiagnostics = UpdateDiagnostics.getInstance();
 
   const checkForUpdates = useCallback(async () => {
     if (isChecking) return;
 
+    const checkStartTime = Date.now();
     setIsChecking(true);
     setUpdateStatus('checking');
     setError('');
+    setDiagnosticResult(null);
 
-    // Log início da verificação
+    // Log início da verificação com timestamp preciso
     updaterDebug.addLog({
       event: 'Update Check Started',
-      details: 'Iniciando verificação de atualizações...',
+      details: `Iniciando verificação de atualizações... (${new Date().toISOString()})`,
       type: 'info'
     });
 
     try {
-      console.log('[AutoUpdater] Checking for updates...');
+      console.log('[AutoUpdater] === UPDATE CHECK STARTED ===');
+      console.log('[AutoUpdater] Timestamp:', new Date().toISOString());
       console.log('[AutoUpdater] Updater endpoint:', 'https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json');
       
-      // Log informações do ambiente antes da verificação
+      // Obter versão atual de forma mais robusta
+      let currentVersion = '1.0.15'; // Fallback
+      try {
+        const { getVersion } = await import('@tauri-apps/api/app');
+        currentVersion = await getVersion();
+        console.log('[AutoUpdater] Current app version from Tauri:', currentVersion);
+      } catch (versionError) {
+        console.warn('[AutoUpdater] Could not get version from Tauri, using fallback:', currentVersion);
+        updaterDebug.addLog({
+          event: 'Version Detection Warning',
+          details: `Não foi possível obter versão via Tauri API: ${versionError}. Usando fallback: ${currentVersion}`,
+          type: 'warning'
+        });
+      }
+
+      // Log informações detalhadas do ambiente
+      const environmentInfo = {
+        platform: navigator.platform,
+        userAgent: navigator.userAgent,
+        online: navigator.onLine,
+        language: navigator.language,
+        currentVersion,
+        endpoint: 'https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json',
+        timestamp: new Date().toISOString(),
+        memory: (performance as any).memory ? {
+          used: Math.round((performance as any).memory.usedJSHeapSize / 1024 / 1024) + 'MB',
+          total: Math.round((performance as any).memory.totalJSHeapSize / 1024 / 1024) + 'MB'
+        } : 'N/A'
+      };
+
+      console.log('[AutoUpdater] Environment details:', environmentInfo);
+      
       updaterDebug.addLog({
         event: 'Environment Check',
-        details: `Plataforma: ${navigator.platform}
-User Agent: ${navigator.userAgent}
-Online: ${navigator.onLine}
-Versão Atual: 1.0.12
-Endpoint: https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json`,
+        details: `Plataforma: ${environmentInfo.platform}
+Versão Atual: ${environmentInfo.currentVersion}
+Online: ${environmentInfo.online}
+Idioma: ${environmentInfo.language}
+Memória: ${typeof environmentInfo.memory === 'object' ? environmentInfo.memory.used : environmentInfo.memory}
+Endpoint: ${environmentInfo.endpoint}
+Timestamp: ${environmentInfo.timestamp}`,
+        type: 'info'
+      });
+
+      // Pré-validação: verificar se estamos online
+      if (!navigator.onLine) {
+        throw new Error('OFFLINE_MODE: Aplicativo está em modo offline. Conecte-se à internet para verificar atualizações.');
+      }
+
+      // Fazer uma verificação manual do endpoint antes do Tauri check
+      updaterDebug.addLog({
+        event: 'Pre-check: Testing Endpoint',
+        details: 'Testando acessibilidade do endpoint antes da verificação Tauri...',
+        type: 'info'
+      });
+
+      console.log('[AutoUpdater] Pre-checking endpoint accessibility...');
+      const preCheckStartTime = Date.now();
+      
+      try {
+        const preCheckResponse = await fetch(environmentInfo.endpoint, { 
+          method: 'HEAD',
+          cache: 'no-cache'
+        });
+        
+        const preCheckDuration = Date.now() - preCheckStartTime;
+        console.log('[AutoUpdater] Pre-check response:', {
+          status: preCheckResponse.status,
+          ok: preCheckResponse.ok,
+          url: preCheckResponse.url,
+          duration: preCheckDuration + 'ms'
+        });
+
+        if (!preCheckResponse.ok) {
+          throw new Error(`PRE_CHECK_FAILED: Endpoint inacessível (HTTP ${preCheckResponse.status}). Servidor pode estar indisponível.`);
+        }
+
+        updaterDebug.addLog({
+          event: 'Pre-check: Endpoint OK',
+          details: `Endpoint acessível (HTTP ${preCheckResponse.status}) em ${preCheckDuration}ms`,
+          type: 'success'
+        });
+
+      } catch (preCheckError) {
+        console.error('[AutoUpdater] Pre-check failed:', preCheckError);
+        updaterDebug.addLog({
+          event: 'Pre-check: Failed',
+          details: `Falha no pré-teste do endpoint: ${preCheckError}`,
+          type: 'error'
+        });
+        // Continue anyway, let Tauri try
+      }
+
+      // Agora fazer a verificação Tauri com timeout
+      console.log('[AutoUpdater] Starting Tauri update check...');
+      updaterDebug.addLog({
+        event: 'Tauri Check Starting',
+        details: 'Iniciando verificação via Tauri plugin...',
+        type: 'info'
+      });
+
+      const tauriCheckStartTime = Date.now();
+      
+      // Implementar timeout manual para o check do Tauri
+      const checkPromise = check();
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('TAURI_TIMEOUT: Verificação Tauri excedeu 30 segundos')), 30000);
+      });
+
+      const update = await Promise.race([checkPromise, timeoutPromise]) as Update;
+      const tauriCheckDuration = Date.now() - tauriCheckStartTime;
+      
+      console.log('[AutoUpdater] Tauri check completed in:', tauriCheckDuration + 'ms');
+      console.log('[AutoUpdater] Tauri check result:', update);
+
+      updaterDebug.addLog({
+        event: 'Tauri Check Completed',
+        details: `Verificação Tauri concluída em ${tauriCheckDuration}ms`,
         type: 'info'
       });
       
-      const update = await check();
-      
+      // Analisar resultado detalhadamente
       if (update?.available) {
-        console.log('[AutoUpdater] Update available:', update.version);
+        console.log('[AutoUpdater] ✅ UPDATE AVAILABLE!');
+        console.log('[AutoUpdater] Current version:', currentVersion);
+        console.log('[AutoUpdater] Available version:', update.version);
+        console.log('[AutoUpdater] Update details:', update);
+
+        const totalCheckDuration = Date.now() - checkStartTime;
+
         updaterDebug.addLog({
           event: 'Update Available',
-          details: `Nova versão encontrada: ${update.version}`,
+          details: `🎉 ATUALIZAÇÃO DISPONÍVEL!
+
+Versão Atual: ${currentVersion}
+Nova Versão: ${update.version}
+Tempo Total de Verificação: ${totalCheckDuration}ms
+Data da Release: ${update.date || 'N/A'}
+
+A nova versão está pronta para download!`,
           type: 'success',
           version: update.version
         });
+
         setUpdateAvailable(update);
         setUpdateStatus('available');
         return;
+        
       } else {
-        console.log('[AutoUpdater] No updates available');
+        console.log('[AutoUpdater] ℹ️  NO UPDATES AVAILABLE');
+        console.log('[AutoUpdater] Current version is up to date:', currentVersion);
+        
+        const totalCheckDuration = Date.now() - checkStartTime;
+
+        // Esta é a parte crucial - diferenciar entre "sem updates" e "erro"
         updaterDebug.addLog({
           event: 'No Updates Available',
-          details: 'Aplicativo já está na versão mais recente',
-          type: 'info'
+          details: `✅ APLICATIVO JÁ ESTÁ ATUALIZADO
+
+Versão Atual: ${currentVersion}
+Status: Nenhuma atualização necessária
+Tempo de Verificação: ${totalCheckDuration}ms
+Última Verificação: ${new Date().toLocaleString()}
+
+Seu aplicativo está na versão mais recente disponível.`,
+          type: 'success'
         });
+
         setUpdateStatus('idle');
+        setError(''); // Limpar qualquer erro anterior
       }
     } catch (err) {
+      const totalCheckDuration = Date.now() - checkStartTime;
+      
+      console.error('[AutoUpdater] === ERROR IN UPDATE CHECK ===');
+      console.error('[AutoUpdater] Check duration before error:', totalCheckDuration + 'ms');
+      console.error('[AutoUpdater] Error object:', err);
+      console.error('[AutoUpdater] Error type:', typeof err);
+      console.error('[AutoUpdater] Error string:', String(err));
+      console.error('[AutoUpdater] Error stack:', err instanceof Error ? err.stack : 'No stack');
+
       // Capturar TODOS os detalhes possíveis do erro
-      let specificError = 'Erro desconhecido';
+      let specificError = 'Erro desconhecido na verificação de atualizações';
+      let errorCategory = 'UNKNOWN';
       let errorMessage = 'N/A';
       let errorName = 'N/A';
       let errorStack = 'N/A';
       let errorString = String(err);
-      
-      console.log('[AutoUpdater] RAW ERROR OBJECT:', err);
-      console.log('[AutoUpdater] ERROR TYPE:', typeof err);
-      console.log('[AutoUpdater] ERROR STRING:', errorString);
-      console.log('[AutoUpdater] ERROR JSON:', JSON.stringify(err, null, 2));
-      
+      let troubleshootingSteps: string[] = [];
+      let errorSeverity: 'low' | 'medium' | 'high' | 'critical' = 'medium';
+
       if (err instanceof Error) {
         errorMessage = err.message;
         errorName = err.name;
         errorStack = err.stack || 'N/A';
         
-        console.log('[AutoUpdater] ERROR.MESSAGE:', errorMessage);
-        console.log('[AutoUpdater] ERROR.NAME:', errorName);
-        console.log('[AutoUpdater] ERROR.STACK:', errorStack);
-        
         const msg = errorMessage.toLowerCase();
         
-        // Categorizar tipos de erro para melhor diagnóstico
-        if (msg.includes('network') || msg.includes('fetch') || msg.includes('connection') || msg.includes('timeout')) {
-          specificError = 'Erro de conexão - verifique sua internet';
-        } else if (msg.includes('signature') || msg.includes('invalid signature') || msg.includes('verification')) {
-          specificError = 'Erro de verificação de segurança - assinatura inválida';
-        } else if (msg.includes('permission') || msg.includes('access denied') || msg.includes('unauthorized')) {
-          specificError = 'Erro de permissão - execute como administrador';
-        } else if (msg.includes('404') || msg.includes('not found')) {
-          specificError = 'Arquivo de atualização não encontrado no servidor';
+        // Categorizar tipos de erro com base na mensagem
+        if (msg.includes('offline_mode') || msg.includes('network') || msg.includes('connection')) {
+          errorCategory = 'NETWORK';
+          specificError = 'Problema de conectividade de rede';
+          troubleshootingSteps = [
+            'Verifique sua conexão com a internet',
+            'Tente conectar-se a uma rede diferente',
+            'Desative temporariamente firewall/antivírus'
+          ];
+          errorSeverity = 'medium';
+          
+        } else if (msg.includes('pre_check_failed') || msg.includes('endpoint')) {
+          errorCategory = 'ENDPOINT';
+          specificError = 'Servidor de atualizações inacessível';
+          troubleshootingSteps = [
+            'Aguarde alguns minutos e tente novamente',
+            'Verifique se github.com está acessível',
+            'Tente reiniciar a aplicação'
+          ];
+          errorSeverity = 'high';
+          
+        } else if (msg.includes('tauri_timeout') || msg.includes('timeout')) {
+          errorCategory = 'TIMEOUT';
+          specificError = 'Tempo limite excedido na verificação';
+          troubleshootingSteps = [
+            'Conexão lenta detectada - aguarde e tente novamente',
+            'Verifique a qualidade da sua conexão',
+            'Reinicie a aplicação se o problema persistir'
+          ];
+          errorSeverity = 'medium';
+          
+        } else if (msg.includes('signature') || msg.includes('verification') || msg.includes('invalid')) {
+          errorCategory = 'SIGNATURE';
+          specificError = 'Erro de verificação de segurança';
+          troubleshootingSteps = [
+            'Este erro pode indicar arquivo corrompido no servidor',
+            'Aguarde uma nova versão ser publicada',
+            'Execute diagnóstico completo para mais detalhes'
+          ];
+          errorSeverity = 'critical';
+          
+        } else if (msg.includes('permission') || msg.includes('access denied')) {
+          errorCategory = 'PERMISSION';
+          specificError = 'Erro de permissão do sistema';
+          troubleshootingSteps = [
+            'Execute a aplicação como administrador',
+            'Verifique permissões de acesso à internet',
+            'Temporariamente desative o antivírus'
+          ];
+          errorSeverity = 'high';
+          
         } else if (msg.includes('json') || msg.includes('parse') || msg.includes('malformed')) {
+          errorCategory = 'DATA_FORMAT';
           specificError = 'Arquivo de configuração de update corrompido';
-        } else if (msg.includes('dns') || msg.includes('host')) {
-          specificError = 'Erro de DNS - não foi possível conectar ao servidor';
-        } else if (msg.includes('ssl') || msg.includes('tls') || msg.includes('certificate')) {
-          specificError = 'Erro de certificado SSL/TLS';
-        } else if (msg.includes('platform') || msg.includes('architecture')) {
-          specificError = 'Plataforma não suportada para atualizações';
+          troubleshootingSteps = [
+            'Arquivo latest.json pode estar corrompido no servidor',
+            'Aguarde alguns minutos para correção automática',
+            'Entre em contato com suporte se persistir'
+          ];
+          errorSeverity = 'medium';
+          
+        } else if (msg.includes('plugin') || msg.includes('tauri')) {
+          errorCategory = 'PLUGIN';
+          specificError = 'Problema com plugin Tauri Updater';
+          troubleshootingSteps = [
+            'Reinstale a aplicação',
+            'Verifique se você tem a versão mais recente',
+            'Execute diagnóstico completo'
+          ];
+          errorSeverity = 'critical';
+          
         } else {
-          specificError = `${errorName}: ${errorMessage}`;
+          // Erro genérico mas com mensagem disponível
+          errorCategory = 'GENERIC';
+          specificError = `Erro na verificação: ${errorMessage}`;
+          troubleshootingSteps = [
+            'Tente novamente em alguns minutos',
+            'Reinicie a aplicação',
+            'Execute diagnóstico completo para mais detalhes'
+          ];
         }
       } else {
+        // Não é uma Error instance
         errorMessage = errorString;
-        specificError = errorString;
+        specificError = `Erro não identificado: ${errorString}`;
+        errorCategory = 'UNKNOWN';
+        troubleshootingSteps = [
+          'Erro de tipo desconhecido detectado',
+          'Reinicie a aplicação',
+          'Entre em contato com suporte técnico'
+        ];
+        errorSeverity = 'critical';
       }
       
-      console.error('[AutoUpdater] Check failed:', err);
-      console.error('[AutoUpdater] Error details:', {
-        name: err instanceof Error ? err.name : 'Unknown',
-        message: errorMessage,
+      console.error('[AutoUpdater] Categorized error:', {
+        category: errorCategory,
+        severity: errorSeverity,
         specificError,
-        stack: err instanceof Error ? err.stack : 'No stack trace',
+        troubleshootingSteps
       });
-      
-      // Tentar fazer um teste manual do endpoint para mais diagnóstico
-      try {
-        const response = await fetch('https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json');
-        const responseText = await response.text();
-        updaterDebug.addLog({
-          event: 'Manual Endpoint Test',
-          details: `Status HTTP: ${response.status}
-Resposta: ${responseText.substring(0, 500)}...`,
-          type: response.ok ? 'success' : 'warning'
-        });
-      } catch (fetchErr) {
-        updaterDebug.addLog({
-          event: 'Manual Endpoint Test Failed',
-          details: `Erro ao testar endpoint manualmente: ${String(fetchErr)}`,
-          type: 'error'
-        });
-      }
 
-      // Registrar erro no debug com MÁXIMO de detalhes
+      // Registrar erro detalhado no debug
       updaterDebug.addLog({
         event: 'Update Check Failed',
-        details: `ERRO: ${specificError}
+        details: `❌ FALHA NA VERIFICAÇÃO DE ATUALIZAÇÕES
 
-DETALHES TÉCNICOS COMPLETOS:
-- Nome do Erro: ${errorName}
+CATEGORIA: ${errorCategory}
+SEVERIDADE: ${errorSeverity.toUpperCase()}
+ERRO: ${specificError}
+
+DETALHES TÉCNICOS:
+- Nome: ${errorName}
 - Mensagem: ${errorMessage}
-- String do Erro: ${errorString}
-- Tipo: ${typeof err}
+- Duração antes do erro: ${totalCheckDuration}ms
+- Timestamp: ${new Date().toISOString()}
+
+PASSOS PARA RESOLVER:
+${troubleshootingSteps.map((step, i) => `${i + 1}. ${step}`).join('\n')}
+
+INFORMAÇÕES PARA SUPORTE:
 - Stack Trace: ${errorStack}
-
-JSON DO ERRO:
-${JSON.stringify(err, Object.getOwnPropertyNames(err), 2)}
-
-ENDPOINT TESTADO:
-https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json
-
-POSSÍVEIS CAUSAS:
-1. Problema de assinatura digital (chave pública incorreta)
-2. Problema de CORS ou política de segurança do Tauri
-3. Versão atual (1.0.12) vs disponível no servidor
-4. Endpoint inacessível ou formato JSON inválido
-5. Problema de permissões do sistema operacional`,
+- Error String: ${errorString}
+- Error Object: ${JSON.stringify(err, Object.getOwnPropertyNames(err), 2)}`,
         type: 'error'
       });
       
-      setError(`${specificError} (Veja detalhes no Debug Modal - Ctrl+D)`);
+      // Executar diagnóstico automático em caso de erro
+      try {
+        console.log('[AutoUpdater] Running automatic diagnostics due to error...');
+        const diagnosticResult = await updateDiagnostics.runCompleteDiagnostic();
+        setDiagnosticResult(diagnosticResult);
+        
+        updaterDebug.addLog({
+          event: 'Auto Diagnostics Completed',
+          details: `Diagnóstico automático executado: ${diagnosticResult.success ? 'SUCESSO' : 'FALHOU'}
+          
+Resumo: ${diagnosticResult.summary}
+Recomendações: ${diagnosticResult.recommendations.join(', ')}`,
+          type: diagnosticResult.success ? 'info' : 'warning'
+        });
+        
+      } catch (diagnosticError) {
+        console.error('[AutoUpdater] Failed to run auto diagnostics:', diagnosticError);
+        updaterDebug.addLog({
+          event: 'Auto Diagnostics Failed',
+          details: `Falha ao executar diagnóstico automático: ${diagnosticError}`,
+          type: 'error'
+        });
+      }
+      
+      // Definir erro final para o usuário (mais amigável)
+      const userFriendlyError = `${specificError}\n\n💡 Dica: Use Ctrl+D → Aba 'Updater' para ver detalhes completos`;
+      setError(userFriendlyError);
       setUpdateStatus('error');
     } finally {
       setIsChecking(false);
+      console.log('[AutoUpdater] === UPDATE CHECK FINISHED ===');
+      console.log('[AutoUpdater] Total duration:', Date.now() - checkStartTime + 'ms');
     }
-  }, [isChecking, updaterDebug]);
+  }, [isChecking, updaterDebug, updateDiagnostics]);
+
+  // Nova função para executar diagnóstico manual
+  const runDiagnostics = useCallback(async () => {
+    try {
+      console.log('[AutoUpdater] Running manual diagnostics...');
+      
+      updaterDebug.addLog({
+        event: 'Manual Diagnostics Started',
+        details: 'Iniciando diagnóstico manual do sistema de atualizações...',
+        type: 'info'
+      });
+
+      const result = await updateDiagnostics.runCompleteDiagnostic();
+      setDiagnosticResult(result);
+
+      updaterDebug.addLog({
+        event: 'Manual Diagnostics Completed',
+        details: `Diagnóstico manual concluído: ${result.success ? 'SUCESSO' : 'FALHOU'}
+        
+${result.summary}
+
+Recomendações principais:
+${result.recommendations.slice(0, 3).join('\n')}`,
+        type: result.success ? 'success' : 'warning'
+      });
+
+    } catch (error) {
+      console.error('[AutoUpdater] Manual diagnostics failed:', error);
+      
+      updaterDebug.addLog({
+        event: 'Manual Diagnostics Failed',
+        details: `Falha no diagnóstico manual: ${error}`,
+        type: 'error'
+      });
+    }
+  }, [updateDiagnostics, updaterDebug]);
 
   const downloadAndInstall = useCallback(async (update?: Update) => {
     const targetUpdate = update || updateAvailable;
@@ -405,6 +666,8 @@ POSSÍVEIS CAUSAS:
     error,
     checkForUpdates,
     downloadAndInstall,
-    restartApp
+    restartApp,
+    runDiagnostics,
+    diagnosticResult,
   };
 };
