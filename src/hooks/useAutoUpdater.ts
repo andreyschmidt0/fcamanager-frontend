@@ -46,9 +46,14 @@ export const useAutoUpdater = (): UseAutoUpdaterReturn => {
         setUpdateStatus('idle');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao verificar atualizações';
-      console.error('[AutoUpdater] Check failed:', errorMessage);
-      setError(errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao verificar atualizações';
+      console.error('[AutoUpdater] Check failed:', err);
+      console.error('[AutoUpdater] Error details:', {
+        name: err instanceof Error ? err.name : 'Unknown',
+        message: errorMessage,
+        stack: err instanceof Error ? err.stack : 'No stack trace',
+      });
+      setError(`Erro ao verificar atualizações: ${errorMessage}`);
       setUpdateStatus('error');
     } finally {
       setIsChecking(false);
@@ -104,9 +109,14 @@ export const useAutoUpdater = (): UseAutoUpdaterReturn => {
       }
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao baixar/instalar atualização';
-      console.error('[AutoUpdater] Download/install failed:', errorMessage);
-      setError(errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao baixar/instalar atualização';
+      console.error('[AutoUpdater] Download/install failed:', err);
+      console.error('[AutoUpdater] Download error details:', {
+        name: err instanceof Error ? err.name : 'Unknown',
+        message: errorMessage,
+        stack: err instanceof Error ? err.stack : 'No stack trace',
+      });
+      setError(`Erro ao baixar/instalar: ${errorMessage}`);
       setUpdateStatus('error');
     } finally {
       setIsDownloading(false);
