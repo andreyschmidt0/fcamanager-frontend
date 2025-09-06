@@ -62,9 +62,7 @@ jobs:
             ## 🚀 Nova Versão do FCA Manager
             
             ### Principais Mudanças
-            - Auto-update implementado
-            - Melhorias gerais de performance
-            - Correções de bugs
+            -  Correção de bugs
             
             ### 📥 Como Instalar
             1. Baixe o arquivo apropriado para seu sistema operacional
@@ -72,7 +70,7 @@ jobs:
             3. O app será atualizado automaticamente nas próximas versões
             
             ### ⚠️ Notas Importantes
-            - Esta versão inclui sistema de auto-update
+            - Esta versão inclui uma alteração na cor do texto das atividades pendentes
             - Backup dos dados recomendado antes da instalação
             
             ---

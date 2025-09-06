@@ -155,7 +155,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
                 } hover:text-white transition-colors`}
               >
                 <span className="w-2 h-2 bg-white rounded-full"></span>
-                <span className="text-base sm:text-lg text-[#24b93a] font-neofara font-medium">ATIVIDADES PENDENTES</span>
+                <span className="text-base sm:text-lg text-white font-neofara font-medium">ATIVIDADES PENDENTES</span>
               </button>
               
               {/* Placeholder area for pending activities */}
