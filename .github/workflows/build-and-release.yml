@@ -80,6 +80,7 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+          includeUpdaterJson: false
 
   create-update-manifest:
     needs: build-tauri
@@ -89,21 +90,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Get release info
+      - name: Get release info and app version
         id: release_info
         run: |
-          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          # Extract version from tauri.conf.json
+          APP_VERSION=$(grep '"version"' src-tauri/tauri.conf.json | cut -d'"' -f4)
+          echo "app_version=${APP_VERSION}" >> $GITHUB_OUTPUT
+      
+      - name: Download release assets
+        run: |
+          # Wait for release to be created
+          sleep 30
+          
+          # Get the signature file content
+          curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.release_info.outputs.tag_name }}" \
+            > release_info.json
+          
+          # Find Windows setup signature
+          SIG_URL=$(jq -r '.assets[] | select(.name | contains("x64-setup.exe.sig")) | .browser_download_url' release_info.json)
+          
+          if [ "$SIG_URL" != "null" ] && [ -n "$SIG_URL" ]; then
+            curl -L "$SIG_URL" > signature.txt
+            SIGNATURE=$(cat signature.txt)
+            echo "signature=${SIGNATURE}" >> $GITHUB_OUTPUT
+          else
+            echo "signature=" >> $GITHUB_OUTPUT
+          fi
+        id: get_signature
       
       - name: Create update manifest
         run: |
           cat > latest.json << EOF
           {
-            "version": "${{ steps.release_info.outputs.version }}",
+            "version": "${{ steps.release_info.outputs.app_version }}",
+            "notes": "Nova versão do FCA Manager com melhorias e correções de bugs. O sistema de auto-update está ativo.",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "url": "https://github.com/${{ github.repository }}/releases/download/${{ steps.release_info.outputs.tag_name }}/",
-            "signature": "",
-            "notes": "Nova versão do FCA Manager com melhorias e correções de bugs. O sistema de auto-update está ativo."
+            "platforms": {
+              "windows-x86_64": {
+                "signature": "${{ steps.get_signature.outputs.signature }}",
+                "url": "https://github.com/${{ github.repository }}/releases/download/${{ steps.release_info.outputs.tag_name }}/FCA.Manager_${{ steps.release_info.outputs.app_version }}_x64-setup.exe"
+              }
+            }
           }
           EOF
       
