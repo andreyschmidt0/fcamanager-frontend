@@ -3,6 +3,7 @@ import { check, Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { ask } from '@tauri-apps/plugin-dialog';
 import { Download, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { UpdaterDebug } from '../debug/DebugModal';
 
 interface AutoUpdaterProps {
   checkOnStart?: boolean;
@@ -15,6 +16,7 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'>('idle');
   const [error, setError] = useState<string>('');
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const updaterDebug = UpdaterDebug.getInstance();
 
   // Verificar updates na inicialização se solicitado
   useEffect(() => {
@@ -32,6 +34,12 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
     setUpdateStatus('checking');
     setError('');
 
+    updaterDebug.addLog({
+      event: 'Update Check Started',
+      details: `Checking for updates... (checkOnStart: ${checkOnStart})`,
+      type: 'info'
+    });
+
     try {
       const update = await check();
       
@@ -39,26 +47,53 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
         setUpdateAvailable(update);
         setUpdateStatus('available');
         
+        updaterDebug.addLog({
+          event: 'Update Available',
+          details: `New version available: ${update.version}. Body: ${update.body}`,
+          type: 'success',
+          version: update.version
+        });
+        
         // Mostrar notificação automática se solicitado
         if (checkOnStart) {
           showUpdateDialog(update);
         }
       } else {
         setUpdateStatus('idle');
+        updaterDebug.addLog({
+          event: 'No Updates Found',
+          details: 'Application is up to date',
+          type: 'info'
+        });
+        
         if (!checkOnStart) {
           // Mostrar feedback apenas se foi check manual
           setUpdateStatus('idle');
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao verificar atualizações');
+      const errorMsg = err instanceof Error ? err.message : 'Erro ao verificar atualizações';
+      setError(errorMsg);
       setUpdateStatus('error');
+      
+      updaterDebug.addLog({
+        event: 'Update Check Failed',
+        details: `Error checking for updates: ${errorMsg}`,
+        type: 'error'
+      });
     } finally {
       setIsChecking(false);
     }
   };
 
   const showUpdateDialog = async (update: Update) => {
+    updaterDebug.addLog({
+      event: 'Update Dialog Shown',
+      details: `Showing update dialog for version ${update.version}`,
+      type: 'info',
+      version: update.version
+    });
+
     const shouldUpdate = await ask(
       `Nova versão ${update.version} disponível!\n\n${update.body}\n\nDeseja atualizar agora?`,
       {
@@ -66,6 +101,13 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
         kind: 'info'
       }
     );
+
+    updaterDebug.addLog({
+      event: 'Update Dialog Response',
+      details: `User ${shouldUpdate ? 'accepted' : 'declined'} the update`,
+      type: shouldUpdate ? 'info' : 'warning',
+      version: update.version
+    });
 
     if (shouldUpdate) {
       downloadAndInstall(update);
@@ -77,6 +119,14 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
     setUpdateStatus('downloading');
     setDownloadProgress(0);
 
+    updaterDebug.addLog({
+      event: 'Download Started',
+      details: `Starting download for version ${update.version}`,
+      type: 'info',
+      version: update.version,
+      progress: 0
+    });
+
     try {
       // Download com callback de progresso
       let downloaded = 0;
@@ -86,15 +136,37 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
         switch (event.event) {
           case 'Started':
             setDownloadProgress(0);
+            updaterDebug.addLog({
+              event: 'Download Progress',
+              details: 'Download started',
+              type: 'info',
+              version: update.version,
+              progress: 0
+            });
             break;
           case 'Progress':
             // Simular progresso - o Tauri v2 pode não ter progresso real
             downloaded += 10;
-            setDownloadProgress(Math.min(downloaded, 90));
+            const progress = Math.min(downloaded, 90);
+            setDownloadProgress(progress);
+            updaterDebug.addLog({
+              event: 'Download Progress',
+              details: `Download progress: ${progress}%`,
+              type: 'info',
+              version: update.version,
+              progress: progress
+            });
             break;
           case 'Finished':
             setDownloadProgress(100);
             setUpdateStatus('ready');
+            updaterDebug.addLog({
+              event: 'Download Completed',
+              details: 'Download and installation completed successfully',
+              type: 'success',
+              version: update.version,
+              progress: 100
+            });
             break;
         }
       });
@@ -108,13 +180,34 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
         }
       );
 
+      updaterDebug.addLog({
+        event: 'Restart Dialog Response',
+        details: `User ${shouldRestart ? 'accepted' : 'declined'} restart`,
+        type: shouldRestart ? 'info' : 'warning',
+        version: update.version
+      });
+
       if (shouldRestart) {
+        updaterDebug.addLog({
+          event: 'Application Restart',
+          details: 'Restarting application to apply update',
+          type: 'info',
+          version: update.version
+        });
         await relaunch();
       }
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao baixar atualização');
+      const errorMsg = err instanceof Error ? err.message : 'Erro ao baixar atualização';
+      setError(errorMsg);
       setUpdateStatus('error');
+      
+      updaterDebug.addLog({
+        event: 'Download Failed',
+        details: `Download failed: ${errorMsg}`,
+        type: 'error',
+        version: update.version
+      });
     } finally {
       setIsDownloading(false);
     }

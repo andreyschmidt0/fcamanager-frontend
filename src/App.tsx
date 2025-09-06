@@ -16,6 +16,7 @@ function App() {
   const [showLoading, setShowLoading] = useState(false);
   const [showDebugModal, setShowDebugModal] = useState(false);
   const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
+  const [appVersion, setAppVersion] = useState<string>('');
   const { user, isLoading, isAuthenticated } = useAuth();
   const tokenManager = TokenManager.getInstance();
 
@@ -45,6 +46,15 @@ function App() {
       window.removeEventListener('tokenExpired', handleTokenExpired);
     };
   }, []);
+
+  useEffect(() => {
+    // Buscar versão do app quando autenticado
+    if (isAuthenticated) {
+      import('@tauri-apps/api/app').then(({ getVersion }) => {
+        getVersion().then(setAppVersion).catch(() => setAppVersion(''));
+      }).catch(() => setAppVersion(''));
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     // Keyboard shortcut for debug modal (Ctrl + D)
@@ -125,6 +135,15 @@ function App() {
           isOpen={showSessionExpiredModal}
           onRelogin={handleRelogin}
         />
+
+        {/* Versão discreta no canto inferior direito */}
+        {isAuthenticated && appVersion && (
+          <div className="fixed bottom-4 right-4 z-10 pointer-events-none">
+            <div className="bg-black/20 backdrop-blur-sm text-gray-400 text-xs px-2 py-1 rounded border border-gray-700/30">
+              v{appVersion}
+            </div>
+          </div>
+        )}
       </SuccessModalProvider>
     </ActivityLogProvider>
   );
