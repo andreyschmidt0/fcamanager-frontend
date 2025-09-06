@@ -45,6 +45,19 @@ export const useAutoUpdater = (): UseAutoUpdaterReturn => {
 
     try {
       console.log('[AutoUpdater] Checking for updates...');
+      console.log('[AutoUpdater] Updater endpoint:', 'https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json');
+      
+      // Log informações do ambiente antes da verificação
+      updaterDebug.addLog({
+        event: 'Environment Check',
+        details: `Plataforma: ${navigator.platform}
+User Agent: ${navigator.userAgent}
+Online: ${navigator.onLine}
+Versão Atual: 1.0.12
+Endpoint: https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json`,
+        type: 'info'
+      });
+      
       const update = await check();
       
       if (update?.available) {
@@ -68,11 +81,28 @@ export const useAutoUpdater = (): UseAutoUpdaterReturn => {
         setUpdateStatus('idle');
       }
     } catch (err) {
+      // Capturar TODOS os detalhes possíveis do erro
       let specificError = 'Erro desconhecido';
-      let errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao verificar atualizações';
+      let errorMessage = 'N/A';
+      let errorName = 'N/A';
+      let errorStack = 'N/A';
+      let errorString = String(err);
+      
+      console.log('[AutoUpdater] RAW ERROR OBJECT:', err);
+      console.log('[AutoUpdater] ERROR TYPE:', typeof err);
+      console.log('[AutoUpdater] ERROR STRING:', errorString);
+      console.log('[AutoUpdater] ERROR JSON:', JSON.stringify(err, null, 2));
       
       if (err instanceof Error) {
-        const msg = err.message.toLowerCase();
+        errorMessage = err.message;
+        errorName = err.name;
+        errorStack = err.stack || 'N/A';
+        
+        console.log('[AutoUpdater] ERROR.MESSAGE:', errorMessage);
+        console.log('[AutoUpdater] ERROR.NAME:', errorName);
+        console.log('[AutoUpdater] ERROR.STACK:', errorStack);
+        
+        const msg = errorMessage.toLowerCase();
         
         // Categorizar tipos de erro para melhor diagnóstico
         if (msg.includes('network') || msg.includes('fetch') || msg.includes('connection') || msg.includes('timeout')) {
@@ -92,8 +122,11 @@ export const useAutoUpdater = (): UseAutoUpdaterReturn => {
         } else if (msg.includes('platform') || msg.includes('architecture')) {
           specificError = 'Plataforma não suportada para atualizações';
         } else {
-          specificError = errorMessage;
+          specificError = `${errorName}: ${errorMessage}`;
         }
+      } else {
+        errorMessage = errorString;
+        specificError = errorString;
       }
       
       console.error('[AutoUpdater] Check failed:', err);
@@ -104,14 +137,52 @@ export const useAutoUpdater = (): UseAutoUpdaterReturn => {
         stack: err instanceof Error ? err.stack : 'No stack trace',
       });
       
-      // Registrar erro no debug
+      // Tentar fazer um teste manual do endpoint para mais diagnóstico
+      try {
+        const response = await fetch('https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json');
+        const responseText = await response.text();
+        updaterDebug.addLog({
+          event: 'Manual Endpoint Test',
+          details: `Status HTTP: ${response.status}
+Resposta: ${responseText.substring(0, 500)}...`,
+          type: response.ok ? 'success' : 'warning'
+        });
+      } catch (fetchErr) {
+        updaterDebug.addLog({
+          event: 'Manual Endpoint Test Failed',
+          details: `Erro ao testar endpoint manualmente: ${String(fetchErr)}`,
+          type: 'error'
+        });
+      }
+
+      // Registrar erro no debug com MÁXIMO de detalhes
       updaterDebug.addLog({
         event: 'Update Check Failed',
-        details: `${specificError}\n\nDetalhes técnicos:\n${errorMessage}\n\nStack: ${err instanceof Error ? err.stack || 'N/A' : 'N/A'}`,
+        details: `ERRO: ${specificError}
+
+DETALHES TÉCNICOS COMPLETOS:
+- Nome do Erro: ${errorName}
+- Mensagem: ${errorMessage}
+- String do Erro: ${errorString}
+- Tipo: ${typeof err}
+- Stack Trace: ${errorStack}
+
+JSON DO ERRO:
+${JSON.stringify(err, Object.getOwnPropertyNames(err), 2)}
+
+ENDPOINT TESTADO:
+https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json
+
+POSSÍVEIS CAUSAS:
+1. Problema de assinatura digital (chave pública incorreta)
+2. Problema de CORS ou política de segurança do Tauri
+3. Versão atual (1.0.12) vs disponível no servidor
+4. Endpoint inacessível ou formato JSON inválido
+5. Problema de permissões do sistema operacional`,
         type: 'error'
       });
       
-      setError(`Erro ao verificar atualizações: ${specificError}`);
+      setError(`${specificError} (Veja detalhes no Debug Modal - Ctrl+D)`);
       setUpdateStatus('error');
     } finally {
       setIsChecking(false);

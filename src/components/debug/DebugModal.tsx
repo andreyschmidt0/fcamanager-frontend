@@ -6,10 +6,19 @@ interface ErrorLog {
   timestamp: Date;
   error: string;
   details: string;
-  type: 'connection' | 'api' | 'auth' | 'general' | 'updater';
+  type: 'connection' | 'api' | 'auth' | 'general' | 'updater' | 'performance' | 'ui';
   stack?: string;
   url?: string;
   method?: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  userAgent?: string;
+  sessionId?: string;
+  userId?: string;
+  component?: string;
+  action?: string;
+  duration?: number;
+  memoryUsage?: number;
+  networkStatus?: string;
 }
 
 interface UpdaterLog {
@@ -19,6 +28,34 @@ interface UpdaterLog {
   type: 'info' | 'success' | 'warning' | 'error';
   version?: string;
   progress?: number;
+  downloadSpeed?: number;
+  fileSize?: number;
+  checksum?: string;
+  installPath?: string;
+  rollbackAvailable?: boolean;
+  serverResponse?: any;
+}
+
+interface SystemInfo {
+  timestamp: Date;
+  appVersion: string;
+  platform: string;
+  userAgent: string;
+  screenResolution: string;
+  memoryUsage: number;
+  onlineStatus: boolean;
+  language: string;
+  timezone: string;
+  connectionType?: string;
+}
+
+interface PerformanceMetrics {
+  timestamp: Date;
+  componentName: string;
+  renderTime: number;
+  memoryDelta: number;
+  networkRequests: number;
+  apiResponseTimes: { [endpoint: string]: number };
 }
 
 interface DebugModalProps {
@@ -40,14 +77,27 @@ class ErrorCapture {
   }
 
   addError(error: Partial<ErrorLog>) {
+    const sessionId = this.getSessionId();
+    const memoryUsage = this.getMemoryUsage();
+    const networkStatus = navigator.onLine ? 'online' : 'offline';
+    
     const newError: ErrorLog = {
       timestamp: new Date(),
       error: error.error || 'Unknown error',
       details: error.details || '',
       type: error.type || 'general',
+      severity: error.severity || 'medium',
       stack: error.stack,
       url: error.url,
-      method: error.method
+      method: error.method,
+      userAgent: navigator.userAgent,
+      sessionId,
+      userId: error.userId,
+      component: error.component,
+      action: error.action,
+      duration: error.duration,
+      memoryUsage,
+      networkStatus
     };
 
     this.errors.unshift(newError);
@@ -56,6 +106,22 @@ class ErrorCapture {
     }
 
     this.notifyListeners();
+  }
+
+  private getSessionId(): string {
+    let sessionId = sessionStorage.getItem('debug-session-id');
+    if (!sessionId) {
+      sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem('debug-session-id', sessionId);
+    }
+    return sessionId;
+  }
+
+  private getMemoryUsage(): number {
+    if ('memory' in performance) {
+      return (performance as any).memory.usedJSHeapSize / 1024 / 1024;
+    }
+    return 0;
   }
 
   getErrors(): ErrorLog[] {
@@ -99,7 +165,13 @@ class UpdaterDebug {
       details: log.details || '',
       type: log.type || 'info',
       version: log.version,
-      progress: log.progress
+      progress: log.progress,
+      downloadSpeed: log.downloadSpeed,
+      fileSize: log.fileSize,
+      checksum: log.checksum,
+      installPath: log.installPath,
+      rollbackAvailable: log.rollbackAvailable,
+      serverResponse: log.serverResponse
     };
 
     this.logs.unshift(newLog);
@@ -128,6 +200,120 @@ class UpdaterDebug {
 
   private notifyListeners(): void {
     this.listeners.forEach(listener => listener(this.getLogs()));
+  }
+}
+
+class SystemInfoCollector {
+  private static instance: SystemInfoCollector;
+  private systemInfo: SystemInfo | null = null;
+
+  static getInstance(): SystemInfoCollector {
+    if (!SystemInfoCollector.instance) {
+      SystemInfoCollector.instance = new SystemInfoCollector();
+    }
+    return SystemInfoCollector.instance;
+  }
+
+  async collectSystemInfo(): Promise<SystemInfo> {
+    const appVersion = await this.getAppVersion();
+    
+    this.systemInfo = {
+      timestamp: new Date(),
+      appVersion,
+      platform: navigator.platform,
+      userAgent: navigator.userAgent,
+      screenResolution: `${screen.width}x${screen.height}`,
+      memoryUsage: this.getMemoryUsage(),
+      onlineStatus: navigator.onLine,
+      language: navigator.language,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      connectionType: this.getConnectionType()
+    };
+
+    return this.systemInfo;
+  }
+
+  private async getAppVersion(): Promise<string> {
+    try {
+      const { getVersion } = await import('@tauri-apps/api/app');
+      return await getVersion();
+    } catch {
+      return 'Unknown';
+    }
+  }
+
+  private getMemoryUsage(): number {
+    if ('memory' in performance) {
+      return (performance as any).memory.usedJSHeapSize / 1024 / 1024;
+    }
+    return 0;
+  }
+
+  private getConnectionType(): string {
+    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+    return connection ? connection.effectiveType || connection.type : 'unknown';
+  }
+
+  getSystemInfo(): SystemInfo | null {
+    return this.systemInfo;
+  }
+}
+
+class PerformanceTracker {
+  private static instance: PerformanceTracker;
+  private metrics: PerformanceMetrics[] = [];
+  private maxMetrics = 50;
+
+  static getInstance(): PerformanceTracker {
+    if (!PerformanceTracker.instance) {
+      PerformanceTracker.instance = new PerformanceTracker();
+    }
+    return PerformanceTracker.instance;
+  }
+
+  trackComponentRender(componentName: string, renderTime: number) {
+    const metric: PerformanceMetrics = {
+      timestamp: new Date(),
+      componentName,
+      renderTime,
+      memoryDelta: this.getMemoryUsage(),
+      networkRequests: performance.getEntriesByType('navigation').length,
+      apiResponseTimes: this.getApiResponseTimes()
+    };
+
+    this.metrics.unshift(metric);
+    if (this.metrics.length > this.maxMetrics) {
+      this.metrics = this.metrics.slice(0, this.maxMetrics);
+    }
+  }
+
+  private getMemoryUsage(): number {
+    if ('memory' in performance) {
+      return (performance as any).memory.usedJSHeapSize / 1024 / 1024;
+    }
+    return 0;
+  }
+
+  private getApiResponseTimes(): { [endpoint: string]: number } {
+    const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    const apiTimes: { [endpoint: string]: number } = {};
+    
+    entries.forEach(entry => {
+      if (entry.name.includes('/api/')) {
+        const url = new URL(entry.name);
+        apiTimes[url.pathname] = entry.duration;
+      }
+    });
+
+    return apiTimes;
+  }
+
+  getMetrics(): PerformanceMetrics[] {
+    return [...this.metrics];
+  }
+
+  clearMetrics(): void {
+    this.metrics = [];
   }
 }
 
@@ -173,15 +359,20 @@ const cleanupErrorInterception = () => {
 };
 
 const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'errors' | 'updater'>('errors');
+  const [activeTab, setActiveTab] = useState<'errors' | 'updater' | 'system' | 'performance'>('errors');
   const [errors, setErrors] = useState<ErrorLog[]>([]);
   const [updaterLogs, setUpdaterLogs] = useState<UpdaterLog[]>([]);
+  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics[]>([]);
   const [filter, setFilter] = useState<string>('all');
+  const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [testResults, setTestResults] = useState<string>('');
   const [testing, setTesting] = useState<boolean>(false);
   const [appVersion, setAppVersion] = useState<string>('');
   const errorCapture = ErrorCapture.getInstance();
   const updaterDebug = UpdaterDebug.getInstance();
+  const systemInfoCollector = SystemInfoCollector.getInstance();
+  const performanceTracker = PerformanceTracker.getInstance();
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -191,15 +382,25 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
     
     setErrors(errorCapture.getErrors());
     setUpdaterLogs(updaterDebug.getLogs());
+    setPerformanceMetrics(performanceTracker.getMetrics());
+
+    // Collect system information
+    systemInfoCollector.collectSystemInfo().then(setSystemInfo);
 
     // Buscar versão do app
     import('@tauri-apps/api/app').then(({ getVersion }) => {
       getVersion().then(setAppVersion).catch(() => setAppVersion('Unknown'));
     }).catch(() => setAppVersion('N/A'));
 
+    // Track performance metrics every 5 seconds
+    const performanceInterval = setInterval(() => {
+      setPerformanceMetrics(performanceTracker.getMetrics());
+    }, 5000);
+
     return () => {
       unsubscribeErrors();
       unsubscribeUpdater();
+      clearInterval(performanceInterval);
       // Note: We don't cleanup error interception here as it's global
       // and may be used by other components
     };
@@ -217,8 +418,9 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
   }, [isOpen, onClose]);
 
   const filteredErrors = errors.filter(error => {
-    if (filter === 'all') return true;
-    return error.type === filter;
+    const typeMatch = filter === 'all' || error.type === filter;
+    const severityMatch = severityFilter === 'all' || error.severity === severityFilter;
+    return typeMatch && severityMatch;
   });
 
   const getErrorTypeColor = (type: string) => {
@@ -226,7 +428,19 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
       case 'connection': return 'text-red-400';
       case 'api': return 'text-orange-400';
       case 'auth': return 'text-yellow-400';
+      case 'performance': return 'text-purple-400';
+      case 'ui': return 'text-blue-400';
       default: return 'text-gray-400';
+    }
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'text-red-600 bg-red-100';
+      case 'high': return 'text-red-500 bg-red-50';
+      case 'medium': return 'text-yellow-600 bg-yellow-100';
+      case 'low': return 'text-green-600 bg-green-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
@@ -299,17 +513,30 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
               )}
             </div>
             <div className="flex items-center gap-2">
-            <select 
-              value={filter} 
-              onChange={(e) => setFilter(e.target.value)}
-              className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm"
-            >
-              <option value="all">All Errors</option>
-              <option value="connection">Connection</option>
-              <option value="api">API</option>
-              <option value="auth">Auth</option>
-              <option value="general">General</option>
-            </select>
+              <select 
+                value={filter} 
+                onChange={(e) => setFilter(e.target.value)}
+                className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm"
+              >
+                <option value="all">All Types</option>
+                <option value="connection">Connection</option>
+                <option value="api">API</option>
+                <option value="auth">Auth</option>
+                <option value="performance">Performance</option>
+                <option value="ui">UI</option>
+                <option value="general">General</option>
+              </select>
+              <select 
+                value={severityFilter} 
+                onChange={(e) => setSeverityFilter(e.target.value)}
+                className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm"
+              >
+                <option value="all">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
             <button 
               onClick={runConnectionTests}
               disabled={testing}
@@ -359,6 +586,26 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
             >
               Updater ({updaterLogs.length})
             </button>
+            <button
+              onClick={() => setActiveTab('system')}
+              className={`px-3 py-1 text-sm rounded-t ${
+                activeTab === 'system' 
+                  ? 'bg-gray-700 text-white' 
+                  : 'bg-gray-800 text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              System Info
+            </button>
+            <button
+              onClick={() => setActiveTab('performance')}
+              className={`px-3 py-1 text-sm rounded-t ${
+                activeTab === 'performance' 
+                  ? 'bg-gray-700 text-white' 
+                  : 'bg-gray-800 text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              Performance ({performanceMetrics.length})
+            </button>
           </div>
         </div>
 
@@ -398,11 +645,14 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
                       <span className={`font-semibold ${getErrorTypeColor(error.type)}`}>
                         [{error.type.toUpperCase()}]
                       </span>
+                      <span className={`text-xs px-2 py-1 rounded ${getSeverityColor(error.severity)}`}>
+                        {error.severity.toUpperCase()}
+                      </span>
                       <span className="text-gray-300">{error.error}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-gray-500">
-                        {error.timestamp.toLocaleTimeString()}
+                        {error.timestamp.toLocaleString()}
                       </span>
                       <button 
                         onClick={() => copyToClipboard(JSON.stringify(error, null, 2))}
@@ -415,11 +665,49 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
                   
                   <div className="text-gray-400 text-xs mb-2">
                     <p>{error.details}</p>
-                    {error.url && (
-                      <p className="mt-1">
-                        <span className="text-gray-500">URL:</span> {error.method} {error.url}
-                      </p>
-                    )}
+                    
+                    <div className="mt-2 grid grid-cols-2 gap-4">
+                      {error.url && (
+                        <div>
+                          <span className="text-gray-500">URL:</span> {error.method} {error.url}
+                        </div>
+                      )}
+                      {error.component && (
+                        <div>
+                          <span className="text-gray-500">Component:</span> {error.component}
+                        </div>
+                      )}
+                      {error.action && (
+                        <div>
+                          <span className="text-gray-500">Action:</span> {error.action}
+                        </div>
+                      )}
+                      {error.duration && (
+                        <div>
+                          <span className="text-gray-500">Duration:</span> {error.duration}ms
+                        </div>
+                      )}
+                      {error.memoryUsage && error.memoryUsage > 0 && (
+                        <div>
+                          <span className="text-gray-500">Memory:</span> {error.memoryUsage.toFixed(1)}MB
+                        </div>
+                      )}
+                      {error.networkStatus && (
+                        <div>
+                          <span className="text-gray-500">Network:</span> {error.networkStatus}
+                        </div>
+                      )}
+                      {error.sessionId && (
+                        <div>
+                          <span className="text-gray-500">Session:</span> {error.sessionId.slice(-8)}
+                        </div>
+                      )}
+                      {error.userId && (
+                        <div>
+                          <span className="text-gray-500">User:</span> {error.userId}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {error.stack && (
@@ -483,16 +771,59 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
                       
                       <div className="text-gray-400 text-xs mb-2">
                         <p>{log.details}</p>
+                        
+                        <div className="mt-2 grid grid-cols-2 gap-4">
+                          {log.downloadSpeed && (
+                            <div>
+                              <span className="text-gray-500">Speed:</span> {(log.downloadSpeed / 1024).toFixed(1)} KB/s
+                            </div>
+                          )}
+                          {log.fileSize && (
+                            <div>
+                              <span className="text-gray-500">Size:</span> {(log.fileSize / 1024 / 1024).toFixed(1)} MB
+                            </div>
+                          )}
+                          {log.checksum && (
+                            <div>
+                              <span className="text-gray-500">Checksum:</span> {log.checksum.slice(0, 8)}...
+                            </div>
+                          )}
+                          {log.installPath && (
+                            <div>
+                              <span className="text-gray-500">Path:</span> {log.installPath}
+                            </div>
+                          )}
+                          {log.rollbackAvailable !== undefined && (
+                            <div>
+                              <span className="text-gray-500">Rollback:</span> {log.rollbackAvailable ? 'Available' : 'Not available'}
+                            </div>
+                          )}
+                        </div>
+
                         {log.progress !== undefined && (
-                          <div className="mt-2">
-                            <div className="w-full bg-gray-700 rounded-full h-1">
+                          <div className="mt-3">
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-gray-500">Progress</span>
+                              <span className="text-gray-300">{log.progress}%</span>
+                            </div>
+                            <div className="w-full bg-gray-700 rounded-full h-2">
                               <div 
-                                className="bg-blue-600 h-1 rounded-full transition-all duration-300"
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                                 style={{ width: `${log.progress}%` }}
                               />
                             </div>
-                            <span className="text-xs text-gray-500 mt-1">{log.progress}%</span>
                           </div>
+                        )}
+
+                        {log.serverResponse && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-gray-500 hover:text-gray-400 text-xs">
+                              Server Response
+                            </summary>
+                            <pre className="mt-2 text-xs text-gray-600 bg-gray-900 p-2 rounded overflow-x-auto">
+                              {JSON.stringify(log.serverResponse, null, 2)}
+                            </pre>
+                          </details>
                         )}
                       </div>
                     </div>
@@ -500,6 +831,192 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
                 </div>
               )}
             </>
+          )}
+
+          {/* System Info Tab */}
+          {activeTab === 'system' && (
+            <div className="space-y-4">
+              {systemInfo ? (
+                <>
+                  <div className="bg-gray-800 border border-gray-700 rounded p-4">
+                    <h3 className="text-green-400 font-semibold mb-3">System Information</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-gray-500">App Version:</span>
+                          <span className="text-gray-300 ml-2">{systemInfo.appVersion}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Platform:</span>
+                          <span className="text-gray-300 ml-2">{systemInfo.platform}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Screen Resolution:</span>
+                          <span className="text-gray-300 ml-2">{systemInfo.screenResolution}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Language:</span>
+                          <span className="text-gray-300 ml-2">{systemInfo.language}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Timezone:</span>
+                          <span className="text-gray-300 ml-2">{systemInfo.timezone}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-gray-500">Memory Usage:</span>
+                          <span className="text-gray-300 ml-2">{systemInfo.memoryUsage.toFixed(1)} MB</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Online Status:</span>
+                          <span className={`ml-2 ${systemInfo.onlineStatus ? 'text-green-400' : 'text-red-400'}`}>
+                            {systemInfo.onlineStatus ? 'Online' : 'Offline'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Connection Type:</span>
+                          <span className="text-gray-300 ml-2">{systemInfo.connectionType}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Last Updated:</span>
+                          <span className="text-gray-300 ml-2">{systemInfo.timestamp.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-800 border border-gray-700 rounded p-4">
+                    <h3 className="text-blue-400 font-semibold mb-3">User Agent</h3>
+                    <pre className="text-xs text-gray-300 bg-gray-900 p-3 rounded overflow-x-auto break-all">
+                      {systemInfo.userAgent}
+                    </pre>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => systemInfoCollector.collectSystemInfo().then(setSystemInfo)}
+                      className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm"
+                    >
+                      Refresh System Info
+                    </button>
+                    <button 
+                      onClick={() => copyToClipboard(JSON.stringify(systemInfo, null, 2))}
+                      className="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded text-sm"
+                    >
+                      Copy System Info
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center text-gray-500 mt-8">
+                  <p>Loading system information...</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Performance Tab */}
+          {activeTab === 'performance' && (
+            <div className="space-y-4">
+              {performanceMetrics.length === 0 ? (
+                <div className="text-center text-gray-500 mt-8">
+                  <p>No performance metrics available yet.</p>
+                  <p className="text-sm mt-2">Component render times and API response metrics will appear here.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-gray-800 border border-gray-700 rounded p-4">
+                    <h3 className="text-purple-400 font-semibold mb-3">Performance Overview</h3>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-purple-400">
+                          {performanceMetrics.length > 0 ? performanceMetrics[0].memoryDelta.toFixed(1) : '0'}MB
+                        </div>
+                        <div className="text-gray-500">Current Memory</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-400">
+                          {performanceMetrics.reduce((avg, metric) => avg + metric.renderTime, 0) / performanceMetrics.length || 0}ms
+                        </div>
+                        <div className="text-gray-500">Avg Render Time</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-400">
+                          {performanceMetrics.reduce((total, metric) => total + Object.keys(metric.apiResponseTimes).length, 0)}
+                        </div>
+                        <div className="text-gray-500">API Calls</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {performanceMetrics.map((metric, index) => (
+                      <div key={index} className="bg-gray-800 border border-gray-700 rounded p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-purple-400">
+                              {metric.componentName}
+                            </span>
+                            <span className="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">
+                              {metric.renderTime.toFixed(2)}ms
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {metric.timestamp.toLocaleTimeString()}
+                          </div>
+                        </div>
+                        
+                        <div className="text-gray-400 text-xs mb-2">
+                          <div className="grid grid-cols-3 gap-4">
+                            <div>
+                              <span className="text-gray-500">Memory:</span> {metric.memoryDelta.toFixed(1)}MB
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Network Requests:</span> {metric.networkRequests}
+                            </div>
+                            <div>
+                              <span className="text-gray-500">API Responses:</span> {Object.keys(metric.apiResponseTimes).length}
+                            </div>
+                          </div>
+                          
+                          {Object.keys(metric.apiResponseTimes).length > 0 && (
+                            <details className="mt-2">
+                              <summary className="cursor-pointer text-gray-500 hover:text-gray-400 text-xs">
+                                API Response Times
+                              </summary>
+                              <div className="mt-2 space-y-1">
+                                {Object.entries(metric.apiResponseTimes).map(([endpoint, time]) => (
+                                  <div key={endpoint} className="flex justify-between">
+                                    <span className="text-gray-600">{endpoint}</span>
+                                    <span className="text-gray-400">{time.toFixed(2)}ms</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => performanceTracker.clearMetrics()}
+                      className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm"
+                    >
+                      Clear Metrics
+                    </button>
+                    <button 
+                      onClick={() => copyToClipboard(JSON.stringify(performanceMetrics, null, 2))}
+                      className="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded text-sm"
+                    >
+                      Copy Metrics
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
 
@@ -513,5 +1030,5 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export { ErrorCapture, UpdaterDebug };
+export { ErrorCapture, UpdaterDebug, SystemInfoCollector, PerformanceTracker };
 export default DebugModal;

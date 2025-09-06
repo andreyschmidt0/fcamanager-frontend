@@ -78,7 +78,7 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
-          includeUpdaterJson: false
+          includeUpdaterJson: true
 
   create-update-manifest:
     needs: build-tauri
