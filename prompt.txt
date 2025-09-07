@@ -1,0 +1,86 @@
+DECLARE @PageNumber INT;
+SET @PageNumber = 1;
+
+DECLARE @PageSize INT;
+SET @PageSize = 30; -- Sempre manter 30 resultados por página.
+
+SELECT 
+    p.ProductID, 
+    p.ProductName, 
+    CASE
+        WHEN i.ItemType = 0 THEN 'AR'
+        WHEN i.ItemType = 1 THEN 'SMG'
+        WHEN i.ItemType = 2 THEN 'Sniper'
+        WHEN i.ItemType = 3 THEN 'Machine Gun'
+        WHEN i.ItemType = 4 THEN 'Pistol'
+        WHEN i.ItemType = 5 THEN 'Double Shotgun'
+        WHEN i.ItemType = 6 THEN 'Grenade'
+        WHEN i.ItemType = 7 THEN 'Knife'
+        WHEN i.ItemType = 8 THEN 'Explosives ETC'
+        WHEN i.ItemType = 11 THEN 'Hat'
+        WHEN i.ItemType = 12 THEN 'Face'
+        WHEN i.ItemType = 14 THEN 'Uniform'
+        WHEN i.ItemType = 15 THEN 'Vest'
+        WHEN i.ItemType = 16 THEN 'Backpack'
+        WHEN i.ItemType = 17 THEN 'Silencer'
+        WHEN i.ItemType = 18 THEN 'Scope'
+        WHEN i.ItemType = 19 THEN 'Magazine'
+        WHEN i.ItemType = 20 THEN 'Box'
+        WHEN i.ItemType = 21 THEN 'Function Item'
+        WHEN i.ItemType = 22 THEN 'Character'
+        WHEN i.ItemType = 25 THEN 'GP Reward'
+        WHEN i.ItemType = 26 THEN 'Shotgun'
+        WHEN i.ItemType = 27 THEN 'Detector'
+        WHEN i.ItemType = 28 THEN ''
+        WHEN i.ItemType = 29 THEN 'Special Items'
+        WHEN i.ItemType = 30 THEN 'Specialist'
+        WHEN i.ItemType = 31 THEN 'Detector'
+        WHEN i.ItemType = 32 THEN 'Material'
+        WHEN i.ItemType = 33 THEN 'Customization Parts'
+        WHEN i.ItemType = 34 THEN 'Medal'
+        WHEN i.ItemType = 35 THEN 'Specialist Enhancement'
+        WHEN i.ItemType = 36 THEN 'Assassin Items'
+        WHEN i.ItemType = 37 THEN 'Assassins'
+        WHEN i.ItemType = 38 THEN 'Clothing Cosmetic'
+        WHEN i.ItemType = 40 THEN 'Hat Cosmetic'
+        WHEN i.ItemType = 41 THEN 'Face Cosmetic'
+        WHEN i.ItemType = 42 THEN 'Vest Cosmetic'
+        WHEN i.ItemType = 43 THEN 'Backpack Cosmetic'
+        WHEN i.ItemType = 44 THEN 'Roulette Coin'
+        WHEN i.ItemType = 45 THEN 'Coupon'
+        WHEN i.ItemType = 46 THEN 'Head Enhancement'
+        WHEN i.ItemType = 47 THEN 'Face Enhancement'
+        WHEN i.ItemType = 48 THEN 'Vest Enhancement'
+        WHEN i.ItemType = 49 THEN 'Bullet Enhancement'
+        WHEN i.ItemType = 50 THEN 'Weapon Enhancement'
+        WHEN i.ItemType = 51 THEN 'Fixed EXP'
+        ELSE 'Others'
+    END AS ProductType,
+    p.Price, 
+    p.Period00, 
+    s.ShopView, 
+    p.SaleType, 
+    i.ItemNo, 
+    i.ItemType, 
+    i.ItemGrade, 
+    n.NewTag, 
+    h.HotTag, 
+    b.SellBackPrice 
+FROM 
+    CBT_ProductInfo p
+LEFT JOIN 
+    CBT_ItemInfo i ON i.ItemNo = p.ItemNo00 
+LEFT JOIN 
+    CBT_ProductInfo_ShopView s ON s.ProductID = p.ProductID
+LEFT JOIN 
+    CBT_ProductInfo_NewTag n ON n.ProductID = p.ProductID
+LEFT JOIN 
+    CBT_ProductInfo_HotTag h ON h.ProductID = p.ProductID
+LEFT JOIN 
+    CBT_ItemInfo_SellBackPrice b ON b.ItemNo = i.ItemNo 
+WHERE 
+    1=1
+ORDER BY 
+    i.ItemType, p.ProductName, p.ProductID 
+OFFSET @PageNumber * @PageSize ROWS
+FETCH NEXT @PageSize ROWS ONLY;

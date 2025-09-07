@@ -294,7 +294,8 @@ const handleConfirmAction = async () => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
+              disabled={!playerValidated}
+              className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors"
             >
               Alterar Senha
             </button>

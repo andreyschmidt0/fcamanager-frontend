@@ -223,7 +223,8 @@ const RemoveClan: React.FC<RemoveClanProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
+              disabled={(!selectedClan && !fetchedClanName) || !formData.reason?.trim()}
+              className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors"
             >
               Remover Clã
             </button>

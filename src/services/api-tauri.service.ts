@@ -1048,6 +1048,96 @@ class ApiTauriService {
     }
   }
 
+  // Search items with advanced filters and pagination
+  async searchItems(filters: {
+    itemname?: string;
+    availableItems?: number;
+    daysperiod?: number;
+    selltype?: number;
+    productId?: number;
+    itemNo?: number;
+    itemGrade?: number;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{
+    success: boolean;
+    data: any[];
+    pagination: {
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    error?: string;
+  }> {
+    try {
+      const params = new URLSearchParams();
+      
+      // Adicionar filtros apenas se tiverem valor
+      if (filters.itemname && filters.itemname.trim() !== '') {
+        params.append('itemname', filters.itemname.trim());
+      }
+      
+      if (filters.availableItems !== undefined && filters.availableItems !== null) {
+        params.append('availableItems', filters.availableItems.toString());
+      }
+      
+      if (filters.daysperiod !== undefined && filters.daysperiod !== null && filters.daysperiod > 0) {
+        params.append('daysperiod', filters.daysperiod.toString());
+      }
+      
+      if (filters.selltype !== undefined && filters.selltype !== null) {
+        params.append('selltype', filters.selltype.toString());
+      }
+      
+      if (filters.productId !== undefined && filters.productId !== null && filters.productId > 0) {
+        params.append('productId', filters.productId.toString());
+      }
+      
+      if (filters.itemNo !== undefined && filters.itemNo !== null && filters.itemNo > 0) {
+        params.append('itemNo', filters.itemNo.toString());
+      }
+      
+      if (filters.itemGrade !== undefined && filters.itemGrade !== null) {
+        params.append('itemGrade', filters.itemGrade.toString());
+      }
+      
+      // Parâmetros de paginação
+      params.append('page', (filters.page || 1).toString());
+      params.append('pageSize', (filters.pageSize || 30).toString());
+
+      const response = await fetch(`${API_BASE}/actions/search-items?${params.toString()}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<{
+        success: boolean;
+        data: any[];
+        pagination: {
+          page: number;
+          pageSize: number;
+          total: number;
+          totalPages: number;
+        };
+      }>(response);
+    } catch (error) {
+      console.error('Erro ao buscar itens:', error);
+      return {
+        success: false,
+        data: [],
+        pagination: {
+          page: 1,
+          pageSize: 30,
+          total: 0,
+          totalPages: 0
+        },
+        error: error instanceof Error ? error.message : 'Erro ao buscar itens'
+      };
+    }
+  }
+
   // Refresh token
   async refreshToken(refreshToken: string): Promise<{success: boolean; accessToken?: string; refreshToken?: string; error?: string}> {
     try {

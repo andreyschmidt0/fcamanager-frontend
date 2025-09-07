@@ -315,7 +315,8 @@ const handleConfirmAction = async () => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
+              disabled={!playerValidated}
+              className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors"
             >
               Enviar Item
             </button>

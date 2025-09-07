@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { ask } from '@tauri-apps/plugin-dialog';
-import { Download, RefreshCw, CheckCircle, AlertCircle, Bug } from 'lucide-react';
+import { Download, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAutoUpdater } from '../../hooks/useAutoUpdater';
 
 interface AutoUpdaterProps {
@@ -12,13 +12,10 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
     updateStatus,
     updateAvailable,
     isChecking,
-    isDownloading,
     downloadProgress,
     error,
-    diagnosticResult,
     checkForUpdates,
-    downloadAndInstall,
-    runDiagnostics
+    downloadAndInstall
   } = useAutoUpdater();
 
   const hasCheckedOnStart = useRef(false);
@@ -75,38 +72,6 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
     }
   };
 
-  const getStatusText = () => {
-    switch (updateStatus) {
-      case 'checking':
-        return 'Verificando...';
-      case 'available':
-        return `v${updateAvailable?.version} disponível`;
-      case 'downloading':
-        return `Baixando... ${downloadProgress}%`;
-      case 'ready':
-        return 'Pronto para instalar';
-      case 'error':
-        return 'Erro na verificação';
-      default:
-        return 'Verificar atualizações';
-    }
-  };
-
-  const getStatusColor = () => {
-    switch (updateStatus) {
-      case 'available':
-        return 'text-blue-400';
-      case 'downloading':
-        return 'text-yellow-400';
-      case 'ready':
-        return 'text-green-400';
-      case 'error':
-        return 'text-red-400';
-      default:
-        return 'text-gray-400';
-    }
-  };
-
   // Componente invisível - só executa verificação automática
   return (
     <div>
@@ -145,28 +110,7 @@ const AutoUpdater: React.FC<AutoUpdaterProps> = ({ checkOnStart = false }) => {
                 >
                   {isChecking ? 'Tentando...' : 'Tentar Novamente'}
                 </button>
-                <button
-                  onClick={runDiagnostics}
-                  className="text-xs bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded text-white flex items-center gap-1"
-                >
-                  <Bug size={12} />
-                  Diagnóstico
-                </button>
               </div>
-              {diagnosticResult && (
-                <div className="mt-2 text-xs">
-                  <div className={`px-2 py-1 rounded text-xs ${
-                    diagnosticResult.success ? 'bg-green-900 text-green-200' : 'bg-red-800 text-red-200'
-                  }`}>
-                    {diagnosticResult.summary}
-                  </div>
-                  {diagnosticResult.recommendations.length > 0 && (
-                    <div className="mt-1 text-red-300">
-                      💡 {diagnosticResult.recommendations[0]}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
             <button
               onClick={() => window.location.reload()}

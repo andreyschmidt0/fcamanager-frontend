@@ -287,7 +287,8 @@ const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
+              disabled={!playerValidated}
+              className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors"
             >
               Remover Conta
             </button>

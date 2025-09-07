@@ -70,8 +70,12 @@ jobs:
             3. O app será atualizado automaticamente nas próximas versões
             
             ### ⚠️ Notas Importantes
-            - Esta versão inclui uma alteração na cor do texto das atividades pendentes
-            - Backup dos dados recomendado antes da instalação
+            - Esta versão inclui:
+            - Remove arquivos obsoletos de configuração do sistema de atualização e de 
+            setup do auto-update. Atualiza componentes de modal para desabilitar botões 
+            de ação quando o jogador não estiver validado, melhorando a usabilidade e a 
+            segurança. Implementa lógica de validação de jogador em tempo real no modal 
+            de consulta de inbox e ajusta a interface para feedback visual durante a validação.
             
             ---
             **Checksum dos arquivos disponível nos Assets abaixo**

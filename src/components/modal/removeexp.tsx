@@ -299,7 +299,8 @@ const RemoveExp: React.FC<RemoveExpProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-lg transition-colors"
+              disabled={!playerValidated}
+              className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors"
             >
               Aplicar Downgrade
             </button>

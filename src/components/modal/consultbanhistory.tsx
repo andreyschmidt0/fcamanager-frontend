@@ -306,7 +306,7 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
               <button
                 type="submit"
                 disabled={isLoading || !playerValidated}
-                className="flex-1 bg-green-600 hover:bg-green-700 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <Loader2 size={20} className="animate-spin" />
