@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Loader2 } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import apiService from '../../services/api-tauri.service';
+import BaseModal from '../common/BaseModal';
+import PlayerValidationFields from '../common/PlayerValidationFields';
+import { CancelButton, SubmitButton } from '../common/ActionButton';
+import { usePlayerValidation } from '../../hooks/usePlayerValidation';
 
 interface ConsultInboxProps {
   isOpen: boolean;
@@ -15,101 +18,27 @@ const ConsultInbox: React.FC<ConsultInboxProps> = ({ isOpen, onClose }) => {
     loginAccount: ''
   });
 
-  // Estados para validação (igual ao consultinventory)
-  const [fetchedPlayerName, setFetchedPlayerName] = useState<string>('');
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
-  const [playerValidated, setPlayerValidated] = useState(false);
-  const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Função para validação cross-check de Discord ID + Login
-  const validatePlayerCrossCheck = async (discordId: string, login: string) => {
-    if (!discordId || discordId.trim() === '' || !login || login.trim() === '') {
-      setFetchedPlayerName('');
-      setValidatedOidUser(null);
-      setPlayerValidated(false);
-      setErrorMessage('');
-      return;
-    }
+  // Usar hook de validação reutilizável
+  const validation = usePlayerValidation(formData, isOpen, {
+    autoValidateOnSelectedPlayer: true,
+    debounceMs: 500,
+    resetOnModalOpen: true
+  });
 
-    setIsValidatingPlayer(true);
-    try {
-      const result = await apiService.validatePlayerCrossCheck(discordId, login);
-      
-      if (result.isValid && result.player) {
-        setFetchedPlayerName(result.player.NickName || '');
-        setValidatedOidUser(result.player.oidUser || null);
-        setPlayerValidated(true);
-        setErrorMessage('');
-      } else {
-        setFetchedPlayerName('');
-        setValidatedOidUser(null);
-        setPlayerValidated(false);
-        setErrorMessage(result.error || 'Erro na validação');
-      }
-    } catch (error) {
-      console.error('Erro ao validar jogador:', error);
-      setFetchedPlayerName('');
-      setValidatedOidUser(null);
-      setPlayerValidated(false);
-      setErrorMessage('Erro de conexão');
-    } finally {
-      setIsValidatingPlayer(false);
-    }
-  };
-
+  // Preencher formData quando selectedPlayer muda
   useEffect(() => {
     if (selectedPlayer && isOpen) {
-      setFormData(prev => ({
-        ...prev,
+      setFormData({
         discordId: selectedPlayer.discordId || '',
-        loginAccount: selectedPlayer.nexonId || '',
-      }));
-      
-      // Limpar estados de validação quando modal abrir com selectedPlayer
-      setFetchedPlayerName('');
-      setErrorMessage('');
-      setPlayerValidated(false);
-      setValidatedOidUser(null);
-      
-      // Se temos selectedPlayer, validar automaticamente
-      if (selectedPlayer.discordId && selectedPlayer.nexonId) {
-        validatePlayerCrossCheck(selectedPlayer.discordId, selectedPlayer.nexonId);
-      }
+        loginAccount: selectedPlayer.nexonId || ''
+      });
     } else if (isOpen) {
-      // Limpar tudo quando modal abrir sem selectedPlayer
       setFormData({ discordId: '', loginAccount: '' });
-      setFetchedPlayerName('');
-      setErrorMessage('');
-      setPlayerValidated(false);
-      setValidatedOidUser(null);
     }
   }, [selectedPlayer, isOpen]);
 
-  // useEffect com debounce para validação automática quando campos são digitados
-  useEffect(() => {
-    // Não executar debounce se temos selectedPlayer (para evitar validação dupla)
-    if (selectedPlayer && selectedPlayer.discordId && selectedPlayer.nexonId) {
-      return;
-    }
-
-    if (formData.discordId && formData.discordId.trim() !== '' && 
-        formData.loginAccount && formData.loginAccount.trim() !== '') {
-      
-      const timeoutId = setTimeout(() => {
-        validatePlayerCrossCheck(formData.discordId, formData.loginAccount);
-      }, 500); // Debounce de 500ms
-
-      return () => clearTimeout(timeoutId);
-    } else {
-      // Se um dos campos estiver vazio, limpar validação
-      setFetchedPlayerName('');
-      setValidatedOidUser(null);
-      setPlayerValidated(false);
-      setErrorMessage('');
-    }
-  }, [formData.discordId, formData.loginAccount, selectedPlayer]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -119,8 +48,8 @@ const ConsultInbox: React.FC<ConsultInboxProps> = ({ isOpen, onClose }) => {
     }));
     
     // Limpar mensagem de erro quando usuário digitar
-    if (errorMessage) {
-      setErrorMessage('');
+    if (validation.errorMessage) {
+      validation.setErrorMessage('');
     }
   };
 
@@ -128,14 +57,14 @@ const ConsultInbox: React.FC<ConsultInboxProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     
     // Validar se o jogador foi validado
-    if (!playerValidated || !fetchedPlayerName || !validatedOidUser) {
-      setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
+    if (!validation.playerValidated || !validation.fetchedPlayerName || !validation.validatedOidUser) {
+      validation.setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
       return;
     }
     
     // Validar se ainda está validando
-    if (isValidatingPlayer) {
-      setErrorMessage('Aguarde a validação ser concluída antes de enviar.');
+    if (validation.isValidatingPlayer) {
+      validation.setErrorMessage('Aguarde a validação ser concluída antes de enviar.');
       return;
     }
 
@@ -143,7 +72,7 @@ const ConsultInbox: React.FC<ConsultInboxProps> = ({ isOpen, onClose }) => {
     
     try {
       // TODO: Implementar lógica de consulta inbox
-      console.log('Consultar inbox para:', { formData, validatedOidUser, fetchedPlayerName });
+      console.log('Consultar inbox para:', { formData, validatedOidUser: validation.validatedOidUser, fetchedPlayerName: validation.fetchedPlayerName });
       
       // Por enquanto só simular sucesso
       setTimeout(() => {
@@ -154,121 +83,47 @@ const ConsultInbox: React.FC<ConsultInboxProps> = ({ isOpen, onClose }) => {
       
     } catch (error) {
       console.error('Erro ao consultar inbox:', error);
-      setErrorMessage('Erro ao consultar inbox do jogador');
+      validation.setErrorMessage('Erro ao consultar inbox do jogador');
       setIsLoading(false);
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="relative flex items-center h-20 border-b border-gray-600">
-          <h2 className="absolute left-1/2 w-[80%] text-center -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            CONSULTAR INBOX
-          </h2>
-          <button
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="CONSULTAR INBOX"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <PlayerValidationFields
+          formData={formData}
+          onInputChange={handleInputChange}
+          validation={validation}
+          placeholders={{
+            discordId: 'Ex 123456789012345678',
+            loginAccount: 'Digite o strNexonID da conta.'
+          }}
+        />
+
+        {/* Buttons */}
+        <div className="flex gap-3 pt-4">
+          <CancelButton
             onClick={onClose}
-            className="ml-[465px] text-gray-400 hover:text-white transition-colors"
+            className="flex-1"
           >
-            <X size={24} />
-          </button>
+            Cancelar
+          </CancelButton>
+          <SubmitButton
+            disabled={isLoading || !validation.playerValidated}
+            loading={isLoading}
+            loadingText="Consultando..."
+            className="flex-1"
+          >
+            Consultar Inbox
+          </SubmitButton>
         </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Discord ID */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Discord ID do usuário alvo
-            </label>
-            <input
-              type="text"
-              name="discordId"
-              value={formData.discordId}
-              placeholder='Ex 123456789012345678'
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Login da Conta
-            </label>
-            <input
-              type="text"
-              name="loginAccount"
-              placeholder='Digite o strNexonID da conta.'
-              value={formData.loginAccount}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-            
-            {/* Feedback visual de validação */}
-            {isValidatingPlayer && (
-              <p className="mt-2 text-sm text-yellow-400">
-                Validando jogador...
-              </p>
-            )}
-            {fetchedPlayerName && playerValidated && (
-              <p className="mt-2 text-sm text-green-400">
-                ✓ Jogador validado: {fetchedPlayerName} | oidUser: {validatedOidUser}
-              </p>
-            )}
-            {errorMessage && (
-              <p className="mt-2 text-sm text-red-400">
-                ✗ {errorMessage}
-              </p>
-            )}
-          </div>
-
-          {/* Mostrar oidUser validado automaticamente */}
-          {fetchedPlayerName && playerValidated && validatedOidUser && (
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                OIDUSER (preenchido automaticamente)
-              </label>
-              <input
-                type="text"
-                value={validatedOidUser}
-                disabled
-                className="w-full px-3 py-2 bg-[#2a2b32] text-gray-400 rounded-lg cursor-not-allowed"
-              />
-            </div>
-          )}
-
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading || !playerValidated}
-              className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Consultando...
-                </>
-              ) : (
-                'Consultar Inbox'
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </BaseModal>
   );
 };
 

@@ -71,11 +71,7 @@ jobs:
             
             ### ⚠️ Notas Importantes
             - Esta versão inclui:
-            - Remove arquivos obsoletos de configuração do sistema de atualização e de 
-            setup do auto-update. Atualiza componentes de modal para desabilitar botões 
-            de ação quando o jogador não estiver validado, melhorando a usabilidade e a 
-            segurança. Implementa lógica de validação de jogador em tempo real no modal 
-            de consulta de inbox e ajusta a interface para feedback visual durante a validação.
+            - Atualiza a versão do aplicativo para 1.0.20 nos arquivos Cargo.toml, Cargo.lock e tauri.conf.json. Refatora componentes de modal para utilizar um sistema de validação de jogador reutilizável, melhorando a usabilidade e a consistência. Implementa feedback visual durante a validação e ajusta a lógica de consulta para garantir que o histórico e o inventário sejam acessados apenas após a validação do jogador.
             
             ---
             **Checksum dos arquivos disponível nos Assets abaixo**
