@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import ActionFormModal from '../common/ActionFormModal';
 import apiService from '../../services/api-tauri.service';
 import { useAuth } from '../../hooks/useAuth';
+import { usePlayer } from '../../contexts/PlayerContext';
 
 interface SendItemProps {
   isOpen: boolean;
@@ -89,12 +90,23 @@ const SendItemFormFields = ({ formData, onInputChange }: any) => (
 
 const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
+  const { selectedPlayer } = usePlayer();
   const [formData, setFormData] = useState({
     loginAccounts: '',
     productIds: '',
     count: '',
     message: '',
   });
+
+  // Preencher automaticamente o login quando um player é selecionado
+  useEffect(() => {
+    if (selectedPlayer && isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        loginAccounts: selectedPlayer.nexonId || ''
+      }));
+    }
+  }, [selectedPlayer, isOpen]);
 
   const handleSendItemAction = async () => {
     const result = await apiService.sendProductToList({
