@@ -1,93 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { usePlayer } from '../../contexts/PlayerContext';
-import ConfirmationModal from './confirm/confirmmodal';
-import { useAuth } from '../../hooks/useAuth';
+import React, { useState, useCallback } from 'react';
+import ActionFormModal from '../common/ActionFormModal';
 import apiService from '../../services/api-tauri.service';
+import { useAuth } from '../../hooks/useAuth';
 
 interface SendCashProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+// Componente movido para fora para evitar re-criação
+const SendCashFormFields = ({ formData, onInputChange }: any) => (
+  <>
+    {/* Login das Contas */}
+    <div>
+      <label className="block text-sm font-medium text-white mb-2">
+        Login das contas (strNexonID)
+      </label>
+      <input
+        type="text"
+        name="loginAccounts"
+        placeholder="Ex: schmidt, nicki, player3"
+        value={formData.loginAccounts}
+        onChange={onInputChange}
+        className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+        required
+      />
+      <p className="mt-1 text-xs text-gray-400">
+        Separe múltiplos logins com vírgula (,)
+      </p>
+    </div>
+
+    {/* Quantidade de Cash */}
+    <div>
+      <label className="block text-sm font-medium text-white mb-2">
+        Quantidade de Cash
+      </label>
+      <input
+        type="number"
+        name="cashAmount"
+        min="1"
+        placeholder="Ex: 10000"
+        value={formData.cashAmount}
+        onChange={onInputChange}
+        className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+        required
+      />
+      <p className="mt-1 text-xs text-gray-400">
+        Quantidade de cash para todos os jogadores
+      </p>
+    </div>
+
+    {/* Razão do Envio */}
+    <div>
+      <label className="block text-sm font-medium text-white mb-2">
+        Razão do Envio
+      </label>
+      <textarea
+        name="creditReason"
+        value={formData.creditReason}
+        onChange={onInputChange}
+        rows={3}
+        placeholder="Ex: Vencedores do Sorteio Semanal"
+        className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors resize-none"
+        required
+      />
+    </div>
+  </>
+);
+
 const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
-  const { selectedPlayer } = usePlayer();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     loginAccounts: '',
     cashAmount: '',
     creditReason: '',
   });
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (selectedPlayer && isOpen) {
-      setFormData(prev => ({
-        ...prev,
-        loginAccounts: selectedPlayer.nexonId || ''
-      }));
-      setErrorMessage('');
-    } else if (isOpen) {
-      // Limpar tudo quando modal abrir sem selectedPlayer
-      setFormData({ 
-        loginAccounts: '', 
-        cashAmount: '', 
-        creditReason: '' 
-      });
-      setErrorMessage('');
-    }
-  }, [selectedPlayer, isOpen]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Limpar mensagem de erro quando usuário digitar
-    if (errorMessage) {
-      setErrorMessage('');
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validar campos obrigatórios
-    if (!formData.loginAccounts.trim()) {
-      setErrorMessage('Por favor, informe ao menos um login de conta.');
-      return;
-    }
-    
-    if (!formData.cashAmount.trim()) {
-      setErrorMessage('Por favor, informe a quantidade de cash.');
-      return;
-    }
-
-    if (!formData.creditReason.trim()) {
-      setErrorMessage('Por favor, informe a razão do envio.');
-      return;
-    }
-
-    // Validar se cashAmount é número válido
-    const cashAmount = parseInt(formData.cashAmount);
-    if (isNaN(cashAmount) || cashAmount <= 0) {
-      setErrorMessage('A quantidade deve ser um número válido maior que zero.');
-      return;
-    }
-    
-    setShowConfirmation(true);
-  };
-
-const handleConfirmAction = async () => {
-  if (isLoading) return; // Prevent multiple calls
-  
-  setIsLoading(true);
-  try {
-    // Chamar API para enviar cash
+  const handleSendCashAction = async () => {
     const result = await apiService.creditCashToList({
       nexonIdList: formData.loginAccounts,
       cashAmount: parseInt(formData.cashAmount),
@@ -95,146 +84,48 @@ const handleConfirmAction = async () => {
       adminDiscordId: user?.profile?.discordId || 'system'
     });
 
-    if (result.success) {
-      setErrorMessage('');
-      setShowConfirmation(false);
-      onClose();
-      // Reset form
-      setFormData({
-        loginAccounts: '',
-        cashAmount: '',
-        creditReason: ''
-      });
-    } else {
-      setErrorMessage(result.error || 'Erro ao enviar cash');
-      setShowConfirmation(false);
+    if (!result.success) {
+      throw new Error(result.error || 'Erro ao enviar cash');
     }
-  } catch (error) {
-    console.error("Erro ao enviar cash:", error);
-    setErrorMessage('Erro de conexão ao enviar cash');
-    setShowConfirmation(false);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-  const handleCancelConfirmation = () => {
-    setShowConfirmation(false);
+    
+    return result;
   };
 
-  if (!isOpen) return null;
+  const customValidation = useCallback(() => {
+    if (!formData.loginAccounts.trim()) return false;
+    if (!formData.cashAmount.trim()) return false;
+    if (!formData.creditReason.trim()) return false;
+    
+    const cashAmount = parseInt(formData.cashAmount);
+    if (isNaN(cashAmount) || cashAmount <= 0) return false;
+    
+    return true;
+  }, [formData]);
+
+  const getConfirmDescription = useCallback(() => {
+    return `Tem certeza que deseja enviar ${formData.cashAmount} de Cash para os jogadores: ${formData.loginAccounts}?
+
+Razão: "${formData.creditReason}"`;
+  }, [formData.cashAmount, formData.loginAccounts, formData.creditReason]);
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="relative flex items-center h-20 border-b border-gray-600">
-          <h2 className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-white font-neofara tracking-wider">
-            ENVIAR CASH
-          </h2>
-          <button
-            onClick={onClose}
-            className="ml-[465px] text-gray-400 hover:text-white transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Login das Contas */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Login das contas (strNexonID)
-            </label>
-            <input
-              type="text"
-              name="loginAccounts"
-              placeholder="Ex: schmidt, nicki, player3"
-              value={formData.loginAccounts}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-            <p className="mt-1 text-xs text-gray-400">
-              Separe múltiplos logins com vírgula (,)
-            </p>
-          </div>
-
-          {/* Quantidade de Cash */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Quantidade de Cash
-            </label>
-            <input
-              type="number"
-              name="cashAmount"
-              min="1"
-              placeholder="Ex: 10000"
-              value={formData.cashAmount}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-              required
-            />
-            <p className="mt-1 text-xs text-gray-400">
-              Quantidade de cash para todos os jogadores
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
-              Razão do Envio
-            </label>
-            <textarea
-              name="creditReason"
-              value={formData.creditReason}
-              onChange={handleInputChange}
-              rows={3}
-              placeholder="Ex: Vencedores do Sorteio Semanal"
-              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors resize-none"
-              required
-            />
-          </div>
-
-          {/* Mensagem de erro */}
-          {errorMessage && (
-            <div className="bg-red-900/20 border border-red-600 rounded-lg p-3">
-              <p className="text-red-400 text-sm">
-                ✗ {errorMessage}
-              </p>
-            </div>
-          )}
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors"
-            >
-              Enviar Cash
-            </button>
-          </div>
-        </form>
-      </div>
-    <ConfirmationModal
-          isOpen={showConfirmation}
-          onConfirm={handleConfirmAction}
-          onCancel={handleCancelConfirmation}
-          title="Confirmar Envio de Cash"
-          description={`Tem certeza que deseja enviar ${formData.cashAmount} de Cash para os jogadores: ${formData.loginAccounts}?
-
-Razão: "${formData.creditReason}"`}
-          confirmActionText="Sim, Enviar Cash"
-          cancelActionText="Cancelar"
-          isLoading={isLoading}
-        />
-    </div>
+    <ActionFormModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="ENVIAR CASH"
+      confirmTitle="Confirmar Envio de Cash"
+      confirmDescription={getConfirmDescription()}
+      confirmActionText="Sim, Enviar Cash"
+      action={handleSendCashAction}
+      formData={formData}
+      onFormDataChange={setFormData}
+      requiresPlayerValidation={false}
+      showPlayerFields={false}
+      customValidation={customValidation}
+      customValidationMessage="Por favor, preencha todos os campos corretamente."
+    >
+      <SendCashFormFields />
+    </ActionFormModal>
   );
 };
 

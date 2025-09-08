@@ -16,7 +16,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const { selectedPlayer, setSelectedPlayer } = usePlayer();
   const { selectedClan, setSelectedClan } = useClan();
   const [viewMode, setViewMode] = useState<'players' | 'clans'>('players');
-  const [searchUserType, setSearchUserType] = useState<'nickname' | 'discordId' | 'macaddress' | 'ipaddress' | 'oiduser'>('nickname');
+  const [searchUserType, setSearchUserType] = useState<'nickname' | 'discordId' | 'macaddress' | 'ipaddress' | 'oiduser' | 'strNexonId'>('nickname');
   const [searchClanType, setSearchClanType] = useState<'clanName' | 'clanId'>('clanName');
   const [search, setSearch] = useState<string>('');
   const [players, setPlayers] = useState<Player[]>([]);
@@ -238,6 +238,16 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               >
                 NICKNAME
               </button>
+              <button 
+                onClick={() => setSearchUserType('strNexonId')}
+                className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                  searchUserType === 'strNexonId' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                }`}
+              >
+                LOGIN CONTA
+              </button>
             </div>
           </div>
         )}
@@ -288,6 +298,8 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                     ? "Digite o MAC Address do player..."
                     : searchUserType === 'ipaddress'
                     ? "Digite o IP Address do player..."
+                    : searchUserType === 'strNexonId'
+                    ? "Digite o login da conta (strNexonID)..."
                     : "Digite o OID User do player..."
                   : searchClanType === 'clanName'
                   ? "Digite o nome do clan..."
@@ -344,6 +356,8 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                       ? 'Digite um MAC Address para buscar'
                       : searchUserType === 'ipaddress'
                       ? 'Digite um IP Address para buscar'
+                      : searchUserType === 'strNexonId'
+                      ? 'Digite um strNexonID para buscar'
                       : 'Digite um OID User para buscar'
                     }
                   </p>
@@ -364,6 +378,8 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                       ? 'Tente buscar por outro MAC Address'
                       : searchUserType === 'ipaddress'
                       ? 'Tente buscar por outro IP Address'
+                      : searchUserType === 'strNexonId'
+                      ? 'Tente buscar por outro strNexonID'
                       : 'Tente buscar por outro OID User'
                     }
                   </p>
