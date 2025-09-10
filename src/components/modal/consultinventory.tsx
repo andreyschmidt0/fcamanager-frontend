@@ -171,6 +171,7 @@ const ConsultInventory: React.FC<ConsultInventory> = ({ isOpen, onClose }) => {
         onClose={handleCloseResultModal}
         inventoryData={inventoryData}
         playerName={validation.fetchedPlayerName}
+        targetOidUser={validation.validatedOidUser}
       />
     </>
   );

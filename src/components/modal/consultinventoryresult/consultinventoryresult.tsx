@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Filter } from 'lucide-react';
+import { X, Filter, Power, Loader2 } from 'lucide-react';
+import apiService from '../../../services/api-tauri.service';
+import toast from 'react-hot-toast';
 
 interface InventoryItem {
   oidUser: number;
@@ -20,6 +22,7 @@ interface ConsultInventoryResultProps {
   onClose: () => void;
   inventoryData: InventoryItem[];
   playerName: string;
+  targetOidUser?: number | null;
   useType?: string;
   itemName?: string;
 }
@@ -29,6 +32,7 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
   onClose, 
   inventoryData, 
   playerName,
+  targetOidUser,
   useType,
   itemName
 }) => {
@@ -39,6 +43,7 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
   });
   const [searchTerm, setSearchTerm] = useState(itemName || '');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(itemName || '');
+  const [loadingItems, setLoadingItems] = useState<Set<number>>(new Set());
 
   // Função para aplicar filtros
   const applyFilters = (data: InventoryItem[], statusFilter: string, nameFilter: string) => {
@@ -116,6 +121,61 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
       filters.push(`Item: ${localFilters.itemName}`);
     }
     return filters.length > 0 ? ` (${filters.join(', ')})` : '';
+  };
+
+  const handleToggleItemStatus = async (item: InventoryItem) => {
+    if (!targetOidUser) {
+      toast.error('Erro: targetOidUser não disponível');
+      return;
+    }
+
+    const inventorySeqNo = item.InventorySeqNo;
+    const currentStatus = item.UseType;
+    const newAction = currentStatus === 1 ? 'I' : 'A'; // Toggle: se ativo (1) -> Inativar (I), se inativo (0) -> Ativar (A)
+    
+    // Adicionar item ao loading
+    setLoadingItems(prev => new Set(Array.from(prev).concat(inventorySeqNo)));
+    
+    try {
+      const result = await apiService.setInventoryItemStatus({
+        targetOidUser,
+        inventorySeqNo,
+        action: newAction
+      });
+
+      if (result.success) {
+        // Atualizar o status do item local
+        const newUseType = newAction === 'A' ? 1 : 0;
+        const newIeAtivo = newAction === 'A' ? 'Ativo' : 'Inativo';
+        
+        setFilteredData(prev => prev.map(prevItem => 
+          prevItem.InventorySeqNo === inventorySeqNo 
+            ? { ...prevItem, UseType: newUseType, ie_Ativo: newIeAtivo }
+            : prevItem
+        ));
+
+        // Atualizar também os dados originais para manter sincronização
+        inventoryData.forEach(originalItem => {
+          if (originalItem.InventorySeqNo === inventorySeqNo) {
+            originalItem.UseType = newUseType;
+            originalItem.ie_Ativo = newIeAtivo;
+          }
+        });
+
+        toast.success(`Item ${newAction === 'A' ? 'ativado' : 'desativado'} com sucesso!`);
+      } else {
+        toast.error(result.error || 'Erro ao alterar status do item');
+      }
+    } catch (error) {
+      console.error('Erro ao alterar status do item:', error);
+      toast.error('Erro ao alterar status do item');
+    } finally {
+      // Remover item do loading
+      setLoadingItems(prev => {
+        const newArray = Array.from(prev).filter(id => id !== inventorySeqNo);
+        return new Set(newArray);
+      });
+    }
   };
 
   if (!isOpen) return null;
@@ -202,11 +262,11 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
                     item.UseType === 1 ? 'border-l-green-500' : 'border-l-red-500'
                   } hover:bg-[#252631] transition-colors`}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-7 gap-3 text-sm items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-8 gap-3 text-sm items-center">
                     {/* Item Info */}
                     <div className="md:col-span-2">
                       <p className="text-white font-medium text-base leading-tight">{item.Name}</p>
-                      <p className="text-xs text-gray-500">ItemNo: {item.ItemNo}</p>
+                      <p className="text-xs text-gray-500">InventorySeqNo: {item.InventorySeqNo}</p>
                     </div>
                     
                     {/* Status */}
@@ -241,6 +301,32 @@ const ConsultInventoryResult: React.FC<ConsultInventoryResultProps> = ({
                       <p className="text-white text-xs">
                         {new Date(item.EndDate).toLocaleDateString('pt-BR')}
                       </p>
+                    </div>
+
+                    {/* Toggle Button */}
+                    <div className="text-center">
+                      <button
+                        onClick={() => handleToggleItemStatus(item)}
+                        disabled={loadingItems.has(item.InventorySeqNo)}
+                        className={`
+                          inline-flex items-center justify-center w-16 h-8 rounded-full transition-all duration-200 relative
+                          ${item.UseType === 1 
+                            ? 'bg-green-600 hover:bg-green-700' 
+                            : 'bg-red-600 hover:bg-red-700'
+                          }
+                          ${loadingItems.has(item.InventorySeqNo) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                        `}
+                        title={`${item.UseType === 1 ? 'Desativar' : 'Ativar'} item`}
+                      >
+                        {loadingItems.has(item.InventorySeqNo) ? (
+                          <Loader2 size={14} className="text-white animate-spin" />
+                        ) : (
+                          <Power size={14} className="text-white" />
+                        )}
+                        <span className="ml-1 text-xs font-medium text-white">
+                          {item.UseType === 1 ? 'ON' : 'OFF'}
+                        </span>
+                      </button>
                     </div>
                   </div>
                 </div>
