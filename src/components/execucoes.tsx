@@ -17,6 +17,7 @@ import TransferClan from './modal/transferclan';
 import TransferDiscord from './modal/transferdiscord';
 import ChangePassword from './modal/changepassword';
 import RemoveAccount from './modal/removeaccount';
+import AtualizarValorFireteamModal from './modal/atualizarvalorfireteam';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -85,7 +86,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Exp', 'Remover Conta'] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
-    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha'] }
+    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam'] }
   ];
   
   return (
@@ -258,6 +259,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Remover Conta' && (
         <RemoveAccount
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />  
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Alterar Fireteam' && (
+        <AtualizarValorFireteamModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />  

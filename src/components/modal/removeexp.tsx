@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import ActionFormModal from '../common/ActionFormModal';
+import PatentDropdown from '../common/PatentDropdown';
 import apiService from '../../services/api-tauri.service';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -15,16 +16,12 @@ const RemoveExpFormFields = ({ formData, onInputChange }: any) => (
       <label className="block text-sm font-medium text-white mb-2">
         Nível de Patente (Grade Level)
       </label>
-      <input
-        type="number"
+      <PatentDropdown
         name="targetGradeLevel"
         value={formData.targetGradeLevel}
         onChange={onInputChange}
-        placeholder="Ex: 30 (para patente correspondente)"
-        className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
         required
-        min="1"
-        max="100"
+        placeholder="Selecione uma patente"
       />
     </div>
 

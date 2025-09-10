@@ -712,6 +712,46 @@ class ApiTauriService {
     }
   }
 
+  async updateFireteamStat(data: {
+    discordId: string;
+    loginAccount: string;
+    mapName: string;
+    attributeName: string;
+    newValue: number;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/update-fireteam-stat`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Valor Atualizado', `Valor de ${data.attributeName} atualizado com sucesso no mapa ${data.mapName}!`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Erro ao atualizar valor fireteam:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao atualizar valor fireteam'
+      };
+    }
+  }
+
   async removeAccount(data: {
     targetNexonId: string;
     reason: string;

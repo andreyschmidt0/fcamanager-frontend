@@ -158,8 +158,8 @@ class AuthService {
                 this.accessToken = result.accessToken;
                 this.refreshToken = result.refreshToken || null;
                 
-                // Calcular tempo de expiração (15 minutos)
-                this.tokenExpiryTime = Date.now() + (15 * 60 * 1000);
+                // Calcular tempo de expiração (24 horas)
+                this.tokenExpiryTime = Date.now() + (24 * 60 * 60 * 1000);
                 
                 // Salvar no localStorage
                 localStorage.setItem('accessToken', result.accessToken);
@@ -217,7 +217,7 @@ class AuthService {
             if (result.success && result.accessToken) {
                 this.accessToken = result.accessToken;
                 this.refreshToken = result.refreshToken || this.refreshToken;
-                this.tokenExpiryTime = Date.now() + (15 * 60 * 1000);
+                this.tokenExpiryTime = Date.now() + (24 * 60 * 60 * 1000);
                 
                 // Atualizar localStorage
                 localStorage.setItem('accessToken', result.accessToken);
