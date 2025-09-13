@@ -169,6 +169,8 @@ const RecentActivities: React.FC = () => {
         return `Alterou email`;
       } else if (sourceProcedure && sourceProcedure.includes('Password')) {
         return `Alterou senha`;
+      } else if (sourceProcedure && sourceProcedure.includes('SetInventoryItemStatus')) {
+        return `Alterou status do item`;
       } else if (sourceProcedure && sourceProcedure.includes('Item')) {
         return `Enviou item`;
       } else if (sourceProcedure && sourceProcedure.includes('Transfer')) {
