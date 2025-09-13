@@ -116,7 +116,7 @@ const AtualizarValorFireteamModal: React.FC<AtualizarValorFireteamModalProps> = 
       isOpen={isOpen}
       onClose={onClose}
       title="ATUALIZAR VALOR FIRETEAM"
-      confirmTitle="Confirmar AlteraÁ„o"
+      confirmTitle="Confirmar Altera√ß√£o"
       confirmDescription={getConfirmDescription()}
       confirmActionText="Sim, Alterar"
       action={handleUpdateFireteamAction}
@@ -124,10 +124,10 @@ const AtualizarValorFireteamModal: React.FC<AtualizarValorFireteamModalProps> = 
       onFormDataChange={setFormData}
       requiresPlayerValidation={true}
       customValidation={customValidation}
-      customValidationMessage="Por favor, preencha todos os campos obrigatÛrios."
+      customValidationMessage="Por favor, preencha todos os campos obrigat√≥rios."
       playerFieldsConfig={{
         labels: {
-          discordId: 'Discord ID do usu·rio alvo',
+          discordId: 'Discord ID do usu√°rio alvo',
           loginAccount: 'Login da conta'
         },
         placeholders: {

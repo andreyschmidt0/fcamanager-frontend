@@ -71,9 +71,6 @@ const ConsultInbox: React.FC<ConsultInboxProps> = ({ isOpen, onClose }) => {
     setIsLoading(true);
     
     try {
-      // TODO: Implementar lógica de consulta inbox
-      console.log('Consultar inbox para:', { formData, validatedOidUser: validation.validatedOidUser, fetchedPlayerName: validation.fetchedPlayerName });
-      
       // Por enquanto só simular sucesso
       setTimeout(() => {
         setIsLoading(false);

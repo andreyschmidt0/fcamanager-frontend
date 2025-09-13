@@ -98,8 +98,9 @@ class ApiTauriService {
         method: 'TAURI-HTTP'
       });
 
-      if (response.status === 401 || response.status === 403) {
-        // Token expirado ou inválido
+      if (response.status === 401) {
+        // Token expirado ou inválido (apenas 401, não 403)
+        // 403 significa que o token é válido mas sem permissão para ação específica
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('currentUser');
@@ -415,100 +416,21 @@ class ApiTauriService {
   }
 
   // Obter lista de GMs
-  async getGMList(discordId: string): Promise<{isAuthorized: boolean, gms?: any[], gmUsers?: any[]}> {
+  async getGMList(discordId: string): Promise<{isAuthorized: boolean, gms?: any[], gmUsers?: any[], users?: any[]}> {
     try {
-      const response = await fetch(`${API_BASE}/users/gms?discordId=${encodeURIComponent(discordId)}`, {
+      const response = await fetch(`${API_BASE}/users/gms`, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 30000
       });
 
-      return await this.handleResponse<{isAuthorized: boolean, gms?: any[], gmUsers?: any[]}>(response);
+      return await this.handleResponse<{isAuthorized: boolean, gms?: any[], gmUsers?: any[], users?: any[]}>(response);
     } catch (error) {
-      console.error('Erro ao buscar GMs:', error);
+      console.error('Erro ao buscar usuários com permissões:', error);
       return {isAuthorized: false};
     }
   }
 
-  // GM Management endpoints
-  async getGMManagementList(): Promise<{success: boolean, gms: any[], total: number}> {
-    try {
-      const response = await fetch(`${API_BASE}/gm-management/list`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-        connectTimeout: 30000
-      });
-
-      return await this.handleResponse<{success: boolean, gms: any[], total: number}>(response);
-    } catch (error) {
-      console.error('Erro ao buscar lista de GMs:', error);
-      return {success: false, gms: [], total: 0};
-    }
-  }
-
-  async updateGMRole(discordId: string, data: any): Promise<any> {
-    try {
-      const response = await fetch(`${API_BASE}/gm-management/role?discordId=${encodeURIComponent(discordId)}`, {
-        method: 'PUT',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
-        connectTimeout: 30000
-      });
-
-      return await this.handleResponse<any>(response);
-    } catch (error) {
-      console.error('Erro ao atualizar role do GM:', error);
-      throw error;
-    }
-  }
-
-  async updateGMStatus(discordId: string, data: any): Promise<any> {
-    try {
-      const response = await fetch(`${API_BASE}/gm-management/status?discordId=${encodeURIComponent(discordId)}`, {
-        method: 'PUT',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
-        connectTimeout: 30000
-      });
-
-      return await this.handleResponse<any>(response);
-    } catch (error) {
-      console.error('Erro ao atualizar status do GM:', error);
-      throw error;
-    }
-  }
-
-  async updateGMNotes(discordId: string, data: any): Promise<any> {
-    try {
-      const response = await fetch(`${API_BASE}/gm-management/notes?discordId=${encodeURIComponent(discordId)}`, {
-        method: 'PUT',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
-        connectTimeout: 30000
-      });
-
-      return await this.handleResponse<any>(response);
-    } catch (error) {
-      console.error('Erro ao atualizar notas do GM:', error);
-      throw error;
-    }
-  }
-
-  // Get GM user info by Discord ID
-  async getGMUser(discordId: string): Promise<any> {
-    try {
-      const response = await fetch(`${API_BASE}/gm-management/user/${encodeURIComponent(discordId)}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-        connectTimeout: 30000
-      });
-
-      return await this.handleResponse<any>(response);
-    } catch (error) {
-      console.error('Erro ao buscar informações do GM:', error);
-      throw error;
-    }
-  }
 
   // Change user password
   async changePassword(data: {
@@ -1232,6 +1154,45 @@ class ApiTauriService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro ao renovar token'
+      };
+    }
+  }
+
+  async setUserMarcaBatalha(data: {
+    targetNexonId?: string;
+    targetOidUser?: number;
+    marcaID?: number;
+    acao: 'A' | 'D';
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/set-user-marca-batalha`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+        error?: string;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Marca de Batalha', result.message || 'Marca de batalha atualizada com sucesso!');
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao atualizar marca de batalha'
       };
     }
   }

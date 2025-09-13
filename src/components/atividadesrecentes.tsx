@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, RefreshCw } from 'lucide-react';
 import { useActivityLog, ActivityLog } from '../contexts/ActivityLogContext';
 import { useAuth } from '../hooks/useAuth';
-import { useGMRole } from '../hooks/useGMRole';
 import apiService from '../services/api-tauri.service';
 
 
@@ -22,7 +21,6 @@ const RecentActivities: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { getActivitiesByPeriod } = useActivityLog();
   const { user } = useAuth();
-  const { isMaster, loading } = useGMRole();
 
   const periods = [
     { value: 'HOJE', label: 'Hoje' },
@@ -65,23 +63,32 @@ const RecentActivities: React.FC = () => {
     });
   };
 
-  // Buscar GMs quando usuário é Master
-  useEffect(() => {
-    if (isMaster && !loading) {
-      fetchGMUsers();
+
+  const fetchGMUsers = async () => {
+    try {
+      const data = await apiService.getGMList('');
+      if (data && data.isAuthorized) {
+        setGMUsers(data.users || data.gms || data.gmUsers || []);
+      }
+    } catch (error) {
+      console.error('Usuário não tem permissão para visualizar lista de GMs (normal para usuários tipo 2 e 3)');
+      // Se não conseguir buscar GMs, não é problema crítico
+      // Usuários tipo 2 e 3 não precisam ver outros GMs
+      setGMUsers([]);
     }
-  }, [isMaster, loading]);
+  };
 
   // Auto-carregamento inicial após login
   useEffect(() => {
-    if (isMaster && !loading) {
+    if (user) {
+      fetchGMUsers();
       fetchLogs(); // Carrega logs automaticamente após login
     }
-  }, [isMaster, loading]);
+  }, [user]);
 
   // Buscar logs quando período ou GM mudarem (com debounce)
   useEffect(() => {
-    if (!isMaster || loading) return;
+    if (!user) return;
     
     const timeout = setTimeout(() => {
       fetchLogs();
@@ -112,7 +119,7 @@ const RecentActivities: React.FC = () => {
   };
 
   const fetchLogs = async () => {
-    if (!isMaster || loading) {
+    if (!user) {
       return;
     }
 
@@ -129,21 +136,6 @@ const RecentActivities: React.FC = () => {
     }
   };
 
-  const fetchGMUsers = async () => {
-    try {
-      const discordId = await getDiscordId();
-      if (!discordId) {
-        return;
-      }
-      
-      const data = await apiService.getGMList(discordId);
-      if (data && data.isAuthorized) {
-        setGMUsers(data.gms || data.gmUsers || []);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar GMs:', error);
-    }
-  };
 
   // Converter logs do banco para o formato do componente
   const convertLogToActivity = (log: any): ActivityLog => {
@@ -269,15 +261,15 @@ const RecentActivities: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
 
-            {/* GM Selector - Only for Masters */}
-            {isMaster && !loading && (
+            {/* GM Selector - Show only for Masters (users with access to GM list) */}
+            {user && gmUsers.length > 0 && (
               <div className="relative rounded-lg">
                 <button
                   onClick={handleToggleGMDropdown}
                   className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
                 >
                   <span className="hidden sm:inline">
-                    {selectedGM || 'Selecionar um GM'}
+                    {selectedGM || 'Todos os GMs'}
                   </span>
                   <span className="sm:hidden">
                     {selectedGM ? selectedGM.substring(0, 8) + '...' : 'GM'}
