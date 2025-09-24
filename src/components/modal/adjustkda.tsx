@@ -98,7 +98,7 @@ const AdjustKDA: React.FC<AdjustKDAProps> = ({ isOpen, onClose }) => {
       discordId: formData.discordId,
       loginAccount: formData.loginAccount,
       reduceKillPct: parseInt(formData.reduceKillPct),
-      reduceDeathPct: Number(formData.setKDAOne) === 0 ? parseInt(formData.reduceDeathPct) : null,
+      reduceDeathPct: Number(formData.setKDAOne) === 0 ? parseInt(formData.reduceDeathPct) : undefined,
       setKDAOne: Number(formData.setKDAOne)
     };
 
