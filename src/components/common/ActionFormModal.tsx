@@ -164,7 +164,8 @@ const ActionFormModal: React.FC<ActionFormModalProps> = ({
                 playerValidated: playerValidation.playerValidated,
                 fetchedPlayerName: playerValidation.fetchedPlayerName,
                 validatedOidUser: playerValidation.validatedOidUser,
-                errorMessage: playerValidation.errorMessage
+                errorMessage: playerValidation.errorMessage,
+                accountCount: playerValidation.accountCount
               }}
               {...playerFieldsConfig}
             />

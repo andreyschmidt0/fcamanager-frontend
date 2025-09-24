@@ -13,6 +13,7 @@ interface PlayerValidationFieldsProps {
     fetchedPlayerName: string;
     validatedOidUser: number | null;
     errorMessage: string;
+    accountCount?: number;
   };
   labels?: {
     discordId?: string;
@@ -91,9 +92,16 @@ const PlayerValidationFields: React.FC<PlayerValidationFieldsProps> = ({
           </p>
         )}
         {validation.fetchedPlayerName && validation.playerValidated && (
-          <p className="mt-2 text-sm text-green-400">
-            ✓ Jogador validado: {validation.fetchedPlayerName} | oidUser: {validation.validatedOidUser}
-          </p>
+          <div className="mt-2 space-y-1">
+            <p className="text-sm text-green-400">
+              ✓ Jogador validado: {validation.fetchedPlayerName} | oidUser: {validation.validatedOidUser}
+            </p>
+            {validation.accountCount !== undefined && (
+              <p className="text-sm text-blue-400">
+                Contas encontradas para este Discord ID: {validation.accountCount}
+              </p>
+            )}
+          </div>
         )}
         {validation.errorMessage && (
           <p className="mt-2 text-sm text-red-400">

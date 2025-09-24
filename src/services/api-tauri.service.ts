@@ -634,6 +634,46 @@ class ApiTauriService {
     }
   }
 
+  async adjustUserKD(data: {
+    discordId: string;
+    loginAccount: string;
+    reduceKillPct: number;
+    reduceDeathPct?: number;
+    setKDAOne: number;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/adjust-user-kd`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('KDA Ajustado', 'KDA do usuário foi ajustado com sucesso!');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao ajustar KDA:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao ajustar KDA'
+      };
+    }
+  }
+
   async updateFireteamStat(data: {
     discordId: string;
     loginAccount: string;

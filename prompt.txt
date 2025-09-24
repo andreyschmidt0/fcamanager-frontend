@@ -1,288 +1,33 @@
-client:789 [vite] connecting...
-client:912 [vite] connected.
-react-dom-client.development.js:24871 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
-login:1 [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://www.chromium.org/developers/design-documents/create-amazing-password-forms) <input placeholder=​"PASSWORD" class=​"w-full px-4 py-3 bg-[#1d1e24]​ text-white text-xl placeholder-gray-500 rounded-lg border-2 border-transparent focus:​border-green-500 focus:​outline-none transition-all duration-300 font-normal tracking-wider password-toggle-white" required minlength=​"6" maxlength=​"50" type=​"password" value>​
-api-tauri.service.ts:68 🔍 getAuthHeaders - Token no localStorage: ausente
-api-tauri.service.ts:68 🔍 getAuthHeaders - Token no localStorage: presente
-api-tauri.service.ts:70 🔍 getAuthHeaders - Enviando Authorization header
-api-tauri.service.ts:68 🔍 getAuthHeaders - Token no localStorage: presente
-api-tauri.service.ts:70 🔍 getAuthHeaders - Enviando Authorization header
-DebugModal.tsx:345  Erro ao buscar usuários com permissões: Error: Permissão negada. Você precisa da permissão: admin.users.view
-    at ApiTauriService.handleResponse (api-tauri.service.ts:130:13)
-    at async ApiTauriService.getGMList (api-tauri.service.ts:430:14)
-    at async fetchGMUsers (atividadesrecentes.tsx:69:20)
-console.error @ DebugModal.tsx:345
-getGMList @ api-tauri.service.ts:432
-await in getGMList
-fetchGMUsers @ atividadesrecentes.tsx:69
-(anônimo) @ atividadesrecentes.tsx:84
-react_stack_bottom_frame @ react-dom-client.development.js:23953
-runWithFiberInDEV @ react-dom-client.development.js:1519
-commitHookEffectListMount @ react-dom-client.development.js:11905
-commitHookPassiveMountEffects @ react-dom-client.development.js:12026
-commitPassiveMountOnFiber @ react-dom-client.development.js:13841
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13853
-flushPassiveEffects @ react-dom-client.development.js:15737
-(anônimo) @ react-dom-client.development.js:15379
-performWorkUntilDeadline @ scheduler.development.js:45
-<RecentActivities>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-MainPage @ page.tsx:73
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
-performWorkUntilDeadline @ scheduler.development.js:45
-<MainPage>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-App @ App.tsx:140
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
-performWorkUntilDeadline @ scheduler.development.js:45
-<App>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-(anônimo) @ index.tsx:11
-useAutoUpdater.ts:54 [AutoUpdater] === UPDATE CHECK STARTED ===
-useAutoUpdater.ts:55 [AutoUpdater] Timestamp: 2025-09-12T00:48:37.965Z
-useAutoUpdater.ts:56 [AutoUpdater] Updater endpoint: https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json
-useAutoUpdater.ts:63 [AutoUpdater] Current app version from Tauri: 1.0.23
-useAutoUpdater.ts:88 [AutoUpdater] Environment details: {platform: 'Win32', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…cko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0', online: true, language: 'pt-BR', currentVersion: '1.0.23', …}
-useAutoUpdater.ts:114 [AutoUpdater] Pre-checking endpoint accessibility...
-login:1  Access to fetch at 'https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
-useAutoUpdater.ts:118   HEAD https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json net::ERR_FAILED 302 (Found)
-(anônimo) @ useAutoUpdater.ts:118
-await in (anônimo)
-(anônimo) @ AutoUpdater.tsx:28
-setTimeout
-(anônimo) @ AutoUpdater.tsx:27
-react_stack_bottom_frame @ react-dom-client.development.js:23953
-runWithFiberInDEV @ react-dom-client.development.js:1519
-commitHookEffectListMount @ react-dom-client.development.js:11905
-commitHookPassiveMountEffects @ react-dom-client.development.js:12026
-commitPassiveMountOnFiber @ react-dom-client.development.js:13841
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13853
-flushPassiveEffects @ react-dom-client.development.js:15737
-(anônimo) @ react-dom-client.development.js:15379
-performWorkUntilDeadline @ scheduler.development.js:45
-<AutoUpdater>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-App @ App.tsx:152
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
-performWorkUntilDeadline @ scheduler.development.js:45
-<App>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-(anônimo) @ index.tsx:11
-DebugModal.tsx:345  [AutoUpdater] Pre-check failed: TypeError: Failed to fetch
-    at useAutoUpdater.ts:118:40
-console.error @ DebugModal.tsx:345
-(anônimo) @ useAutoUpdater.ts:142
-await in (anônimo)
-(anônimo) @ AutoUpdater.tsx:28
-setTimeout
-(anônimo) @ AutoUpdater.tsx:27
-react_stack_bottom_frame @ react-dom-client.development.js:23953
-runWithFiberInDEV @ react-dom-client.development.js:1519
-commitHookEffectListMount @ react-dom-client.development.js:11905
-commitHookPassiveMountEffects @ react-dom-client.development.js:12026
-commitPassiveMountOnFiber @ react-dom-client.development.js:13841
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13853
-flushPassiveEffects @ react-dom-client.development.js:15737
-(anônimo) @ react-dom-client.development.js:15379
-performWorkUntilDeadline @ scheduler.development.js:45
-<AutoUpdater>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-App @ App.tsx:152
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
-performWorkUntilDeadline @ scheduler.development.js:45
-<App>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-(anônimo) @ index.tsx:11
-useAutoUpdater.ts:152 [AutoUpdater] Starting Tauri update check...
-useAutoUpdater.ts:170 [AutoUpdater] Tauri check completed in: 467ms
-useAutoUpdater.ts:171 [AutoUpdater] Tauri check result: null
-useAutoUpdater.ts:207 [AutoUpdater] ℹ️  NO UPDATES AVAILABLE
-useAutoUpdater.ts:208 [AutoUpdater] Current version is up to date: 1.0.23
-useAutoUpdater.ts:412 [AutoUpdater] === UPDATE CHECK FINISHED ===
-useAutoUpdater.ts:413 [AutoUpdater] Total duration: 688ms
-api-tauri.service.ts:68 🔍 getAuthHeaders - Token no localStorage: ausente
-DebugModal.tsx:345  Erro ao buscar usuários: Error: Token de acesso requerido
-    at ApiTauriService.handleResponse (api-tauri.service.ts:130:13)
-    at async ApiTauriService.searchUsers (api-tauri.service.ts:382:14)
-    at async searchPlayers (listaplayersandclans.tsx:52:21)
-console.error @ DebugModal.tsx:345
-searchUsers @ api-tauri.service.ts:384
-await in searchUsers
-searchPlayers @ listaplayersandclans.tsx:52
-(anônimo) @ listaplayersandclans.tsx:134
-setTimeout
-(anônimo) @ listaplayersandclans.tsx:132
-react_stack_bottom_frame @ react-dom-client.development.js:23953
-runWithFiberInDEV @ react-dom-client.development.js:1519
-commitHookEffectListMount @ react-dom-client.development.js:11905
-commitHookPassiveMountEffects @ react-dom-client.development.js:12026
-commitPassiveMountOnFiber @ react-dom-client.development.js:13841
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13853
-flushPassiveEffects @ react-dom-client.development.js:15737
-flushPendingEffects @ react-dom-client.development.js:15702
-flushSpawnedWork @ react-dom-client.development.js:15668
-commitRoot @ react-dom-client.development.js:15403
-commitRootWhenReady @ react-dom-client.development.js:14652
-performWorkOnRoot @ react-dom-client.development.js:14575
-performSyncWorkOnRoot @ react-dom-client.development.js:16231
-flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
-flushSyncWork$1 @ react-dom-client.development.js:14721
-batchedUpdates$1 @ react-dom-client.development.js:3270
-dispatchEventForPluginEventSystem @ react-dom-client.development.js:16572
-dispatchEvent @ react-dom-client.development.js:20658
-dispatchDiscreteEvent @ react-dom-client.development.js:20626
-<PlayersList>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-MainPage @ page.tsx:68
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
-performWorkUntilDeadline @ scheduler.development.js:45
-<MainPage>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-App @ App.tsx:140
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
-performWorkUntilDeadline @ scheduler.development.js:45
-<App>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-(anônimo) @ index.tsx:11
+Criei uma proc pro App
+[23:59, 20/09/2025] +55 62 9291-7227: Exemplo:
+
+Opção 1
+EXEC dbo.BSP_AdjustUserKD @gmOidUser=2, @targetOidUser=3592, @ReduceKillPct=25, @ReduceDeathPct=10, @SetKDAOne=0;
+
+
+Opção 2
+EXEC dbo.BSP_AdjustUserKD @gmOidUser=2, @targetOidUser=3592, @ReduceKillPct=40, @SetKDAOne=1;
+[00:00, 21/09/2025] +55 62 9291-7227: Você precisa informar 5 parametros
+[00:00, 21/09/2025] +55 62 9291-7227: o oidUser do GM
+o oidUser do player que vai ter o KDA alterado
+[00:01, 21/09/2025] +55 62 9291-7227: Daí você vai informar a pocentagem que quer diminuir os Kills e as Mortes do cara...
+
+Exemplo:
+@ReduceKillPct = 30
+@ReduceDeathPct = 20
+
+Vai diminuir os kills dele em 30% do valor atual
+E diminuir as mortes em 20% do valor atual
+[00:02, 21/09/2025] +55 62 9291-7227: E por último, tem o parâmetro @SetKDAOne
+Se colocar = 1, ele vai colocar o KDA do cara como 1.0
+Ou seja, colocar as Mortes = Kills
+[00:03, 21/09/2025] +55 62 9291-7227: Exemplo:
+
+O cara tinha 1000 kills e 500 mortes, e você vai diminuir as kills em 30%
+
+Então ele vai ficar com 700 Kills.
+Como tu colocou @SetKDAOne = 1
+Ele tbm vai colocar as mortes como 700, pro kda ficar 1.0
+[00:03, 21/09/2025] +55 62 9291-7227: neste caso, ele ignora o campo @ReduceDeathPct
+
+Preciso que leia essa conversa e implemente oque está no conteudo dela, baseado nos meus outros modais. Tanto em questão de backend quanto frontend. Se inspire nos ja criados e faça o mesmo processo.

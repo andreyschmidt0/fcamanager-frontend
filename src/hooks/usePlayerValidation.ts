@@ -8,6 +8,7 @@ interface PlayerValidationState {
   isValidatingPlayer: boolean;
   playerValidated: boolean;
   validatedOidUser: number | null;
+  accountCount?: number;
 }
 
 interface UsePlayerValidationReturn extends PlayerValidationState {
@@ -41,6 +42,7 @@ export const usePlayerValidation = (
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [playerValidated, setPlayerValidated] = useState(false);
   const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
+  const [accountCount, setAccountCount] = useState<number | undefined>(undefined);
 
   // Função para resetar estados de validação
   const resetValidation = useCallback(() => {
@@ -48,6 +50,7 @@ export const usePlayerValidation = (
     setErrorMessage('');
     setPlayerValidated(false);
     setValidatedOidUser(null);
+    setAccountCount(undefined);
     setIsValidatingPlayer(false);
   }, []);
 
@@ -63,16 +66,26 @@ export const usePlayerValidation = (
 
     try {
       const result = await apiService.validatePlayerCrossCheck(discordId, login);
-      
+
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
         setValidatedOidUser(result.player.oidUser || null);
         setPlayerValidated(true);
         setErrorMessage('');
+
+        // Buscar contagem de contas por Discord ID
+        try {
+          const accountsResult = await apiService.searchUsers({ discordId: discordId });
+          setAccountCount(accountsResult.length);
+        } catch (countError) {
+          console.warn('Erro ao buscar contagem de contas:', countError);
+          setAccountCount(undefined);
+        }
       } else {
         setFetchedPlayerName('');
         setValidatedOidUser(null);
         setPlayerValidated(false);
+        setAccountCount(undefined);
         setErrorMessage(result.error || 'Erro na validação');
       }
     } catch (error) {
@@ -80,6 +93,7 @@ export const usePlayerValidation = (
       setFetchedPlayerName('');
       setValidatedOidUser(null);
       setPlayerValidated(false);
+      setAccountCount(undefined);
       setErrorMessage('Erro de conexão');
     } finally {
       setIsValidatingPlayer(false);
@@ -127,6 +141,7 @@ export const usePlayerValidation = (
       setFetchedPlayerName('');
       setValidatedOidUser(null);
       setPlayerValidated(false);
+      setAccountCount(undefined);
       setErrorMessage('');
     }
   }, [formData.discordId, formData.loginAccount, selectedPlayer, isModalOpen, debounceMs, validatePlayerCrossCheck]);
@@ -137,6 +152,7 @@ export const usePlayerValidation = (
     isValidatingPlayer,
     playerValidated,
     validatedOidUser,
+    accountCount,
     validatePlayerCrossCheck,
     resetValidation,
     setErrorMessage

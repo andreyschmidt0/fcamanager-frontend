@@ -1,6 +1,6 @@
 [package]
 name = "fca-manager"
-version = "1.0.24"
+version = "1.0.25"
 description = "Combat Arms FCA Manager"
 authors = ["FCA Team"]
 license = "MIT"

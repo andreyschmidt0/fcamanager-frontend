@@ -19,6 +19,7 @@ import ChangePassword from './modal/changepassword';
 import RemoveAccount from './modal/removeaccount';
 import AtualizarValorFireteamModal from './modal/atualizarvalorfireteam';
 import MarcaDeBatalha from './modal/marcadebatalha';
+import AdjustKDA from './modal/adjustkda';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -87,7 +88,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Exp', 'Remover Conta'] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
-    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha'] }
+    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha', 'Ajustar KDA'] }
   ];
   
   return (
@@ -274,7 +275,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
         <MarcaDeBatalha
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-        />  
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Ajustar KDA' && (
+        <AdjustKDA
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       )}
 
     </div>
