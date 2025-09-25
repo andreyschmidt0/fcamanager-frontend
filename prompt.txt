@@ -1,33 +1,377 @@
-Criei uma proc pro App
-[23:59, 20/09/2025] +55 62 9291-7227: Exemplo:
+client:789 [vite] connecting...
+client:912 [vite] connected.
+react-dom-client.development.js:24871 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+useAutoUpdater.ts:54 [AutoUpdater] === UPDATE CHECK STARTED ===
+useAutoUpdater.ts:55 [AutoUpdater] Timestamp: 2025-09-25T02:18:23.887Z
+useAutoUpdater.ts:56 [AutoUpdater] Updater endpoint: https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json
+useAutoUpdater.ts:63 [AutoUpdater] Current app version from Tauri: 1.0.25
+useAutoUpdater.ts:88 [AutoUpdater] Environment details: {platform: 'Win32', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…cko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0', online: true, language: 'en-US', currentVersion: '1.0.25', …}
+useAutoUpdater.ts:114 [AutoUpdater] Pre-checking endpoint accessibility...
+login:1  Access to fetch at 'https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+useAutoUpdater.ts:118   HEAD https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json net::ERR_FAILED 302 (Found)
+(anonymous) @ useAutoUpdater.ts:118
+await in (anonymous)
+(anonymous) @ AutoUpdater.tsx:28
+setTimeout
+(anonymous) @ AutoUpdater.tsx:27
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1519
+commitHookEffectListMount @ react-dom-client.development.js:11905
+commitHookPassiveMountEffects @ react-dom-client.development.js:12026
+commitPassiveMountOnFiber @ react-dom-client.development.js:13841
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13853
+flushPassiveEffects @ react-dom-client.development.js:15737
+(anonymous) @ react-dom-client.development.js:15379
+performWorkUntilDeadline @ scheduler.development.js:45
+<AutoUpdater>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.tsx:152
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ index.tsx:11
+DebugModal.tsx:345  [AutoUpdater] Pre-check failed: TypeError: Failed to fetch
+    at useAutoUpdater.ts:118:40
+console.error @ DebugModal.tsx:345
+(anonymous) @ useAutoUpdater.ts:142
+await in (anonymous)
+(anonymous) @ AutoUpdater.tsx:28
+setTimeout
+(anonymous) @ AutoUpdater.tsx:27
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1519
+commitHookEffectListMount @ react-dom-client.development.js:11905
+commitHookPassiveMountEffects @ react-dom-client.development.js:12026
+commitPassiveMountOnFiber @ react-dom-client.development.js:13841
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13957
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13834
+recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
+commitPassiveMountOnFiber @ react-dom-client.development.js:13853
+flushPassiveEffects @ react-dom-client.development.js:15737
+(anonymous) @ react-dom-client.development.js:15379
+performWorkUntilDeadline @ scheduler.development.js:45
+<AutoUpdater>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.tsx:152
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ index.tsx:11
+useAutoUpdater.ts:152 [AutoUpdater] Starting Tauri update check...
+useAutoUpdater.ts:170 [AutoUpdater] Tauri check completed in: 205ms
+useAutoUpdater.ts:171 [AutoUpdater] Tauri check result: null
+useAutoUpdater.ts:207 [AutoUpdater] ℹ️  NO UPDATES AVAILABLE
+useAutoUpdater.ts:208 [AutoUpdater] Current version is up to date: 1.0.25
+useAutoUpdater.ts:412 [AutoUpdater] === UPDATE CHECK FINISHED ===
+useAutoUpdater.ts:413 [AutoUpdater] Total duration: 273ms
+transferclan.tsx:50 🚀 TRANSFER CLAN - FINAL DEBUG
+transferclan.tsx:51 User object: {id: 3592, username: 'nischulz', profile: {…}, role: 'admin', lastLogin: Wed Sep 24 2025 23:18:20 GMT-0300 (Brasilia Standard Time), …}id: 3592lastLogin: Wed Sep 24 2025 23:18:20 GMT-0300 (Brasilia Standard Time) {}password: "[PROTECTED]"profile: {nickname: 'GM-Nicki', email: 'nicoleschulzif@gmail.com', discordId: '1375563306147774564'}role: "admin"username: "nischulz"[[Prototype]]: Object
+transferclan.tsx:52 adminDiscordId sendo enviado: 1375563306147774564
+transferclan.tsx:53 Tipo do adminDiscordId: string
+transferclan.tsx:54 Length do adminDiscordId: 19
+transferclan.tsx:55 Transfer data completo: {oldLeaderOidUser: 2147, newLeaderOidUser: 1457, adminDiscordId: '1375563306147774564'}
+DebugModal.tsx:345  Erro ao transferir liderança do clã: Error: GM não encontrado no banco principal ou está inativo
+    at ApiTauriService.handleResponse (api-tauri.service.ts:127:13)
+    at async ApiTauriService.transferClanLeadership (api-tauri.service.ts:932:22)
+    at async handleTransferClanAction (transferclan.tsx:57:20)
+    at async useModalAction.ts:68:22
+console.error @ DebugModal.tsx:345
+transferClanLeadership @ api-tauri.service.ts:944
+await in transferClanLeadership
+handleTransferClanAction @ transferclan.tsx:57
+await in handleTransferClanAction
+(anonymous) @ ActionFormModal.tsx:86
+(anonymous) @ useModalAction.ts:68
+executeDispatch @ react-dom-client.development.js:16368
+runWithFiberInDEV @ react-dom-client.development.js:1519
+processDispatchQueue @ react-dom-client.development.js:16418
+(anonymous) @ react-dom-client.development.js:17016
+batchedUpdates$1 @ react-dom-client.development.js:3262
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16572
+dispatchEvent @ react-dom-client.development.js:20658
+dispatchDiscreteEvent @ react-dom-client.development.js:20626
+<button>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+ConfirmationModal @ confirmmodal.tsx:65
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anonymous) @ react-dom-client.development.js:16250
+<ConfirmationModal>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+ActionFormModal @ ActionFormModal.tsx:208
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anonymous) @ react-dom-client.development.js:16250
+<ActionFormModal>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+TransferClan @ transferclan.tsx:75
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anonymous) @ react-dom-client.development.js:16250
+<TransferClan>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+SidebarMenu @ execucoes.tsx:245
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anonymous) @ react-dom-client.development.js:16250
+DebugModal.tsx:345  Erro na ação: Error: GM não encontrado no banco principal ou está inativo
+    at handleTransferClanAction (transferclan.tsx:60:13)
+    at async useModalAction.ts:68:22
+console.error @ DebugModal.tsx:345
+(anonymous) @ useModalAction.ts:73
+await in (anonymous)
+executeDispatch @ react-dom-client.development.js:16368
+runWithFiberInDEV @ react-dom-client.development.js:1519
+processDispatchQueue @ react-dom-client.development.js:16418
+(anonymous) @ react-dom-client.development.js:17016
+batchedUpdates$1 @ react-dom-client.development.js:3262
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16572
+dispatchEvent @ react-dom-client.development.js:20658
+dispatchDiscreteEvent @ react-dom-client.development.js:20626
+<button>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+ConfirmationModal @ confirmmodal.tsx:65
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anonymous) @ react-dom-client.development.js:16250
+<ConfirmationModal>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+ActionFormModal @ ActionFormModal.tsx:208
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anonymous) @ react-dom-client.development.js:16250
+<ActionFormModal>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+TransferClan @ transferclan.tsx:75
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anonymous) @ react-dom-client.development.js:16250
+<TransferClan>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+SidebarMenu @ execucoes.tsx:245
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performSyncWorkOnRoot @ react-dom-client.development.js:16231
+flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
+processRootScheduleInMicrotask @ react-dom-client.development.js:16116
+(anonymous) @ react-dom-client.development.js:16250
+  
 
-Opção 1
-EXEC dbo.BSP_AdjustUserKD @gmOidUser=2, @targetOidUser=3592, @ReduceKillPct=25, @ReduceDeathPct=10, @SetKDAOne=0;
+  
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
+  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
+}
+GM não encontrado no banco principal para Discord ID: 3592
 
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
+  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
+}
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
+  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
+  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
+}
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
+  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+more information.
+more information.
+    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
+    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
+    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
+    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
+    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
+  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
+}
+GM não encontrado no banco principal para Discord ID: 3592
+GM não encontrado no banco principal para Discord ID: 3592
 
-Opção 2
-EXEC dbo.BSP_AdjustUserKD @gmOidUser=2, @targetOidUser=3592, @ReduceKillPct=40, @SetKDAOne=1;
-[00:00, 21/09/2025] +55 62 9291-7227: Você precisa informar 5 parametros
-[00:00, 21/09/2025] +55 62 9291-7227: o oidUser do GM
-o oidUser do player que vai ter o KDA alterado
-[00:01, 21/09/2025] +55 62 9291-7227: Daí você vai informar a pocentagem que quer diminuir os Kills e as Mortes do cara...
-
-Exemplo:
-@ReduceKillPct = 30
-@ReduceDeathPct = 20
-
-Vai diminuir os kills dele em 30% do valor atual
-E diminuir as mortes em 20% do valor atual
-[00:02, 21/09/2025] +55 62 9291-7227: E por último, tem o parâmetro @SetKDAOne
-Se colocar = 1, ele vai colocar o KDA do cara como 1.0
-Ou seja, colocar as Mortes = Kills
-[00:03, 21/09/2025] +55 62 9291-7227: Exemplo:
-
-O cara tinha 1000 kills e 500 mortes, e você vai diminuir as kills em 30%
-
-Então ele vai ficar com 700 Kills.
-Como tu colocou @SetKDAOne = 1
-Ele tbm vai colocar as mortes como 700, pro kda ficar 1.0
-[00:03, 21/09/2025] +55 62 9291-7227: neste caso, ele ignora o campo @ReduceDeathPct
-
-Preciso que leia essa conversa e implemente oque está no conteudo dela, baseado nos meus outros modais. Tanto em questão de backend quanto frontend. Se inspire nos ja criados e faça o mesmo processo.

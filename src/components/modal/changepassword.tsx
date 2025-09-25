@@ -74,6 +74,8 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ isOpen, onClose }) => {
       action={handleChangePasswordAction}
       formData={formData}
       onFormDataChange={setFormData}
+      requiresPlayerValidation={true}
+      showPlayerFields={true}
       customValidation={customValidation}
       customValidationMessage="Por favor, digite uma senha válida (mínimo 3 caracteres)."
       playerFieldsConfig={{

@@ -42,7 +42,6 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
     }
 
     const changeDiscordData = {
-      gmOidUser: user?.id || 2,
       targetOidUser: validationResult.player.oidUser,
       newDiscordID: formData.newDiscordID,
       adminDiscordId: user?.profile?.discordId || 'system'
@@ -79,6 +78,8 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
       action={handleTransferDiscordAction}
       formData={formData}
       onFormDataChange={setFormData}
+      requiresPlayerValidation={true}
+      showPlayerFields={true}
       customValidation={customValidation}
       customValidationMessage="Por favor, digite um Discord ID válido (17-19 dígitos numéricos)."
       playerFieldsConfig={{

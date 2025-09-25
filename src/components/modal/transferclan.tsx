@@ -41,12 +41,13 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       throw new Error('Jogador não pôde ser validado. Verifique os dados informados.');
     }
 
-    const result = await apiService.transferClanLeadership({
-      gmOidUser: user?.id || 0,
+    const transferData = {
       oldLeaderOidUser: validationResult.player.oidUser,
       newLeaderOidUser: parseInt(formData.oidusernovolider),
       adminDiscordId: user?.profile?.discordId || 'system'
-    });
+    };
+
+    const result = await apiService.transferClanLeadership(transferData);
 
     if (!result.success) {
       throw new Error(result.error || 'Erro ao transferir liderança do clã');
@@ -73,6 +74,8 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
       confirmActionText="Sim, transferir"
       action={handleTransferClanAction}
       formData={formData}
+      requiresPlayerValidation={true}
+      showPlayerFields={true}
       onFormDataChange={setFormData}
       customValidation={customValidation}
       customValidationMessage="Por favor, digite um oidUser válido para o novo líder."

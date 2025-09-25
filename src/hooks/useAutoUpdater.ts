@@ -51,18 +51,13 @@ export const useAutoUpdater = (): UseAutoUpdaterReturn => {
     });
 
     try {
-      console.log('[AutoUpdater] === UPDATE CHECK STARTED ===');
-      console.log('[AutoUpdater] Timestamp:', new Date().toISOString());
-      console.log('[AutoUpdater] Updater endpoint:', 'https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json');
       
       // Obter versão atual de forma mais robusta
       let currentVersion = '1.0.15'; // Fallback
       try {
         const { getVersion } = await import('@tauri-apps/api/app');
         currentVersion = await getVersion();
-        console.log('[AutoUpdater] Current app version from Tauri:', currentVersion);
       } catch (versionError) {
-        console.warn('[AutoUpdater] Could not get version from Tauri, using fallback:', currentVersion);
         updaterDebug.addLog({
           event: 'Version Detection Warning',
           details: `Não foi possível obter versão via Tauri API: ${versionError}. Usando fallback: ${currentVersion}`,
@@ -85,8 +80,6 @@ export const useAutoUpdater = (): UseAutoUpdaterReturn => {
         } : 'N/A'
       };
 
-      console.log('[AutoUpdater] Environment details:', environmentInfo);
-      
       updaterDebug.addLog({
         event: 'Environment Check',
         details: `Plataforma: ${environmentInfo.platform}
@@ -111,7 +104,6 @@ Timestamp: ${environmentInfo.timestamp}`,
         type: 'info'
       });
 
-      console.log('[AutoUpdater] Pre-checking endpoint accessibility...');
       const preCheckStartTime = Date.now();
       
       try {
@@ -121,12 +113,6 @@ Timestamp: ${environmentInfo.timestamp}`,
         });
         
         const preCheckDuration = Date.now() - preCheckStartTime;
-        console.log('[AutoUpdater] Pre-check response:', {
-          status: preCheckResponse.status,
-          ok: preCheckResponse.ok,
-          url: preCheckResponse.url,
-          duration: preCheckDuration + 'ms'
-        });
 
         if (!preCheckResponse.ok) {
           throw new Error(`PRE_CHECK_FAILED: Endpoint inacessível (HTTP ${preCheckResponse.status}). Servidor pode estar indisponível.`);
@@ -139,7 +125,6 @@ Timestamp: ${environmentInfo.timestamp}`,
         });
 
       } catch (preCheckError) {
-        console.error('[AutoUpdater] Pre-check failed:', preCheckError);
         updaterDebug.addLog({
           event: 'Pre-check: Failed',
           details: `Falha no pré-teste do endpoint: ${preCheckError}`,
@@ -149,7 +134,6 @@ Timestamp: ${environmentInfo.timestamp}`,
       }
 
       // Agora fazer a verificação Tauri com timeout
-      console.log('[AutoUpdater] Starting Tauri update check...');
       updaterDebug.addLog({
         event: 'Tauri Check Starting',
         details: 'Iniciando verificação via Tauri plugin...',
@@ -166,9 +150,6 @@ Timestamp: ${environmentInfo.timestamp}`,
 
       const update = await Promise.race([checkPromise, timeoutPromise]) as Update;
       const tauriCheckDuration = Date.now() - tauriCheckStartTime;
-      
-      console.log('[AutoUpdater] Tauri check completed in:', tauriCheckDuration + 'ms');
-      console.log('[AutoUpdater] Tauri check result:', update);
 
       updaterDebug.addLog({
         event: 'Tauri Check Completed',
@@ -178,10 +159,6 @@ Timestamp: ${environmentInfo.timestamp}`,
       
       // Analisar resultado detalhadamente
       if (update?.available) {
-        console.log('[AutoUpdater] ✅ UPDATE AVAILABLE!');
-        console.log('[AutoUpdater] Current version:', currentVersion);
-        console.log('[AutoUpdater] Available version:', update.version);
-        console.log('[AutoUpdater] Update details:', update);
 
         const totalCheckDuration = Date.now() - checkStartTime;
 
@@ -202,10 +179,8 @@ A nova versão está pronta para download!`,
         setUpdateAvailable(update);
         setUpdateStatus('available');
         return;
-        
+
       } else {
-        console.log('[AutoUpdater] ℹ️  NO UPDATES AVAILABLE');
-        console.log('[AutoUpdater] Current version is up to date:', currentVersion);
         
         const totalCheckDuration = Date.now() - checkStartTime;
 
@@ -228,13 +203,6 @@ Seu aplicativo está na versão mais recente disponível.`,
       }
     } catch (err) {
       const totalCheckDuration = Date.now() - checkStartTime;
-      
-      console.error('[AutoUpdater] === ERROR IN UPDATE CHECK ===');
-      console.error('[AutoUpdater] Check duration before error:', totalCheckDuration + 'ms');
-      console.error('[AutoUpdater] Error object:', err);
-      console.error('[AutoUpdater] Error type:', typeof err);
-      console.error('[AutoUpdater] Error string:', String(err));
-      console.error('[AutoUpdater] Error stack:', err instanceof Error ? err.stack : 'No stack');
 
       // Capturar TODOS os detalhes possíveis do erro
       let specificError = 'Erro desconhecido na verificação de atualizações';
@@ -346,13 +314,6 @@ Seu aplicativo está na versão mais recente disponível.`,
         ];
         errorSeverity = 'critical';
       }
-      
-      console.error('[AutoUpdater] Categorized error:', {
-        category: errorCategory,
-        severity: errorSeverity,
-        specificError,
-        troubleshootingSteps
-      });
 
       // Registrar erro detalhado no debug
       updaterDebug.addLog({
@@ -381,7 +342,6 @@ INFORMAÇÕES PARA SUPORTE:
       
       // Executar diagnóstico automático em caso de erro
       try {
-        console.log('[AutoUpdater] Running automatic diagnostics due to error...');
         const diagnosticResult = await updateDiagnostics.runCompleteDiagnostic();
         setDiagnosticResult(diagnosticResult);
         
@@ -393,9 +353,7 @@ Resumo: ${diagnosticResult.summary}
 Recomendações: ${diagnosticResult.recommendations.join(', ')}`,
           type: diagnosticResult.success ? 'info' : 'warning'
         });
-        
       } catch (diagnosticError) {
-        console.error('[AutoUpdater] Failed to run auto diagnostics:', diagnosticError);
         updaterDebug.addLog({
           event: 'Auto Diagnostics Failed',
           details: `Falha ao executar diagnóstico automático: ${diagnosticError}`,
@@ -409,16 +367,12 @@ Recomendações: ${diagnosticResult.recommendations.join(', ')}`,
       setUpdateStatus('error');
     } finally {
       setIsChecking(false);
-      console.log('[AutoUpdater] === UPDATE CHECK FINISHED ===');
-      console.log('[AutoUpdater] Total duration:', Date.now() - checkStartTime + 'ms');
     }
   }, [isChecking, updaterDebug, updateDiagnostics]);
 
   // Nova função para executar diagnóstico manual
   const runDiagnostics = useCallback(async () => {
     try {
-      console.log('[AutoUpdater] Running manual diagnostics...');
-      
       updaterDebug.addLog({
         event: 'Manual Diagnostics Started',
         details: 'Iniciando diagnóstico manual do sistema de atualizações...',
@@ -440,8 +394,6 @@ ${result.recommendations.slice(0, 3).join('\n')}`,
       });
 
     } catch (error) {
-      console.error('[AutoUpdater] Manual diagnostics failed:', error);
-      
       updaterDebug.addLog({
         event: 'Manual Diagnostics Failed',
         details: `Falha no diagnóstico manual: ${error}`,
@@ -478,10 +430,7 @@ ${result.recommendations.slice(0, 3).join('\n')}`,
     });
 
     try {
-      console.log('[AutoUpdater] Starting download and install...');
-      
       await targetUpdate.downloadAndInstall((event) => {
-        console.log('[AutoUpdater] Download event:', event.event);
         
         switch (event.event) {
           case 'Started':
@@ -519,8 +468,6 @@ ${result.recommendations.slice(0, 3).join('\n')}`,
             break;
         }
       });
-
-      console.log('[AutoUpdater] Download completed successfully');
 
       // Log conclusão da instalação
       updaterDebug.addLog({
@@ -587,14 +534,6 @@ ${result.recommendations.slice(0, 3).join('\n')}`,
         }
       }
       
-      console.error('[AutoUpdater] Download/install failed:', err);
-      console.error('[AutoUpdater] Download error details:', {
-        name: err instanceof Error ? err.name : 'Unknown',
-        message: errorMessage,
-        specificError,
-        stack: err instanceof Error ? err.stack : 'No stack trace',
-      });
-      
       // Registrar erro no debug
       updaterDebug.addLog({
         event: 'Download/Install Failed',
@@ -612,7 +551,6 @@ ${result.recommendations.slice(0, 3).join('\n')}`,
 
   const restartApp = useCallback(async () => {
     try {
-      console.log('[AutoUpdater] Restarting application...');
       updaterDebug.addLog({
         event: 'Restart Initiated',
         details: 'Iniciando processo de reinicialização do aplicativo...',
@@ -637,14 +575,6 @@ ${result.recommendations.slice(0, 3).join('\n')}`,
           specificError = errorMessage;
         }
       }
-      
-      console.error('[AutoUpdater] Restart failed:', err);
-      console.error('[AutoUpdater] Restart error details:', {
-        name: err instanceof Error ? err.name : 'Unknown',
-        message: errorMessage,
-        specificError,
-        stack: err instanceof Error ? err.stack : 'No stack trace',
-      });
       
       // Registrar erro no debug
       updaterDebug.addLog({

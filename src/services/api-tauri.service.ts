@@ -912,7 +912,6 @@ class ApiTauriService {
 
   // Transferir liderança de clã usando BSP_AdminTransferClanLeadership
   async transferClanLeadership(data: {
-    gmOidUser: number;
     oldLeaderOidUser: number;
     newLeaderOidUser: number;
     adminDiscordId: string;
@@ -993,7 +992,6 @@ class ApiTauriService {
 
   // Change user Discord ID using BSP_ChangeUserDiscordID
   async changeUserDiscordId(data: {
-    gmOidUser: number;
     targetOidUser: number;
     newDiscordID: string;
     adminDiscordId: string;

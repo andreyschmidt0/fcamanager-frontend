@@ -76,6 +76,8 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
       action={handleChangeEmailAction}
       formData={formData}
       onFormDataChange={setFormData}
+      requiresPlayerValidation={true}
+      showPlayerFields={true}
       customValidation={customValidation}
       customValidationMessage="Por favor, digite um email válido."
       playerFieldsConfig={{
