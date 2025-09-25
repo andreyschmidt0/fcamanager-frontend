@@ -4,8 +4,8 @@ react-dom-client.development.js:24871 Download the React DevTools for a better d
 useAutoUpdater.ts:54 [AutoUpdater] === UPDATE CHECK STARTED ===
 useAutoUpdater.ts:55 [AutoUpdater] Timestamp: 2025-09-25T02:18:23.887Z
 useAutoUpdater.ts:56 [AutoUpdater] Updater endpoint: https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json
-useAutoUpdater.ts:63 [AutoUpdater] Current app version from Tauri: 1.0.25
-useAutoUpdater.ts:88 [AutoUpdater] Environment details: {platform: 'Win32', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…cko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0', online: true, language: 'en-US', currentVersion: '1.0.25', …}
+useAutoUpdater.ts:63 [AutoUpdater] Current app version from Tauri: 1.0.26
+useAutoUpdater.ts:88 [AutoUpdater] Environment details: {platform: 'Win32', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…cko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0', online: true, language: 'en-US', currentVersion: '1.0.26', …}
 useAutoUpdater.ts:114 [AutoUpdater] Pre-checking endpoint accessibility...
 login:1  Access to fetch at 'https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
 useAutoUpdater.ts:118   HEAD https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json net::ERR_FAILED 302 (Found)
@@ -104,7 +104,7 @@ useAutoUpdater.ts:152 [AutoUpdater] Starting Tauri update check...
 useAutoUpdater.ts:170 [AutoUpdater] Tauri check completed in: 205ms
 useAutoUpdater.ts:171 [AutoUpdater] Tauri check result: null
 useAutoUpdater.ts:207 [AutoUpdater] ℹ️  NO UPDATES AVAILABLE
-useAutoUpdater.ts:208 [AutoUpdater] Current version is up to date: 1.0.25
+useAutoUpdater.ts:208 [AutoUpdater] Current version is up to date: 1.0.26
 useAutoUpdater.ts:412 [AutoUpdater] === UPDATE CHECK FINISHED ===
 useAutoUpdater.ts:413 [AutoUpdater] Total duration: 273ms
 transferclan.tsx:50 🚀 TRANSFER CLAN - FINAL DEBUG
