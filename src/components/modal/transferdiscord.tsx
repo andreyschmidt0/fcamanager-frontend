@@ -42,17 +42,17 @@ const TransferDiscord: React.FC<TransferDiscordProps> = ({ isOpen, onClose }) =>
     }
 
     const changeDiscordData = {
+      gmOidUser: user?.id || 0, // oidUser do GM executando a ação
       targetOidUser: validationResult.player.oidUser,
-      newDiscordID: formData.newDiscordID,
-      adminDiscordId: user?.profile?.discordId || 'system'
+      newDiscordID: formData.newDiscordID
     };
 
     const result = await apiService.changeUserDiscordId(changeDiscordData);
-    
+
     if (!result.success) {
       throw new Error(result.error || result.message || 'Erro ao alterar Discord ID');
     }
-    
+
     return result;
   };
 

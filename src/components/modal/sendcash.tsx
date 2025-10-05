@@ -92,8 +92,7 @@ const SendCash: React.FC<SendCashProps> = ({ isOpen, onClose }) => {
     const result = await apiService.creditCashToList({
       nexonIdList: formData.loginAccounts,
       cashAmount: parseInt(formData.cashAmount),
-      creditReason: formData.creditReason,
-      adminDiscordId: user?.profile?.discordId || 'system'
+      creditReason: formData.creditReason
     });
 
     if (!result.success) {

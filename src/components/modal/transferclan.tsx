@@ -43,8 +43,7 @@ const TransferClan: React.FC<TransferClanProps> = ({ isOpen, onClose }) => {
 
     const transferData = {
       oldLeaderOidUser: validationResult.player.oidUser,
-      newLeaderOidUser: parseInt(formData.oidusernovolider),
-      adminDiscordId: user?.profile?.discordId || 'system'
+      newLeaderOidUser: parseInt(formData.oidusernovolider)
     };
 
     const result = await apiService.transferClanLeadership(transferData);

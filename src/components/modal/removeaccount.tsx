@@ -44,7 +44,6 @@ const RemoveAccount: React.FC<RemoveAccountProps> = ({ isOpen, onClose }) => {
     const result = await apiService.removeAccount({
       targetNexonId: formData.loginAccount,
       reason: formData.reason,
-      adminDiscordId: user?.profile?.discordId || 'system',
       targetOidUser: validationResult.player.oidUser
     });
 

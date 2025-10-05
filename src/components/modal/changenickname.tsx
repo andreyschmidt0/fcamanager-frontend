@@ -44,7 +44,6 @@ const ChangeNickname: React.FC<ChangeNicknameProps> = ({ isOpen, onClose }) => {
     const result = await apiService.changeNickname({
       targetNexonId: formData.loginAccount,
       newNickname: formData.new_value,
-      adminDiscordId: user?.profile?.discordId || 'system',
       targetOidUser: validationResult.player.oidUser
     });
 

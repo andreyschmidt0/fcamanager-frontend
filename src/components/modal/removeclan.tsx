@@ -144,8 +144,7 @@ const RemoveClan: React.FC<RemoveClanProps> = ({ isOpen, onClose }) => {
 
     const result = await apiService.deleteClan({
       oidGuild: parseInt(formData.oidGuild),
-      reason: formData.reason,
-      adminDiscordId: user?.profile?.discordId || 'system'
+      reason: formData.reason
     });
 
     if (!result.success) {

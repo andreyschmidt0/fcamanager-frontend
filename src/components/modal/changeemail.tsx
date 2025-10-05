@@ -44,7 +44,6 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({ isOpen, onClose }) => {
     const result = await apiService.changeEmail({
       targetNexonId: formData.loginAccount,
       newEmail: formData.newemail,
-      adminDiscordId: user?.profile?.discordId || 'system',
       targetOidUser: validationResult.player.oidUser
     });
 

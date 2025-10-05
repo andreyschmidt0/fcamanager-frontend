@@ -113,8 +113,7 @@ const SendItem: React.FC<SendItemProps> = ({ isOpen, onClose }) => {
       nexonIdList: formData.loginAccounts,
       productListString: formData.productIds,
       count: parseInt(formData.count),
-      message: formData.message,
-      adminDiscordId: user?.profile?.discordId || 'system'
+      message: formData.message
     });
 
     if (!result.success) {

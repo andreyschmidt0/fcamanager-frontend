@@ -44,7 +44,6 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({ isOpen, onClose }) => {
     const result = await apiService.changePassword({
       targetNexonId: formData.loginAccount,
       newPassword: formData.newPassword,
-      adminDiscordId: user?.profile?.discordId || 'system',
       targetOidUser: validationResult.player.oidUser
     });
 

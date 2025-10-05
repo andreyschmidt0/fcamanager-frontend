@@ -436,7 +436,6 @@ class ApiTauriService {
   async changePassword(data: {
     targetNexonId: string;
     newPassword: string;
-    adminDiscordId: string;
     targetOidUser?: number;
   }): Promise<{
     success: boolean;
@@ -476,7 +475,6 @@ class ApiTauriService {
   async changeNickname(data: {
     targetNexonId: string;
     newNickname: string;
-    adminDiscordId: string;
     targetOidUser?: number;
   }): Promise<{
     success: boolean;
@@ -516,7 +514,6 @@ class ApiTauriService {
   async changeEmail(data: {
     targetNexonId: string;
     newEmail: string;
-    adminDiscordId: string;
     targetOidUser?: number;
   }): Promise<{
     success: boolean;
@@ -756,7 +753,6 @@ class ApiTauriService {
   async removeAccount(data: {
     targetNexonId: string;
     reason: string;
-    adminDiscordId: string;
     targetOidUser?: number;
   }): Promise<{
     success: boolean;
@@ -797,7 +793,6 @@ class ApiTauriService {
     productListString: string;
     count: number;
     message: string;
-    adminDiscordId: string;
   }): Promise<{
     success: boolean;
     message?: string;
@@ -836,7 +831,6 @@ class ApiTauriService {
     nexonIdList: string;
     cashAmount: number;
     creditReason: string;
-    adminDiscordId: string;
   }): Promise<{
     success: boolean;
     message?: string;
@@ -875,7 +869,6 @@ class ApiTauriService {
   async deleteClan(data: {
     oidGuild: number;
     reason: string;
-    adminDiscordId: string;
   }): Promise<{
     success: boolean;
     message?: string;
@@ -914,7 +907,6 @@ class ApiTauriService {
   async transferClanLeadership(data: {
     oldLeaderOidUser: number;
     newLeaderOidUser: number;
-    adminDiscordId: string;
   }): Promise<{
     success: boolean;
     message?: string;
@@ -955,7 +947,6 @@ class ApiTauriService {
     loginAccount: string;
     targetGradeLevel: number;
     reason: string;
-    adminDiscordId: string;
   }): Promise<{
     success: boolean;
     message?: string;
@@ -992,9 +983,9 @@ class ApiTauriService {
 
   // Change user Discord ID using BSP_ChangeUserDiscordID
   async changeUserDiscordId(data: {
+    gmOidUser: number;
     targetOidUser: number;
     newDiscordID: string;
-    adminDiscordId: string;
   }): Promise<{
     success: boolean;
     message?: string;
