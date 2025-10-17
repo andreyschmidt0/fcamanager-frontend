@@ -10,6 +10,7 @@ import ConsultInbox from './modal/consultinbox';
 import ConsultItem from './modal/consultitem';
 import ChangeNickname from './modal/changenickname';
 import ChangeEmail from './modal/changeemail';
+import ChangeLogin from './modal/changelogin';
 import RemoveExp from './modal/removeexp';
 import RemoveClan from './modal/removeclan';
 import SendCash from './modal/sendcash';
@@ -88,7 +89,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Exp', 'Remover Conta'] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
-    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha', 'Ajustar KDA'] }
+    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha', 'Ajustar KDA', 'Alterar Login'] }
   ];
   
   return (
@@ -279,6 +280,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Ajustar KDA' && (
         <AdjustKDA
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Alterar Login' && (
+        <ChangeLogin
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

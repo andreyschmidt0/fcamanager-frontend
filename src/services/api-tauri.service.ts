@@ -549,6 +549,45 @@ class ApiTauriService {
     }
   }
 
+  // Change user login
+  async changeLogin(data: {
+    targetNexonId: string;
+    newLogin: string;
+    targetOidUser?: number;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/change-login`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+      
+      if (result.success) {
+        this.showSuccessModal('Login Alterado', 'Login do usuário foi alterado com sucesso!');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Erro ao alterar login:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao alterar login'
+      };
+    }
+  }
+
   async banUser(data: {
     discordId: string;
     loginAccount: string;
@@ -1226,6 +1265,9 @@ class ApiTauriService {
     }
   }
 
+  
+
 }
+
 // Exportar instância única
 export default new ApiTauriService();
