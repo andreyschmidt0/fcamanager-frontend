@@ -1095,11 +1095,11 @@ class ApiTauriService {
     try {
       const params = new URLSearchParams();
       params.append('oidUser', oidUser);
-      
+
       if (useType !== undefined && useType !== '') {
         params.append('useType', useType);
       }
-      
+
       if (itemName && itemName.trim() !== '') {
         params.append('itemName', itemName.trim());
       }
@@ -1113,6 +1113,44 @@ class ApiTauriService {
       return await this.handleResponse<any[]>(response);
     } catch (error) {
       console.error('Erro ao buscar inventário:', error);
+      return [];
+    }
+  }
+
+  // Search player inbox (user store)
+  async searchInbox(oidUser: string): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      params.append('oidUser', oidUser);
+
+      const response = await fetch(`${API_BASE}/users/inbox?${params.toString()}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<any[]>(response);
+    } catch (error) {
+      console.error('Erro ao buscar inbox:', error);
+      return [];
+    }
+  }
+
+  // Get clan members
+  async getClanMembers(oidGuild: string): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      params.append('oidGuild', oidGuild);
+
+      const response = await fetch(`${API_BASE}/users/clan-members?${params.toString()}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse<any[]>(response);
+    } catch (error) {
+      console.error('Erro ao buscar membros do clã:', error);
       return [];
     }
   }

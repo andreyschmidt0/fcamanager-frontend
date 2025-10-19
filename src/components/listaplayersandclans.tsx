@@ -5,6 +5,7 @@ import { usePlayer, Player } from '../contexts/PlayerContext';
 import { useClan, Clan } from '../contexts/ClanContext';
 import PlayerInfo from './modal/playerinfo/playerinfo';
 import PlayerProfile from './modal/playerprofile/PlayerProfile';
+import ClanMembersModal from './modal/ClanMembersModal';
 import apiService from '../services/api-tauri.service';
 
 interface PlayersListProps {
@@ -26,6 +27,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const [copiedId, setCopiedId] = useState<string>('');
   const [showPlayerInfo, setShowPlayerInfo] = useState<boolean>(false);
   const [showPlayerProfile, setShowPlayerProfile] = useState<boolean>(false);
+  const [showClanMembers, setShowClanMembers] = useState<boolean>(false);
 
   const copyToClipboard = (discordId: string) => {
     navigator.clipboard.writeText(discordId).then(() => {
@@ -751,7 +753,10 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
             
             {/* Action buttons */}
             <div className="space-y-2">
-              <button className="w-full bg-green-600 hover:bg-green-700 text-white text-xs py-2 px-3 rounded transition-colors">
+              <button
+                onClick={() => setShowClanMembers(true)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white text-xs py-2 px-3 rounded transition-colors"
+              >
                 Ver Membros
               </button>
             </div>
@@ -779,6 +784,16 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
           onClose={() => setShowPlayerProfile(false)}
           nickname={selectedPlayer.name}
           isBanned={selectedPlayer.banStatus === 'Sim'}
+        />
+      )}
+
+      {/* Clan Members Modal */}
+      {selectedClan && showClanMembers && (
+        <ClanMembersModal
+          isOpen={showClanMembers}
+          onClose={() => setShowClanMembers(false)}
+          clanName={selectedClan.strName}
+          oidGuild={selectedClan.oidGuild}
         />
       )}
     </>
