@@ -34,6 +34,8 @@ interface PlayerProfileData {
   KillsStreak: number;
   MostKills: number;
   Money: number;
+  GP: number;
+  Cash: number;
   EXP: number;
   KillCnt: number;
   DeadCnt: number;
@@ -234,7 +236,8 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ isOpen, onClose, nickname
               <section>
                 <SectionTitle title="💰 Recursos" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard title="Money" value={playerData.Money} highlight />
+                  <StatCard title="GP" value={playerData.GP || 0} highlight />
+                  <StatCard title="Cash" value={playerData.Cash || 0} highlight />
                   <StatCard title="EXP" value={playerData.EXP} highlight />
                   <StatCard title="NX Usado" value={playerData.UsedNX} />
                   <StatCard title="Marca de Batalha" value={playerData.nr_MarcaBatalha} />

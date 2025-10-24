@@ -1303,7 +1303,95 @@ class ApiTauriService {
     }
   }
 
-  
+  /**
+   * Obtém o ambiente atual do banco de dados (production ou test)
+   * @returns Promise com o ambiente atual
+   */
+  async getCurrentEnvironment(): Promise<'production' | 'test'> {
+    try {
+      const response = await fetch(`${API_BASE}/database/environment`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{ environment: string }>(response);
+      return result.environment as 'production' | 'test';
+    } catch (error) {
+      console.error('Erro ao obter ambiente:', error);
+      // Retornar produção como padrão em caso de erro
+      return 'production';
+    }
+  }
+
+  /**
+   * Alterna o ambiente do banco de dados entre produção e teste
+   * Requer permissão de Master
+   * @param environment - 'production' ou 'test'
+   * @returns Promise com resultado da operação
+   */
+  async switchEnvironment(environment: 'production' | 'test'): Promise<{
+    success: boolean;
+    environment: string;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/database/environment/switch`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ environment }),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        environment: string;
+        message?: string;
+      }>(response);
+
+      if (result.success && result.message) {
+        this.showSuccessModal('Ambiente Alterado', result.message);
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao alternar ambiente';
+      
+      return {
+        success: false,
+        environment: environment,
+        error: errorMessage
+      };
+    }
+  }
+
+  /**
+   * Obtém status detalhado das conexões de banco de dados
+   * Requer permissão de Master
+   * @returns Promise com status das conexões
+   */
+  async getDatabaseStatus(): Promise<{
+    currentEnvironment: string;
+    isTestEnvironment: boolean;
+    isProductionEnvironment: boolean;
+    databaseUrls: {
+      production: string;
+      test: string;
+    };
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/database/status`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      throw new Error('Erro ao obter status do banco de dados');
+    }
+  }
 
 }
 

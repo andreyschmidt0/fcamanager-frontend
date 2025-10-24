@@ -81,7 +81,6 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
       setHasSearched(true);
       
       // Mostrar erro para o usuário (você pode implementar um estado de erro se desejar)
-      alert(`Erro ao buscar players: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }

@@ -12,7 +12,7 @@ interface GMUser {
 }
 
 const RecentActivities: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('ESTE_MES');
+  const [selectedPeriod, setSelectedPeriod] = useState('HOJE');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedGM, setSelectedGM] = useState<string>('');
   const [showGMDropdown, setShowGMDropdown] = useState(false);

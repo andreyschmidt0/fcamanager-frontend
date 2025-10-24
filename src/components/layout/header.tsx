@@ -1,16 +1,57 @@
-import { Bell, Menu, ChevronDown, LogOut } from 'lucide-react';
+import { Bell, Menu, ChevronDown, LogOut, Database } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import Sidebar from './Sidebar';
+import apiService from '../../services/api-tauri.service';
 
 const Header = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  
+  // Inicializar com o ambiente salvo no localStorage
+  const [currentEnvironment, setCurrentEnvironment] = useState<'production' | 'test'>(() => {
+    const saved = localStorage.getItem('currentEnvironment');
+    return (saved as 'production' | 'test') || 'production';
+  });
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuContainerRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
   };
 
+  const handleMenuToggle = () => {
+    setShowSidebar(!showSidebar);
+  };
+
+  // Buscar ambiente atual do servidor apenas uma vez ao montar
+  useEffect(() => {
+    const fetchEnvironment = async () => {
+      try {
+        const env = await apiService.getCurrentEnvironment();
+        
+        // Atualizar apenas se for diferente
+        if (env !== currentEnvironment) {
+          setCurrentEnvironment(env);
+          localStorage.setItem('currentEnvironment', env);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar ambiente:', error);
+      }
+    };
+
+    // Buscar apenas uma vez ao carregar a página
+    fetchEnvironment();
+  }, []);
+
+  // Atualizar o ambiente quando o Sidebar notificar mudança
+  const handleEnvironmentChange = (env: 'production' | 'test') => {
+    setCurrentEnvironment(env);
+    localStorage.setItem('currentEnvironment', env);
+  };
 
   // Fechar dropdown quando clicar fora
   useEffect(() => {
@@ -24,13 +65,38 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
     return (
+      <>
       <header className="bg-black border-b border-gray-800 p-2">
       <div className="relative flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-6">
-          <button className="text-white hover:text-gray-300 transition-colors">
-            <Menu size={24}
-/>
+        <div ref={menuContainerRef} className="flex items-center gap-4 relative">
+          <button 
+            ref={menuButtonRef}
+            onClick={handleMenuToggle}
+            className="text-white hover:text-gray-300 transition-colors p-2 hover:bg-gray-800 rounded-lg"
+            aria-label="Abrir menu"
+          >
+            <Menu size={24} />
           </button>
+          
+          {/* Dropdown Menu - Posicionado abaixo do botão */}
+          {showSidebar && (
+            <Sidebar 
+              isOpen={showSidebar} 
+              onClose={() => setShowSidebar(false)}
+              onEnvironmentChange={(env) => setCurrentEnvironment(env)}
+              buttonRef={menuButtonRef}
+            />
+          )}
+          
+          {/* Indicador de Ambiente */}
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold border ${
+            currentEnvironment === 'production'
+              ? 'bg-green-600/20 text-green-400 border-green-500/30'
+              : 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30'
+          }`}>
+            <Database size={14} />
+            <span>{currentEnvironment === 'production' ? 'PRODUÇÃO' : 'TESTES'}</span>
+          </div>
         </div>
         
         <div className="absolute left-1/2 transform -translate-x-1/2">
@@ -79,8 +145,8 @@ const Header = () => {
           </div>
         </div>
       </div>
-
     </header>
+    </>
   );
 };
 
