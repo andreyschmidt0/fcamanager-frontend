@@ -927,17 +927,55 @@ class ApiTauriService {
         message?: string;
         data?: any;
       }>(response);
-      
+
       if (result.success) {
         this.showSuccessModal('Clã Excluído', 'Clã foi excluído com sucesso!');
       }
-      
+
       return result;
     } catch (error) {
       console.error('Erro ao excluir clã:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro ao excluir clã'
+      };
+    }
+  }
+
+  // Remover emblema de clã usando BSP_RemoveClanEmblem
+  async removeClanEmblem(data: {
+    oidGuild: number;
+    reason: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/remove-clan-emblem`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Emblema Removido', 'Emblema do clã foi removido com sucesso!');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao remover emblema do clã:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao remover emblema do clã'
       };
     }
   }

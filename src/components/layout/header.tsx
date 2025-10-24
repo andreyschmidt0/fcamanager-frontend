@@ -95,7 +95,7 @@ const Header = () => {
               : 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30'
           }`}>
             <Database size={14} />
-            <span>{currentEnvironment === 'production' ? 'PRODUÇÃO' : 'TESTES'}</span>
+            <span>{currentEnvironment === 'production' ? 'OFICIAL' : 'TESTES'}</span>
           </div>
         </div>
         

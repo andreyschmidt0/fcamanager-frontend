@@ -6,7 +6,7 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onEnvironmentChange?: (env: 'production' | 'test') => void;
-  buttonRef?: React.RefObject<HTMLButtonElement>;
+  buttonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onEnvironmentChange, buttonRef }) => {
@@ -150,7 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onEnvironmentChange,
             {currentEnv === 'production' ? (
               <>
                 <CheckCircle size={14} />
-                <span>PRODUÇÃO</span>
+                <span>OFICIAL</span>
               </>
             ) : (
               <>
@@ -183,12 +183,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onEnvironmentChange,
             {currentEnv === 'production' ? (
               <>
                 <CheckCircle size={16} />
-                <span>✓ Produção (Ativo)</span>
+                <span>✓ Oficial (Ativo)</span>
               </>
             ) : (
               <>
                 <Database size={16} />
-                <span>Alternar para Produção</span>
+                <span>Alternar para Oficial</span>
               </>
             )}
           </button>
