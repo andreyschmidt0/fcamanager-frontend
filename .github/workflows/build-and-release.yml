@@ -123,7 +123,7 @@ jobs:
           cat > latest.json << EOF
           {
             "version": "${{ steps.release_info.outputs.app_version }}",
-            "notes": "Nova versão do FCA Manager com melhorias e correções de bugs. O sistema de auto-update está ativo.",
+            "notes": "Novo recurso de Consulta de Caixas de Items e Caixas de Produtos adicionado.",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "windows-x86_64": {
