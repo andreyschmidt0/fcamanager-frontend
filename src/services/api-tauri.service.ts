@@ -1431,6 +1431,162 @@ class ApiTauriService {
     }
   }
 
+  // Obter todas as caixas de items (Gachapon)
+  async getAllItemBoxes(): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: Array<{ BoxName: string; GachaponItemNo: number }>;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/boxes/items`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: Array<{ BoxName: string; GachaponItemNo: number }>;
+      }>(response);
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar caixas de items:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar caixas de items'
+      };
+    }
+  }
+
+  // Obter todas as caixas de produtos (Gachapon)
+  async getAllProductBoxes(): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: Array<{ BoxName: string; GachaponItemNo: number }>;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/boxes/products`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: Array<{ BoxName: string; GachaponItemNo: number }>;
+      }>(response);
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar caixas de produtos:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar caixas de produtos'
+      };
+    }
+  }
+
+  // Obter itens dentro de uma caixa específica
+  async getItemsInBox(gachaponItemNo: number): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: Array<{
+      BoxName: string;
+      GachaponItemNo: number;
+      ItemNo: number;
+      ItemName: string;
+      ItemType: number;
+      Percentage: number;
+      Period: number;
+      ConsumeType: number;
+    }>;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/boxes/items/${gachaponItemNo}/contents`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: Array<{
+          BoxName: string;
+          GachaponItemNo: number;
+          ItemNo: number;
+          ItemName: string;
+          ItemType: number;
+          Percentage: number;
+          Period: number;
+          ConsumeType: number;
+        }>;
+      }>(response);
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar itens da caixa:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar itens da caixa'
+      };
+    }
+  }
+
+  // Obter produtos dentro de uma caixa específica
+  async getProductsInBox(gachaponItemNo: number): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: Array<{
+      BoxName: string;
+      GachaponItemNo: number;
+      ProductID: number;
+      ProductName: string;
+      ItemNo00: number;
+      Percentage: number;
+      Period: number;
+      ConsumeType: number;
+    }>;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/boxes/products/${gachaponItemNo}/contents`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: Array<{
+          BoxName: string;
+          GachaponItemNo: number;
+          ProductID: number;
+          ProductName: string;
+          ItemNo00: number;
+          Percentage: number;
+          Period: number;
+          ConsumeType: number;
+        }>;
+      }>(response);
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar produtos da caixa:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar produtos da caixa'
+      };
+    }
+  }
+
 }
 
 // Exportar instância única

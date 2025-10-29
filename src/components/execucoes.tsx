@@ -8,6 +8,7 @@ import SendItem from './modal/senditem';
 import ConsultInventory from './modal/consultinventory';
 import ConsultInbox from './modal/consultinbox';
 import ConsultItem from './modal/consultitem';
+import ConsultBoxes from './modal/consultboxes';
 import ChangeNickname from './modal/changenickname';
 import ChangeEmail from './modal/changeemail';
 import ChangeLogin from './modal/changelogin';
@@ -85,7 +86,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   };
 
   const actionButtons = [
-    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox'] },
+    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox', 'Consultar Caixas'] },
     { name: 'ENVIAR', options: ['Enviar Cash', 'Enviar Item'] },
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Emblema Clan', 'Remover Exp', 'Remover Conta'] },
@@ -208,7 +209,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
         />
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Consultar Item' && (
-        <ConsultItem 
+        <ConsultItem
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Consultar Caixas' && (
+        <ConsultBoxes
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />
