@@ -107,7 +107,7 @@ jobs:
             > release_info.json
           
           # Find Windows setup signature
-          SIG_URL=$(jq -r '.assets[] | select(.name | contains("x64-setup.exe.sig")) | .browser_download_url' release_info.json)
+          SIG_URL=$(jq -r '.assets[] | select(.name | contains("x64-setup_windows.exe.sig")) | .browser_download_url' release_info.json)
           
           if [ "$SIG_URL" != "null" ] && [ -n "$SIG_URL" ]; then
             curl -L "$SIG_URL" > signature.txt
@@ -128,7 +128,7 @@ jobs:
             "platforms": {
               "windows-x86_64": {
                 "signature": "${{ steps.get_signature.outputs.signature }}",
-                "url": "https://github.com/${{ github.repository }}/releases/download/${{ steps.release_info.outputs.tag_name }}/FCA.Manager_${{ steps.release_info.outputs.app_version }}_x64-setup.exe"
+                "url": "https://github.com/${{ github.repository }}/releases/download/${{ steps.release_info.outputs.tag_name }}/FCA.Manager_${{ steps.release_info.outputs.app_version }}_x64-setup_windows.exe"
               }
             }
           }
