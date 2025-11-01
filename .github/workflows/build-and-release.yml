@@ -123,7 +123,8 @@ jobs:
           cat > latest.json << EOF
           {
             "version": "${{ steps.release_info.outputs.app_version }}",
-            "notes": "Novo recurso de Consulta de Caixas de Items e Caixas de Produtos adicionado.",
+            "notes": "1° Disponibilizar filtro na função Pesquisar Caixas e
+            2° Adicionar coluna de Percentage na função Pesquisar Caixas/Listar Itens",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "windows-x86_64": {

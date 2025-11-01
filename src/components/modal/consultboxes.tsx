@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import apiService from '../../services/api-tauri.service';
 import BoxContentsModal from './consultboxes/BoxContentsModal';
@@ -46,6 +46,7 @@ const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
   const [isLoadingContents, setIsLoadingContents] = useState(false);
   const [showContentsModal, setShowContentsModal] = useState(false);
   const [error, setError] = useState<string>('');
+  const [boxSearchTerm, setBoxSearchTerm] = useState('');
 
   if (!isOpen) return null;
 
@@ -56,6 +57,7 @@ const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
     setBoxContents([]);
     setShowContentsModal(false);
     setError('');
+    setBoxSearchTerm('');
     onClose();
   };
 
@@ -71,6 +73,7 @@ const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
     setSelectedBox(null);
     setBoxContents([]);
     setShowContentsModal(false);
+    setBoxSearchTerm('');
 
     try {
       const result = boxType === 'items'
@@ -89,6 +92,19 @@ const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
       setIsLoadingBoxes(false);
     }
   };
+
+  const filteredBoxes = useMemo(() => {
+    if (!boxSearchTerm.trim()) {
+      return boxes;
+    }
+
+    const term = boxSearchTerm.trim().toLowerCase();
+    return boxes.filter((box) => {
+      const nameMatch = box.BoxName?.toLowerCase().includes(term);
+      const idMatch = box.GachaponItemNo?.toString().includes(term);
+      return nameMatch || idMatch;
+    });
+  }, [boxes, boxSearchTerm]);
 
   const handleListContents = async (box: BoxData) => {
     setSelectedBox(box);
@@ -173,8 +189,26 @@ const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
           {boxes.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-white">
-                {boxType === 'items' ? 'Caixas de Items' : 'Caixas de Produtos'} ({boxes.length})
+                {boxType === 'items' ? 'Caixas de Items' : 'Caixas de Produtos'} ({filteredBoxes.length}/{boxes.length})
               </h3>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <label className="text-sm text-gray-300" htmlFor="box-search">
+                  Pesquisar
+                </label>
+                <input
+                  id="box-search"
+                  type="text"
+                  value={boxSearchTerm}
+                  onChange={(e) => setBoxSearchTerm(e.target.value)}
+                  placeholder="Filtrar por nome ou ID da caixa"
+                  className="flex-1 px-3 py-2 bg-[#1d1e24] text-white rounded-lg border border-transparent focus:border-green-500 focus:outline-none"
+                />
+              </div>
+              {filteredBoxes.length === 0 ? (
+                <div className="bg-[#1d1e24] border border-gray-700 rounded-lg p-4 text-center text-gray-400">
+                  Nenhuma caixa encontrada para "{boxSearchTerm}"
+                </div>
+              ) : (
               <div className="overflow-x-auto rounded-lg border border-gray-700">
                 <table className="w-full">
                   <thead className="bg-[#111216]">
@@ -191,7 +225,7 @@ const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-700">
-                    {boxes.map((box) => (
+                    {filteredBoxes.map((box) => (
                       <tr key={box.GachaponItemNo} className="hover:bg-[#1d1e24] transition-colors">
                         <td className="px-4 py-3 text-sm text-white">{box.BoxName}</td>
                         <td className="px-4 py-3 text-sm text-gray-400">{box.GachaponItemNo}</td>
@@ -208,6 +242,7 @@ const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
           )}
         </div>

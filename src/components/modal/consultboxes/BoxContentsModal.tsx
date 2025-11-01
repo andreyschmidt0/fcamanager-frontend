@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
 interface BoxData {
@@ -47,6 +47,14 @@ const BoxContentsModal: React.FC<BoxContentsModalProps> = ({
 }) => {
   if (!isOpen || !selectedBox) return null;
 
+  const [itemSearchTerm, setItemSearchTerm] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setItemSearchTerm('');
+    }
+  }, [isOpen, selectedBox]);
+
   const getItemTypeLabel = (itemType: number): string => {
     const types: { [key: number]: string } = {
       0: 'AR', 1: 'SMG', 2: 'Sniper', 3: 'Machine Gun', 4: 'Pistol',
@@ -65,6 +73,29 @@ const BoxContentsModal: React.FC<BoxContentsModalProps> = ({
     };
     return types[itemType] || 'Others';
   };
+
+  const filteredContents = useMemo(() => {
+    if (!itemSearchTerm.trim()) {
+      return boxContents;
+    }
+
+    const term = itemSearchTerm.trim().toLowerCase();
+
+    return boxContents.filter((item) => {
+      if (boxType === 'items') {
+        const entry = item as ItemInBox;
+        const nameMatch = entry.ItemName?.toLowerCase().includes(term);
+        const idMatch = entry.ItemNo?.toString().includes(term);
+        const typeMatch = getItemTypeLabel(entry.ItemType).toLowerCase().includes(term);
+        return nameMatch || idMatch || typeMatch;
+      }
+
+      const entry = item as ProductInBox;
+      const nameMatch = entry.ProductName?.toLowerCase().includes(term);
+      const idMatch = entry.ProductID?.toString().includes(term);
+      return nameMatch || idMatch;
+    });
+  }, [boxContents, itemSearchTerm, boxType]);
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
@@ -99,12 +130,32 @@ const BoxContentsModal: React.FC<BoxContentsModalProps> = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white">
-                  {boxType === 'items' ? 'Itens na Caixa' : 'Produtos na Caixa'} ({boxContents.length})
+                  {boxType === 'items' ? 'Itens na Caixa' : 'Produtos na Caixa'} ({filteredContents.length}/{boxContents.length})
                 </h3>
                 <span className="text-sm text-gray-400">
                   ID: {selectedBox.GachaponItemNo}
                 </span>
               </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <label className="text-sm text-gray-300" htmlFor="box-contents-search">
+                  Pesquisar
+                </label>
+                <input
+                  id="box-contents-search"
+                  type="text"
+                  value={itemSearchTerm}
+                  onChange={(e) => setItemSearchTerm(e.target.value)}
+                  placeholder={boxType === 'items' ? 'Filtrar por nome, ID ou tipo de item' : 'Filtrar por nome ou ID do produto'}
+                  className="flex-1 px-3 py-2 bg-[#1d1e24] text-white rounded-lg border border-transparent focus:border-green-500 focus:outline-none"
+                />
+              </div>
+
+              {filteredContents.length === 0 ? (
+                <div className="bg-[#1d1e24] border border-gray-700 rounded-lg p-4 text-center text-gray-400">
+                  Nenhum resultado para "{itemSearchTerm}"
+                </div>
+              ) : (
 
               <div className="overflow-x-auto rounded-lg border border-gray-700">
                 <table className="w-full">
@@ -141,7 +192,7 @@ const BoxContentsModal: React.FC<BoxContentsModalProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-700">
-                    {boxContents.map((item, index) => (
+                    {filteredContents.map((item, index) => (
                       <tr key={index} className="hover:bg-[#1d1e24] transition-colors">
                         {boxType === 'items' ? (
                           <>
@@ -176,6 +227,7 @@ const BoxContentsModal: React.FC<BoxContentsModalProps> = ({
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
           )}
         </div>
