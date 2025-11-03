@@ -9,7 +9,7 @@
       "identifier": "http:default",
       "allow": [
         {
-          "url": "https://fcamanager-backend.onrender.com/*"
+          "url": "https://fca-backend.fly.dev/*"
         },
         {
           "url": "http://localhost:*"

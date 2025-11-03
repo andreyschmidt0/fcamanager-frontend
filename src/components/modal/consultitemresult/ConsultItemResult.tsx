@@ -12,6 +12,7 @@ interface ItemData {
   ItemNo: number;
   ItemType: number;
   ItemGrade: number;
+  ModoCamp: number;
   NewTag: number;
   HotTag: number;
   SellBackPrice: number;
@@ -268,14 +269,14 @@ const ConsultItemResult: React.FC<ConsultItemResultProps> = ({
                       item.ShopView === 1 ? 'border-l-green-500' : 'border-l-gray-500'
                     } hover:bg-[#252631] transition-colors`}
                   >
-                    <div className="grid grid-cols-1 lg:grid-cols-8 gap-3 text-sm items-center">
+                    <div className="grid grid-cols-1 lg:grid-cols-9 gap-3 text-sm items-center">
                       {/* Item Info */}
                       <div className="lg:col-span-2">
                         <p className="text-white font-medium text-base leading-tight">{item.ProductName}</p>
                         <p className="text-xs text-gray-500">ID: {item.ProductID} | Item: {item.ItemNo}</p>
                         <p className="text-xs text-blue-400">{item.ProductType}</p>
                       </div>
-                      
+
                       {/* Price & Sale Type */}
                       <div className="text-center">
                         <span className="text-xs text-gray-400">Preço:</span>
@@ -284,13 +285,13 @@ const ConsultItemResult: React.FC<ConsultItemResultProps> = ({
                           {getSaleTypeText(item.SaleType)}
                         </p>
                       </div>
-                      
+
                       {/* Period */}
                       <div className="text-center">
                         <span className="text-xs text-gray-400">Período:</span>
                         <p className="text-white font-medium">{item.Period00}d</p>
                       </div>
-                      
+
                       {/* Shop Status */}
                       <div className="text-center">
                         <span className="text-xs text-gray-400">Loja:</span>
@@ -304,6 +305,14 @@ const ConsultItemResult: React.FC<ConsultItemResultProps> = ({
                         <span className="text-xs text-gray-400">Grau:</span>
                         <p className="text-white font-medium text-xs">
                           {getStarsText(item.ItemGrade)}
+                        </p>
+                      </div>
+
+                      {/* Modo CAMP */}
+                      <div className="text-center">
+                        <span className="text-xs text-gray-400">CAMP:</span>
+                        <p className="text-white font-medium text-xs">
+                          {item.ModoCamp > 0 ? 'Sim' : 'Não'}
                         </p>
                       </div>
 

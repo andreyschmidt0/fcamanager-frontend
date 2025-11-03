@@ -889,17 +889,57 @@ class ApiTauriService {
         message?: string;
         data?: any;
       }>(response);
-      
+
       if (result.success) {
         this.showSuccessModal('Cash Enviado', 'Cash foi creditado com sucesso!');
       }
-      
+
       return result;
     } catch (error) {
       console.error('Erro ao enviar cash:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro ao enviar cash'
+      };
+    }
+  }
+
+  // Remover cash de um usuário usando BSP_RemoveCashFromUser
+  async removeCashFromUser(data: {
+    targetNexonId: string;
+    amountToRemove: number;
+    reason: string;
+    targetOidUser?: number;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/remove-cash`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Cash Removido', 'Cash foi removido com sucesso!');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao remover cash:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao remover cash'
       };
     }
   }

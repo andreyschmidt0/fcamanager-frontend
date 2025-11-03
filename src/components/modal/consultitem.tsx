@@ -13,10 +13,15 @@ const ConsultItem: React.FC<ConsultItemProps> = ({ isOpen, onClose }) => {
     itemname: '',
     availableItems: '',
     daysperiod: '',
+    periodIn: [] as number[],
     selltype: '',
     productId: '',
+    productIds: '',
     itemNo: '',
-    itemGrade: ''
+    itemTypes: [] as number[],
+    itemGrade: '',
+    priceNotEqual99999: false,
+    sellBackPriceFilter: ''
   });
 
   // Estados para resultados e loading
@@ -32,10 +37,40 @@ const ConsultItem: React.FC<ConsultItemProps> = ({ isOpen, onClose }) => {
   const [searchError, setSearchError] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+
+    if (type === 'checkbox') {
+      const checkbox = e.target as HTMLInputElement;
+      setFormData(prev => ({
+        ...prev,
+        [name]: checkbox.checked
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const handlePeriodCheckbox = (period: number) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      periodIn: prev.periodIn.includes(period)
+        ? prev.periodIn.filter(p => p !== period)
+        : [...prev.periodIn, period]
+    }));
+  };
+
+  const handleItemTypeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const options = e.target.selectedOptions;
+    const values: number[] = [];
+    for (let i = 0; i < options.length; i++) {
+      values.push(parseInt(options[i].value));
+    }
+    setFormData(prev => ({
+      ...prev,
+      itemTypes: values
     }));
   };
 
@@ -55,29 +90,57 @@ const ConsultItem: React.FC<ConsultItemProps> = ({ isOpen, onClose }) => {
       if (formData.itemname && formData.itemname.trim()) {
         filters.itemname = formData.itemname.trim();
       }
-      
+
       if (formData.availableItems) {
         filters.availableItems = parseInt(formData.availableItems);
       }
-      
+
       if (formData.daysperiod) {
         filters.daysperiod = parseInt(formData.daysperiod);
       }
-      
+
+      // Filtro de múltiplos períodos
+      if (formData.periodIn.length > 0) {
+        filters.periodIn = formData.periodIn;
+      }
+
       if (formData.selltype) {
         filters.selltype = parseInt(formData.selltype);
       }
-      
+
       if (formData.productId) {
         filters.productId = parseInt(formData.productId);
       }
-      
+
+      // Filtro de múltiplos product IDs
+      if (formData.productIds && formData.productIds.trim()) {
+        const ids = formData.productIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+        if (ids.length > 0) {
+          filters.productIds = ids;
+        }
+      }
+
       if (formData.itemNo) {
         filters.itemNo = parseInt(formData.itemNo);
       }
-      
+
+      // Filtro de múltiplos item types
+      if (formData.itemTypes.length > 0) {
+        filters.itemTypes = formData.itemTypes;
+      }
+
       if (formData.itemGrade) {
         filters.itemGrade = parseInt(formData.itemGrade);
+      }
+
+      // Filtro de preço != 99999
+      if (formData.priceNotEqual99999) {
+        filters.priceNotEqual99999 = true;
+      }
+
+      // Filtro de SellBackPrice
+      if (formData.sellBackPriceFilter) {
+        filters.sellBackPriceFilter = formData.sellBackPriceFilter;
       }
 
       // Fazer chamada API
@@ -189,7 +252,28 @@ const ConsultItem: React.FC<ConsultItemProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
-                    <div>
+          {/* Múltiplos Períodos */}
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Filtrar por Períodos Específicos
+            </label>
+            <div className="flex flex-wrap gap-3 bg-[#1d1e24] p-3 rounded-lg">
+              {[1, 7, 30, 90, 999].map(period => (
+                <label key={period} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.periodIn.includes(period)}
+                    onChange={() => handlePeriodCheckbox(period)}
+                    className="w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
+                  />
+                  <span className="text-white text-sm">{period === 999 ? 'Permanente' : `${period} dias`}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Marque os períodos desejados (múltipla escolha)</p>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-white mb-2">
               Tipo de Venda (0/1/3)
             </label>
@@ -245,6 +329,89 @@ const ConsultItem: React.FC<ConsultItemProps> = ({ isOpen, onClose }) => {
               <option value="9">9 - Ouro</option>
             </select>
             <p className="text-xs text-gray-400 mt-1">Filtrar por quantidade e tipo de estrelas do item</p>
+          </div>
+
+          {/* Múltiplos Product IDs */}
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              IDs de Produtos (Múltiplos)
+            </label>
+            <textarea
+              name="productIds"
+              value={formData.productIds}
+              onChange={handleInputChange}
+              placeholder="Ex: 100001,100002,100003"
+              rows={2}
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors resize-none"
+            />
+            <p className="text-xs text-gray-400 mt-1">Insira os IDs separados por vírgula</p>
+          </div>
+
+          {/* Múltiplos Item Types */}
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Tipos de Item (Múltiplos)
+            </label>
+            <select
+              multiple
+              value={formData.itemTypes.map(String)}
+              onChange={handleItemTypeSelect}
+              size={6}
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+            >
+              <option value="0">AR</option>
+              <option value="1">SMG</option>
+              <option value="2">Sniper</option>
+              <option value="3">Machine Gun</option>
+              <option value="4">Pistol</option>
+              <option value="5">Double Shotgun</option>
+              <option value="6">Grenade</option>
+              <option value="7">Knife</option>
+              <option value="11">Hat</option>
+              <option value="12">Face</option>
+              <option value="14">Uniform</option>
+              <option value="15">Vest</option>
+              <option value="16">Backpack</option>
+              <option value="20">Box</option>
+              <option value="21">Function Item</option>
+              <option value="22">Character</option>
+              <option value="26">Shotgun</option>
+              <option value="29">Special Items</option>
+              <option value="30">Specialist</option>
+            </select>
+            <p className="text-xs text-gray-400 mt-1">Segure Ctrl/Cmd para selecionar múltiplos tipos</p>
+          </div>
+
+          {/* Filtro de Preço */}
+          <div className="flex items-center gap-3 bg-[#1d1e24] p-3 rounded-lg">
+            <input
+              type="checkbox"
+              name="priceNotEqual99999"
+              checked={formData.priceNotEqual99999}
+              onChange={handleInputChange}
+              className="w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
+            />
+            <label className="text-white text-sm cursor-pointer">
+              Excluir itens com preço 99999
+            </label>
+          </div>
+
+          {/* Filtro de SellBackPrice */}
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Preço de Revenda (SellBackPrice)
+            </label>
+            <select
+              name="sellBackPriceFilter"
+              value={formData.sellBackPriceFilter}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+            >
+              <option value="">Todos (com ou sem preço de revenda)</option>
+              <option value="null">Apenas itens SEM preço de revenda</option>
+              <option value="notnull">Apenas itens COM preço de revenda</option>
+            </select>
+            <p className="text-xs text-gray-400 mt-1">Filtrar itens por disponibilidade de revenda</p>
           </div>
 
           {/* Error Message */}
