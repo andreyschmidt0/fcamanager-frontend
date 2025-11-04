@@ -2,7 +2,7 @@ import { fetch } from '@tauri-apps/plugin-http';
 
 // Test service using Tauri's native HTTP client
 class TauriHttpService {
-  private primaryURL = 'https://fcamanager-backend.onrender.com/api';
+  private primaryURL = 'http://206.0.29.225:3000/api';
   private fallbackURL = 'http://localhost:3000/api';
 
   async testConnection(): Promise<{success: boolean, details: string}> {

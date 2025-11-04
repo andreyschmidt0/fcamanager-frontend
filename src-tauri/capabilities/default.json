@@ -12,6 +12,12 @@
           "url": "https://fcamanager-backend.onrender.com/*"
         },
         {
+          "url": "http://206.0.29.225:*"
+        },
+        {
+          "url": "https://206.0.29.225:*"
+        },
+        {
           "url": "http://localhost:*"
         }
       ]
