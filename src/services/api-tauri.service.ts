@@ -12,7 +12,7 @@ export interface PlayerProfileData {
 
 
 // Configuração da API
-const API_BASE = import.meta.env.VITE_API_URL || 'http://206.0.29.225:3000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://181.215.45.220:3000/api';
 
 // Interface para o usuário retornado pelo backend
 export interface BackendUser {
