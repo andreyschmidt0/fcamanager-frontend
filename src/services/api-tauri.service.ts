@@ -1238,10 +1238,15 @@ class ApiTauriService {
     itemname?: string;
     availableItems?: number;
     daysperiod?: number;
+    periodIn?: number[];
     selltype?: number;
     productId?: number;
+    productIds?: number[];
     itemNo?: number;
+    itemTypes?: number[];
     itemGrade?: number;
+    priceNotEqual99999?: boolean;
+    sellBackPriceFilter?: string;
     page?: number;
     pageSize?: number;
   }): Promise<{
@@ -1270,6 +1275,13 @@ class ApiTauriService {
       if (filters.daysperiod !== undefined && filters.daysperiod !== null && filters.daysperiod > 0) {
         params.append('daysperiod', filters.daysperiod.toString());
       }
+
+      // Filtro de múltiplos períodos
+      if (filters.periodIn && filters.periodIn.length > 0) {
+        filters.periodIn.forEach(period => {
+          params.append('periodIn', period.toString());
+        });
+      }
       
       if (filters.selltype !== undefined && filters.selltype !== null) {
         params.append('selltype', filters.selltype.toString());
@@ -1278,13 +1290,37 @@ class ApiTauriService {
       if (filters.productId !== undefined && filters.productId !== null && filters.productId > 0) {
         params.append('productId', filters.productId.toString());
       }
+
+      // Filtro de múltiplos product IDs
+      if (filters.productIds && filters.productIds.length > 0) {
+        filters.productIds.forEach(id => {
+          params.append('productIds', id.toString());
+        });
+      }
       
       if (filters.itemNo !== undefined && filters.itemNo !== null && filters.itemNo > 0) {
         params.append('itemNo', filters.itemNo.toString());
       }
+
+      // Filtro de múltiplos item types
+      if (filters.itemTypes && filters.itemTypes.length > 0) {
+        filters.itemTypes.forEach(type => {
+          params.append('itemTypes', type.toString());
+        });
+      }
       
       if (filters.itemGrade !== undefined && filters.itemGrade !== null) {
         params.append('itemGrade', filters.itemGrade.toString());
+      }
+
+      // Filtro de preço != 99999
+      if (filters.priceNotEqual99999 === true) {
+        params.append('priceNotEqual99999', 'true');
+      }
+
+      // Filtro de SellBackPrice
+      if (filters.sellBackPriceFilter) {
+        params.append('sellBackPriceFilter', filters.sellBackPriceFilter);
       }
       
       // Parâmetros de paginação
