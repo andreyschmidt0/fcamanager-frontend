@@ -9,7 +9,7 @@ interface AtualizarValorFireteamModalProps {
 
 const AtualizarValorFireteamFormFields = ({ formData, onInputChange }: any) => (
     <>
-      {/* Map Name */}
+      {/* Map Name*/}
       <div>
         <label className="block text-sm font-medium text-white mb-2">
           Nome do Mapa
