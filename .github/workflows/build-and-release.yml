@@ -128,7 +128,7 @@ jobs:
             "platforms": {
               "windows-x86_64": {
                 "signature": "${{ steps.get_signature.outputs.signature }}",
-                "url": "https://github.com/${{ github.repository }}/releases/download/${{ steps.release_info.outputs.tag_name }}/FCA.Manager_${{ steps.release_info.outputs.app_version }}_x64-setup_windows.exe"
+                "url": "https://github.com/${{ github.repository }}/releases/download/${{ steps.release_info.outputs.tag_name }}/FCA.Manager_${{ steps.release_info.outputs.app_version }}_x64-setup.exe"
               }
             }
           }
