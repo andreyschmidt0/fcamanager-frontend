@@ -17,7 +17,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const { selectedPlayer, setSelectedPlayer } = usePlayer();
   const { selectedClan, setSelectedClan } = useClan();
   const [viewMode, setViewMode] = useState<'players' | 'clans'>('players');
-  const [searchUserType, setSearchUserType] = useState<'nickname' | 'discordId' | 'macaddress' | 'ipaddress' | 'oiduser' | 'strNexonId'>('nickname');
+  const [searchUserType, setSearchUserType] = useState<'nickname' | 'discordId' | 'email' | 'macaddress' | 'ipaddress' | 'oiduser' | 'strNexonId'>('nickname');
   const [searchClanType, setSearchClanType] = useState<'clanName' | 'clanId'>('clanName');
   const [search, setSearch] = useState<string>('');
   const [players, setPlayers] = useState<Player[]>([]);
@@ -200,6 +200,16 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                 DISCORD ID
               </button>
               <button 
+                onClick={() => setSearchUserType('email')}
+                className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
+                  searchUserType === 'email' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                }`}
+              >
+                EMAIL
+              </button>
+              <button 
                 onClick={() => setSearchUserType('macaddress')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
                   searchUserType === 'macaddress' 
@@ -295,6 +305,8 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                     ? "Digite o nickname do player..."
                     : searchUserType === 'discordId'
                     ? "Digite o Discord ID do player..."
+                    : searchUserType === 'email'
+                    ? "Digite o email do player..."
                     : searchUserType === 'macaddress'
                     ? "Digite o MAC Address do player..."
                     : searchUserType === 'ipaddress'
@@ -349,15 +361,17 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <Search size={48} className="mb-4" />
                   <p className="text-lg">
-                    {searchUserType === 'nickname' 
-                      ? 'Digite um nickname para buscar' 
-                      : searchUserType === 'discordId'
-                      ? 'Digite um Discord ID para buscar'
-                      : searchUserType === 'macaddress'
-                      ? 'Digite um MAC Address para buscar'
-                      : searchUserType === 'ipaddress'
-                      ? 'Digite um IP Address para buscar'
-                      : searchUserType === 'strNexonId'
+                     {searchUserType === 'nickname' 
+                       ? 'Digite um nickname para buscar' 
+                       : searchUserType === 'discordId'
+                       ? 'Digite um Discord ID para buscar'
+                       : searchUserType === 'email'
+                       ? 'Digite um email para buscar'
+                       : searchUserType === 'macaddress'
+                       ? 'Digite um MAC Address para buscar'
+                       : searchUserType === 'ipaddress'
+                       ? 'Digite um IP Address para buscar'
+                       : searchUserType === 'strNexonId'
                       ? 'Digite um strNexonID para buscar'
                       : 'Digite um OID User para buscar'
                     }
@@ -371,12 +385,14 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                   <X size={48} className="mb-4" />
                   <p className="text-lg">Nenhum player encontrado</p>
                   <p className="text-sm">
-                    {searchUserType === 'nickname' 
-                      ? 'Tente buscar por outro nickname' 
-                      : searchUserType === 'discordId'
-                      ? 'Tente buscar por outro Discord ID'
-                      : searchUserType === 'macaddress'
-                      ? 'Tente buscar por outro MAC Address'
+                     {searchUserType === 'nickname' 
+                       ? 'Tente buscar por outro nickname' 
+                       : searchUserType === 'discordId'
+                       ? 'Tente buscar por outro Discord ID'
+                       : searchUserType === 'email'
+                       ? 'Tente buscar por outro email'
+                       : searchUserType === 'macaddress'
+                       ? 'Tente buscar por outro MAC Address'
                       : searchUserType === 'ipaddress'
                       ? 'Tente buscar por outro IP Address'
                       : searchUserType === 'strNexonId'
