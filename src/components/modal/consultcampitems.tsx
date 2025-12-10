@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { RefreshCcw, Search, X } from 'lucide-react';
+import { RefreshCcw, Search, X, Trash2, Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
 import apiService from '../../services/api-tauri.service';
 
 interface CampItem {
@@ -20,6 +21,9 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newItemNo, setNewItemNo] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadItems = async () => {
     setIsLoading(true);
@@ -28,10 +32,10 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
     try {
       const result = await apiService.getCampItems();
 
-      if (result.success) {
-        setItems(result.data || []);
-      } else {
-        setError(result.error || 'Erro ao buscar itens do modo CAMP');
+    if (result.success) {
+      setItems(result.data || []);
+    } else {
+      setError(result.error || 'Erro ao buscar itens do modo CAMP');
         setItems([]);
       }
     } catch (err) {
@@ -63,6 +67,51 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
       return nameMatch || valueMatch;
     });
   }, [items, searchTerm]);
+
+  const handleAddItem = async () => {
+    const numericItem = parseInt(newItemNo, 10);
+    if (isNaN(numericItem) || numericItem <= 0) {
+      toast.error('Informe um ItemNo válido.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const result = await apiService.addCampItem(numericItem);
+      if (result.success) {
+        toast.success(result.message || 'Item adicionado ao modo CAMP.');
+        setShowAddModal(false);
+        setNewItemNo('');
+        loadItems();
+      } else {
+        toast.error(result.error || 'Erro ao adicionar item.');
+      }
+    } catch (err) {
+      console.error('Erro ao adicionar item CAMP:', err);
+      toast.error('Erro ao adicionar item CAMP.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteItem = async (itemNo: number) => {
+    const confirm = window.confirm(`Remover o item ${itemNo} do modo CAMP?`);
+    if (!confirm) return;
+    setIsSubmitting(true);
+    try {
+      const result = await apiService.deleteCampItem(itemNo);
+      if (result.success) {
+        toast.success(result.message || 'Item removido do modo CAMP.');
+        loadItems();
+      } else {
+        toast.error(result.error || 'Erro ao remover item.');
+      }
+    } catch (err) {
+      console.error('Erro ao remover item CAMP:', err);
+      toast.error('Erro ao remover item CAMP.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -107,6 +156,15 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
                   disabled={isLoading}
                 />
               </div>
+
+              <button
+                onClick={() => setShowAddModal(true)}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus size={16} />
+                Adicionar Item
+              </button>
 
               <button
                 onClick={loadItems}
@@ -156,6 +214,9 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Value (ItemNo)
                       </th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Ações
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
@@ -170,6 +231,16 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
                         <td className="px-4 py-3 text-sm text-gray-200">{item.AllowType}</td>
                         <td className="px-4 py-3 text-sm text-gray-200">{item.ValueType}</td>
                         <td className="px-4 py-3 text-sm text-gray-200">{item.Value}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleDeleteItem(item.Value)}
+                            disabled={isSubmitting}
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Trash2 size={14} />
+                            Excluir
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -189,6 +260,51 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
           </div>
         </div>
       </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-md p-6 border border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-white">Adicionar Item CAMP</h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">ItemNo</label>
+                <input
+                  type="number"
+                  value={newItemNo}
+                  onChange={(e) => setNewItemNo(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                  placeholder="Ex: 17998"
+                />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAddItem}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Salvando...' : 'Adicionar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

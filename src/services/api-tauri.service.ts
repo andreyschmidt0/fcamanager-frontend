@@ -1419,6 +1419,51 @@ class ApiTauriService {
     }
   }
 
+  async addCampItem(itemNo: number, allowType: number = 1, valueType: number = 2): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/items/mode-camp`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ itemNo, allowType, valueType }),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao adicionar item CAMP:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao adicionar item CAMP'
+      };
+    }
+  }
+
+  async deleteCampItem(itemNo: number): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/items/mode-camp/${itemNo}`, {
+        method: 'DELETE',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao remover item CAMP:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao remover item CAMP'
+      };
+    }
+  }
+
   // Refresh token
   async refreshToken(refreshToken: string): Promise<{success: boolean; accessToken?: string; refreshToken?: string; error?: string}> {
     try {
