@@ -944,6 +944,35 @@ class ApiTauriService {
     }
   }
 
+  // Inserir jogador na blacklist de recompensa de Fireteam
+  async insertFireteamRewardBlacklist(data: {
+    discordId: string;
+    loginAccount: string;
+    reason?: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/fireteam-blacklist`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao inserir na blacklist de Fireteam:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao inserir na blacklist de Fireteam'
+      };
+    }
+  }
+
   // Deletar clã usando BSP_DeleteSingleClan
   async deleteClan(data: {
     oidGuild: number;
@@ -1355,6 +1384,37 @@ class ApiTauriService {
           totalPages: 0
         },
         error: error instanceof Error ? error.message : 'Erro ao buscar itens'
+      };
+    }
+  }
+
+  // Listar itens habilitados para o modo CAMP
+  async getCampItems(): Promise<{
+    success: boolean;
+    data: Array<{
+      Name: string;
+      ItemType?: number | null;
+      AllowType: number;
+      ValueType: number;
+      Value: number;
+    }>;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/items/mode-camp`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao buscar itens do modo CAMP:', error);
+      return {
+        success: false,
+        data: [],
+        error: error instanceof Error ? error.message : 'Erro ao buscar itens do modo CAMP'
       };
     }
   }
