@@ -963,7 +963,17 @@ class ApiTauriService {
         connectTimeout: 30000
       });
 
-      return await this.handleResponse(response);
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Blacklist EA', result.message || 'Jogador inserido na blacklist de Fireteam.');
+      }
+
+      return result;
     } catch (error) {
       console.error('Erro ao inserir na blacklist de Fireteam:', error);
       return {

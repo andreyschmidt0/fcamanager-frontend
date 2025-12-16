@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldAlert } from 'lucide-react';
-import toast from 'react-hot-toast';
 import BaseModal from '../common/BaseModal';
 import PlayerValidationFields from '../common/PlayerValidationFields';
 import { CancelButton, SubmitButton } from '../common/ActionButton';
@@ -77,14 +75,13 @@ const InsertFireteamBlacklist: React.FC<InsertFireteamBlacklistProps> = ({ isOpe
       });
 
       if (result.success) {
-        toast.success(result.message || 'Jogador inserido na blacklist de Fireteam.');
         onClose();
       } else {
-        toast.error(result.error || 'Erro ao inserir na blacklist.');
+        validation.setErrorMessage(result.error || 'Erro ao inserir na blacklist.');
       }
     } catch (error) {
       console.error('Erro ao inserir blacklist Fireteam:', error);
-      toast.error('Erro ao inserir na blacklist.');
+      validation.setErrorMessage('Erro ao inserir na blacklist.');
     } finally {
       setIsLoading(false);
     }
