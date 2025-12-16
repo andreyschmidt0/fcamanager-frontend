@@ -11,7 +11,14 @@ interface BaseActionFormModalProps {
   onClose: () => void;
   title: string;
   confirmTitle: string;
-  confirmDescription: string;
+  confirmDescription:
+    | string
+    | ((args: {
+        formData: any;
+        validatedPlayer: any | null;
+        fetchedPlayerName: string;
+        validatedOidUser: number | null;
+      }) => string);
   confirmActionText: string;
   cancelActionText?: string;
   action: (data: any) => Promise<any>;
@@ -143,6 +150,16 @@ const ActionFormModal: React.FC<ActionFormModalProps> = ({
 
   if (!isOpen) return null;
 
+  const resolvedConfirmDescription =
+    typeof confirmDescription === 'function'
+      ? confirmDescription({
+          formData,
+          validatedPlayer: requiresPlayerValidation ? playerValidation.validatedPlayer : null,
+          fetchedPlayerName: playerValidation.fetchedPlayerName,
+          validatedOidUser: playerValidation.validatedOidUser
+        })
+      : confirmDescription;
+
   return (
     <>
       <BaseModal
@@ -173,7 +190,8 @@ const ActionFormModal: React.FC<ActionFormModalProps> = ({
 
           {children && React.isValidElement(children) && React.cloneElement(children, {
             formData,
-            onInputChange: handleInputChange
+            onInputChange: handleInputChange,
+            validatedPlayer: requiresPlayerValidation ? playerValidation.validatedPlayer : null
           } as any)}
 
           {/* Error Message */}
@@ -210,7 +228,7 @@ const ActionFormModal: React.FC<ActionFormModalProps> = ({
         onConfirm={modalAction.handleConfirmAction}
         onCancel={modalAction.handleCancelConfirmation}
         title={confirmTitle}
-        description={confirmDescription}
+        description={resolvedConfirmDescription}
         confirmActionText={confirmActionText}
         cancelActionText={cancelActionText}
         isLoading={modalAction.isLoading}

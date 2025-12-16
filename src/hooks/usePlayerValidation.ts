@@ -8,6 +8,7 @@ interface PlayerValidationState {
   isValidatingPlayer: boolean;
   playerValidated: boolean;
   validatedOidUser: number | null;
+  validatedPlayer: any | null;
   accountCount?: number;
 }
 
@@ -42,6 +43,7 @@ export const usePlayerValidation = (
   const [isValidatingPlayer, setIsValidatingPlayer] = useState(false);
   const [playerValidated, setPlayerValidated] = useState(false);
   const [validatedOidUser, setValidatedOidUser] = useState<number | null>(null);
+  const [validatedPlayer, setValidatedPlayer] = useState<any | null>(null);
   const [accountCount, setAccountCount] = useState<number | undefined>(undefined);
 
   // Função para resetar estados de validação
@@ -50,6 +52,7 @@ export const usePlayerValidation = (
     setErrorMessage('');
     setPlayerValidated(false);
     setValidatedOidUser(null);
+    setValidatedPlayer(null);
     setAccountCount(undefined);
     setIsValidatingPlayer(false);
   }, []);
@@ -70,6 +73,7 @@ export const usePlayerValidation = (
       if (result.isValid && result.player) {
         setFetchedPlayerName(result.player.NickName || '');
         setValidatedOidUser(result.player.oidUser || null);
+        setValidatedPlayer(result.player);
         setPlayerValidated(true);
         setErrorMessage('');
 
@@ -84,6 +88,7 @@ export const usePlayerValidation = (
       } else {
         setFetchedPlayerName('');
         setValidatedOidUser(null);
+        setValidatedPlayer(null);
         setPlayerValidated(false);
         setAccountCount(undefined);
         setErrorMessage(result.error || 'Erro na validação');
@@ -92,6 +97,7 @@ export const usePlayerValidation = (
       console.error('Erro ao validar jogador:', error);
       setFetchedPlayerName('');
       setValidatedOidUser(null);
+      setValidatedPlayer(null);
       setPlayerValidated(false);
       setAccountCount(undefined);
       setErrorMessage('Erro de conexão');
@@ -140,6 +146,7 @@ export const usePlayerValidation = (
       // Se um dos campos estiver vazio, limpar validação
       setFetchedPlayerName('');
       setValidatedOidUser(null);
+      setValidatedPlayer(null);
       setPlayerValidated(false);
       setAccountCount(undefined);
       setErrorMessage('');
@@ -152,6 +159,7 @@ export const usePlayerValidation = (
     isValidatingPlayer,
     playerValidated,
     validatedOidUser,
+    validatedPlayer,
     accountCount,
     validatePlayerCrossCheck,
     resetValidation,

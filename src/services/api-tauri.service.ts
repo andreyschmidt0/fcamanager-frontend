@@ -1127,6 +1127,62 @@ class ApiTauriService {
     }
   }
 
+  // Remover EXP de um usuario usando BSP_RemoveUserExp
+  async removeUserExp(data: {
+    discordId: string;
+    loginAccount: string;
+    expToRemove: number;
+    reason: string;
+    targetOidUser?: number;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/remove-exp`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        const expAfterRaw = (result as any)?.data?.expAfter;
+        const expAfter =
+          typeof expAfterRaw === 'bigint'
+            ? Number(expAfterRaw)
+            : typeof expAfterRaw === 'number'
+              ? expAfterRaw
+              : typeof expAfterRaw === 'string'
+                ? Number(expAfterRaw)
+                : null;
+
+        const message =
+          expAfter === null || Number.isNaN(expAfter)
+            ? 'EXP foi removida com sucesso!'
+            : `EXP foi removida com sucesso! Novo EXP: ${expAfter.toLocaleString('pt-BR')}`;
+
+        this.showSuccessModal('EXP Removida', message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao remover EXP:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao remover EXP'
+      };
+    }
+  }
+
   // Change user Discord ID using BSP_ChangeUserDiscordID
   async changeUserDiscordId(data: {
     gmOidUser: number;
