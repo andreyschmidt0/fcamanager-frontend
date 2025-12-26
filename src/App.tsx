@@ -148,9 +148,7 @@ function App() {
         ) : null}
 
         {/* Auto-updater component - verifica updates automaticamente */}
-        {isAuthenticated && (
-          <AutoUpdater checkOnStart={true} />
-        )}
+        <AutoUpdater checkOnStart={true} />
 
         <DebugModal 
           isOpen={showDebugModal} 
