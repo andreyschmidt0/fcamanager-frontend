@@ -1834,6 +1834,310 @@ class ApiTauriService {
     }
   }
 
+  // ============================================
+  // GACHAPON MANAGEMENT - API Methods
+  // ============================================
+
+  /**
+   * Buscar itens para adicionar em caixa de gachapon
+   */
+  async searchGachaponItems(searchTerm: string): Promise<{
+    success: boolean;
+    data?: Array<{
+      ItemNo: number;
+      Name: string;
+      ItemType: number;
+      ConsumeType: number;
+      DefaultPeriod: number;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/search-items?searchTerm=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao buscar itens:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar itens'
+      };
+    }
+  }
+
+  /**
+   * Buscar produtos para adicionar em caixa de gachapon
+   */
+  async searchGachaponProducts(searchTerm: string): Promise<{
+    success: boolean;
+    data?: Array<{
+      ProductID: number;
+      ProductName: string;
+      ItemNo00: number;
+      ConsumeType: number;
+      Period: number;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/search-products?searchTerm=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar produtos'
+      };
+    }
+  }
+
+  /**
+   * Obter configuração atual de uma caixa
+   */
+  async getGachaponBoxConfig(gachaponItemNo: number, type: 'item' | 'produto'): Promise<{
+    success: boolean;
+    data?: any[];
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/box-config/${gachaponItemNo}/${type}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao obter configuração da caixa:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao obter configuração'
+      };
+    }
+  }
+
+  /**
+   * Criar solicitação de aprovação de caixa
+   */
+  async createGachaponRequest(data: {
+    tipoCaixa: 'item' | 'produto';
+    gachaponItemNo: number;
+    gachaponName: string;
+    config: {
+      items: Array<{
+        itemNo?: number;
+        productID?: number;
+        name: string;
+        percentage: number;
+        percentageDisplay: number;
+        period: number;
+        consumeType: number;
+        broadcast: boolean;
+      }>;
+      totalPercentage: number;
+      itemCount: number;
+    };
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/create-request`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Solicitação Criada', result.message || 'Solicitação criada com sucesso! Aguardando aprovação.');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao criar solicitação:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao criar solicitação'
+      };
+    }
+  }
+
+  /**
+   * Listar solicitações pendentes (apenas oidUser = 2)
+   */
+  async getPendingGachaponRequests(): Promise<{
+    success: boolean;
+    data?: Array<{
+      id: number;
+      solicitante_oiduser: number;
+      solicitante_nickname: string;
+      solicitante_discord: string;
+      tipo_caixa: string;
+      gachapon_itemno: number;
+      gachapon_name: string;
+      config_json: string;
+      status: string;
+      data_solicitacao: string;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/pending-requests`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao listar solicitações pendentes:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao listar solicitações'
+      };
+    }
+  }
+
+  /**
+   * Listar minhas solicitações
+   */
+  async getMyGachaponRequests(status?: string, period?: string): Promise<{
+    success: boolean;
+    data?: Array<{
+      id: number;
+      solicitante_oiduser: number;
+      solicitante_nickname: string;
+      solicitante_discord: string;
+      tipo_caixa: string;
+      gachapon_itemno: number;
+      gachapon_name: string;
+      config_json: string;
+      status: string;
+      data_solicitacao: string;
+      data_aprovacao?: string;
+      motivo_rejeicao?: string;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const params = new URLSearchParams();
+
+      if (status) {
+        params.append('status', status);
+      }
+
+      if (period) {
+        params.append('period', period);
+      }
+
+      const url = `${API_BASE}/actions/gachapon/my-requests${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao listar minhas solicitações:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao listar minhas solicitações'
+      };
+    }
+  }
+
+  /**
+   * Aprovar solicitação (apenas oidUser = 2)
+   */
+  async approveGachaponRequest(id: number): Promise<{
+    success: boolean;
+    message?: string;
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/approve/${id}`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Solicitação Aprovada', result.message || 'Caixa configurada com sucesso!');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao aprovar solicitação:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao aprovar solicitação'
+      };
+    }
+  }
+
+  /**
+   * Rejeitar solicitação (apenas oidUser = 2)
+   */
+  async rejectGachaponRequest(id: number, motivoRejeicao: string): Promise<{
+    success: boolean;
+    message?: string;
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/reject/${id}`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ motivoRejeicao }),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Solicitação Rejeitada', result.message || 'Solicitação rejeitada');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao rejeitar solicitação:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao rejeitar solicitação'
+      };
+    }
+  }
+
 }
 
 // Exportar instância única

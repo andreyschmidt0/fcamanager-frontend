@@ -266,7 +266,7 @@ const RecentActivities: React.FC = () => {
               <div className="relative rounded-lg">
                 <button
                   onClick={handleToggleGMDropdown}
-                  className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
+                  className="flex items-center border border-black gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
                 >
                   <span className="hidden sm:inline">
                     {selectedGM || 'Todos os GMs'}
@@ -311,7 +311,7 @@ const RecentActivities: React.FC = () => {
             <div className="relative">
               <button
                 onClick={handleTogglePeriodDropdown}
-                className="flex items-center gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
+                className="flex items-center border border-black gap-2 bg-[#1d1e24] px-3 py-1.5 rounded-lg text-xs sm:text-sm hover:bg-gray-700 transition-colors"
               >
                 <span className="hidden sm:inline">
                   {periods.find(p => p.value === selectedPeriod)?.label || selectedPeriod}

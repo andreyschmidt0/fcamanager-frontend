@@ -26,6 +26,8 @@ import AtualizarValorFireteamModal from './modal/atualizarvalorfireteam';
 import MarcaDeBatalha from './modal/marcadebatalha';
 import AdjustKDA from './modal/adjustkda';
 import InsertFireteamBlacklist from './modal/insertfireteamblacklist';
+import CreateGachaponBox from './modal/creategachaponbox';
+import AtividadesPendentes from './atividadespendentes';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -90,88 +92,78 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
 
   const actionButtons = [
     { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox', 'Consultar Caixas', 'Consultar Modo CAMP'] },
-    { name: 'ENVIAR / INSERIR', options: ['Enviar Cash', 'Enviar Item', 'Inserir BlackList EA'] },
+    { name: 'ENVIAR / INSERIR', options: ['Enviar Cash', 'Enviar Item', 'Inserir BlackList EA',  'Criar/Editar Caixa'] },
     { name: 'BANIR', options: getBanOptions() },
-    { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Emblema Clan', 'Remover Exp', 'Remover Cash', 'Remover Conta'] },
+    { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Emblema Clan', 'Remover Exp', 'Remover Cash', 'Remover Conta', ] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
     { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha', 'Ajustar KDA', 'Alterar Login'] }
   ];
   
-  return (
+return (
     <div ref={containerRef} className="bg-[#111216] rounded-lg border border-black h-full flex flex-col" style={{ maxHeight: '100%', overflow: 'hidden' }}>
-      <div style={{ flex: '1 1 0', minHeight: 0, padding: '24px', overflow: 'hidden' }}>
-        <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden' }} className="custom-scrollbar">
-          <div className="space-y-8">
-            {/* Execuções Section */}
-            <div>
-              <button 
-                onClick={() => setActiveTab('execucoes')}
-                className={`flex items-center gap-2 text-sm font-medium mb-6 ${
-                  activeTab === 'execucoes' ? 'text-white' : 'text-gray-400'
-                } hover:text-white transition-colors`}
-              >
-                <span className="w-2 h-2 bg-white rounded-full"></span>
-                <span className="text-base sm:text-lg text-white font-neofara font-medium">EXECUÇÕES</span>
-              </button>
-              
-              {/* Action buttons grid - Responsive */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 font-neofara">
-                {actionButtons.map((button) => (
-                  <div key={button.name} className="relative">
-                    <button 
-                      onClick={() => toggleDropdown(button.name)}
-                      data-button={button.name}
-                      className="w-full bg-[#1d1e24] rounded-lg h-[60px] sm:h-[70px] md:h-[80px] hover:bg-[#525252] transition-colors"
-                    >
-                      <span className="text-sm sm:text-base md:text-xl text-white font-medium flex justify-center items-center h-full gap-1 sm:gap-2 px-2">
-                        <span className="truncate">{button.name}</span>
-                        <ChevronDown 
-                          size={14} 
-                          className={`transition-transform flex-shrink-0 ${openDropdown === button.name ? 'rotate-180' : ''}`} 
-                        />
-                      </span>
-                    </button>
-                    
-                    {openDropdown === button.name && (
-                      <div 
-                        data-dropdown={button.name}
-                        className="absolute top-full left-0 mt-2 w-full bg-[#1d1e24] rounded-lg shadow-lg z-10 min-w-[150px] sm:min-w-[180px] md:min-w-[200px]"
-                      >
-                        {button.options.map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => {
-                              handleOptionClick(button.name, option)
-                            }}
-                            className="block w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-md sm:text-sm md:text-[16px] tracking-wide text-white hover:bg-[#525252] transition-colors first:rounded-t-lg last:rounded-b-lg"
-                          >
-                            {option} 
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+      <div className="flex flex-col h-full p-6" style={{ minHeight: 0 }}>
+        
+        {/* === BLOCO SUPERIOR: EXECUÇÕES (FIXO) === */}
+        {/* flex-none impede que este bloco encolha ou cresça, ele ocupa apenas o espaço necessário */}
+        <div className="flex-none mb-8">
+            <div className="flex items-center gap-2 text-sm font-medium mb-6">
+              <span className="w-2 h-2 bg-white rounded-full"></span>
+              <span className="text-base sm:text-lg text-white font-neofara font-medium">EXECUÇÕES</span>
             </div>
 
-            {/* Atividades Pendentes Section */}
-            <div>
-              <button 
-                onClick={() => setActiveTab('pendentes')}
-                className={`flex items-center gap-2 text-sm font-medium mb-6 ${
-                  activeTab === 'pendentes' ? 'text-white' : 'text-gray-400'
-                } hover:text-white transition-colors`}
-              >
-                <span className="w-2 h-2 bg-white rounded-full"></span>
-                <span className="text-base sm:text-lg text-white font-neofara font-medium">ATIVIDADES PENDENTES</span>
-              </button>
-              
-              {/* Placeholder area for pending activities */}
-              <div className="bg-[#1d1e24] rounded-lg h-24 sm:h-28 md:h-32"></div>
+            {/* Action buttons grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 font-neofara">
+              {actionButtons.map((button) => (
+                <div key={button.name} className="relative">
+                  <button
+                    onClick={() => toggleDropdown(button.name)}
+                    data-button={button.name}
+                    className="w-full bg-[#1d1e24] border border-black rounded-lg h-[60px] sm:h-[70px] md:h-[80px] hover:bg-[#525252] transition-colors"
+                  >
+                    <span className="text-sm sm:text-base md:text-xl text-white font-medium flex justify-center items-center h-full gap-1 sm:gap-2 px-2">
+                      <span className="truncate">{button.name}</span>
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform flex-shrink-0 ${openDropdown === button.name ? 'rotate-180' : ''}`}
+                      />
+                    </span>
+                  </button>
+
+                  {openDropdown === button.name && (
+                    <div
+                      data-dropdown={button.name}
+                      className="absolute top-full left-0 mt-2 w-full bg-[#1d1e24] border border-black rounded-lg shadow-lg z-10 min-w-[150px] sm:min-w-[180px] md:min-w-[200px]"
+                    >
+                      {button.options.map((option) => (
+                        <button
+                          key={option}
+                          onClick={() => handleOptionClick(button.name, option)}
+                          className="block w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-md sm:text-sm md:text-[16px] tracking-wide text-white hover:bg-[#525252] transition-colors first:rounded-t-lg last:rounded-b-lg"
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-          </div>
         </div>
+
+        {/* === BLOCO INFERIOR: ATIVIDADES PENDENTES (EXPANSÍVEL E COM SCROLL) === */}
+        {/* flex-1 faz ocupar todo o espaço restante. min-h-0 é CRUCIAL para scroll aninhado funcionar no flexbox */}
+        <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-none flex items-center gap-2 text-sm font-medium mb-6">
+              <span className="w-2 h-2 bg-white rounded-full"></span>
+              <span className="text-base sm:text-lg text-white font-neofara font-medium">ATIVIDADES PENDENTES</span>
+            </div>
+
+            {/* Container específico para a rolagem */}
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+               <AtividadesPendentes />
+            </div>
+        </div>
+
       </div>
 
       {/* Modals */}
@@ -219,6 +211,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Consultar Caixas' && (
         <ConsultBoxes
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Criar/Editar Caixa' && (
+        <CreateGachaponBox
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

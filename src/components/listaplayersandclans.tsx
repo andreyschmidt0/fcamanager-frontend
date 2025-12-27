@@ -189,72 +189,72 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
         {viewMode === 'players' && (
           <div className="px-4 pb-6" style={{ flexShrink: 0 }}>
             <div className="flex gap-2 flex-wrap">
-              <button 
+              <button
                 onClick={() => setSearchUserType('discordId')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                  searchUserType === 'discordId' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                  searchUserType === 'discordId'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
                 }`}
               >
                 DISCORD ID
               </button>
-              <button 
+              <button
                 onClick={() => setSearchUserType('email')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                  searchUserType === 'email' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                  searchUserType === 'email'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
                 }`}
               >
                 EMAIL
               </button>
-              <button 
+              <button
                 onClick={() => setSearchUserType('macaddress')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                  searchUserType === 'macaddress' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                  searchUserType === 'macaddress'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
                 }`}
               >
                 MACADDRESS
               </button>
-              <button 
+              <button
                 onClick={() => setSearchUserType('ipaddress')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                  searchUserType === 'ipaddress' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                  searchUserType === 'ipaddress'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
                 }`}
               >
                 IPADDRESS
               </button>
-              <button 
+              <button
                 onClick={() => setSearchUserType('oiduser')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                  searchUserType === 'oiduser' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                  searchUserType === 'oiduser'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
                 }`}
               >
                 OIDUSER
               </button>
-              <button 
+              <button
                 onClick={() => setSearchUserType('nickname')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                  searchUserType === 'nickname' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                  searchUserType === 'nickname'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
                 }`}
               >
                 NICKNAME
               </button>
-              <button 
+              <button
                 onClick={() => setSearchUserType('strNexonId')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                  searchUserType === 'strNexonId' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                  searchUserType === 'strNexonId'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
                 }`}
               >
                 LOGIN CONTA
@@ -267,22 +267,22 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
         {viewMode === 'clans' && (
           <div className="px-4 pb-6" style={{ flexShrink: 0 }}>
             <div className="flex gap-2 flex-wrap">
-              <button 
+              <button
                 onClick={() => setSearchClanType('clanName')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                  searchClanType === 'clanName' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                  searchClanType === 'clanName'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
                 }`}
               >
                 NOME DO CLAN
               </button>
-              <button 
+              <button
                 onClick={() => setSearchClanType('clanId')}
                 className={`flex-1 py-2 px-3 rounded-lg text-md tracking-wide font-medium transition-colors font-neofara ${
-                  searchClanType === 'clanId' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+                  searchClanType === 'clanId'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
                 }`}
               >
                 ID DO CLAN
@@ -331,22 +331,22 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
 
         {/* Toggle Buttons */}
         <div className="p-4 flex gap-2" style={{ flexShrink: 0 }}>
-          <button 
+          <button
             onClick={() => setViewMode('players')}
             className={`flex-1 py-2 px-4 rounded-lg text-lg font-medium transition-colors font-neofara ${
-              viewMode === 'players' 
-                ? 'bg-green-600 text-white' 
-                : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+              viewMode === 'players'
+                ? 'bg-green-600 text-white'
+                : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
             }`}
           >
             PLAYERS
           </button>
-          <button 
+          <button
             onClick={() => setViewMode('clans')}
             className={`flex-1 py-2 px-4 rounded-lg text-lg font-medium transition-colors font-neofara ${
-              viewMode === 'clans' 
-                ? 'bg-green-600 text-white' 
-                : 'bg-[#1d1e24] text-gray-300 hover:bg-[#525252]'
+              viewMode === 'clans'
+                ? 'bg-green-600 text-white'
+                : 'bg-[#1d1e24] border border-black text-gray-300 hover:bg-[#525252]'
             }`}
           >
             CLANS

@@ -1,377 +1,205 @@
-client:789 [vite] connecting...
-client:912 [vite] connected.
-react-dom-client.development.js:24871 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
-useAutoUpdater.ts:54 [AutoUpdater] === UPDATE CHECK STARTED ===
-useAutoUpdater.ts:55 [AutoUpdater] Timestamp: 2025-09-25T02:18:23.887Z
-useAutoUpdater.ts:56 [AutoUpdater] Updater endpoint: https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json
-useAutoUpdater.ts:63 [AutoUpdater] Current app version from Tauri: 1.0.26
-useAutoUpdater.ts:88 [AutoUpdater] Environment details: {platform: 'Win32', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…cko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0', online: true, language: 'en-US', currentVersion: '1.0.26', …}
-useAutoUpdater.ts:114 [AutoUpdater] Pre-checking endpoint accessibility...
-login:1  Access to fetch at 'https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json' from origin 'http://localhost:5173' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
-useAutoUpdater.ts:118   HEAD https://github.com/andreyschmidt0/fcamanager-frontend/releases/latest/download/latest.json net::ERR_FAILED 302 (Found)
-(anonymous) @ useAutoUpdater.ts:118
-await in (anonymous)
-(anonymous) @ AutoUpdater.tsx:28
-setTimeout
-(anonymous) @ AutoUpdater.tsx:27
-react_stack_bottom_frame @ react-dom-client.development.js:23953
-runWithFiberInDEV @ react-dom-client.development.js:1519
-commitHookEffectListMount @ react-dom-client.development.js:11905
-commitHookPassiveMountEffects @ react-dom-client.development.js:12026
-commitPassiveMountOnFiber @ react-dom-client.development.js:13841
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13853
-flushPassiveEffects @ react-dom-client.development.js:15737
-(anonymous) @ react-dom-client.development.js:15379
-performWorkUntilDeadline @ scheduler.development.js:45
-<AutoUpdater>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-App @ App.tsx:152
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
-performWorkUntilDeadline @ scheduler.development.js:45
-<App>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-(anonymous) @ index.tsx:11
-DebugModal.tsx:345  [AutoUpdater] Pre-check failed: TypeError: Failed to fetch
-    at useAutoUpdater.ts:118:40
-console.error @ DebugModal.tsx:345
-(anonymous) @ useAutoUpdater.ts:142
-await in (anonymous)
-(anonymous) @ AutoUpdater.tsx:28
-setTimeout
-(anonymous) @ AutoUpdater.tsx:27
-react_stack_bottom_frame @ react-dom-client.development.js:23953
-runWithFiberInDEV @ react-dom-client.development.js:1519
-commitHookEffectListMount @ react-dom-client.development.js:11905
-commitHookPassiveMountEffects @ react-dom-client.development.js:12026
-commitPassiveMountOnFiber @ react-dom-client.development.js:13841
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13957
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13834
-recursivelyTraversePassiveMountEffects @ react-dom-client.development.js:13815
-commitPassiveMountOnFiber @ react-dom-client.development.js:13853
-flushPassiveEffects @ react-dom-client.development.js:15737
-(anonymous) @ react-dom-client.development.js:15379
-performWorkUntilDeadline @ scheduler.development.js:45
-<AutoUpdater>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-App @ App.tsx:152
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
-performWorkUntilDeadline @ scheduler.development.js:45
-<App>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-(anonymous) @ index.tsx:11
-useAutoUpdater.ts:152 [AutoUpdater] Starting Tauri update check...
-useAutoUpdater.ts:170 [AutoUpdater] Tauri check completed in: 205ms
-useAutoUpdater.ts:171 [AutoUpdater] Tauri check result: null
-useAutoUpdater.ts:207 [AutoUpdater] ℹ️  NO UPDATES AVAILABLE
-useAutoUpdater.ts:208 [AutoUpdater] Current version is up to date: 1.0.26
-useAutoUpdater.ts:412 [AutoUpdater] === UPDATE CHECK FINISHED ===
-useAutoUpdater.ts:413 [AutoUpdater] Total duration: 273ms
-transferclan.tsx:50 🚀 TRANSFER CLAN - FINAL DEBUG
-transferclan.tsx:51 User object: {id: 3592, username: 'nischulz', profile: {…}, role: 'admin', lastLogin: Wed Sep 24 2025 23:18:20 GMT-0300 (Brasilia Standard Time), …}id: 3592lastLogin: Wed Sep 24 2025 23:18:20 GMT-0300 (Brasilia Standard Time) {}password: "[PROTECTED]"profile: {nickname: 'GM-Nicki', email: 'nicoleschulzif@gmail.com', discordId: '1375563306147774564'}role: "admin"username: "nischulz"[[Prototype]]: Object
-transferclan.tsx:52 adminDiscordId sendo enviado: 1375563306147774564
-transferclan.tsx:53 Tipo do adminDiscordId: string
-transferclan.tsx:54 Length do adminDiscordId: 19
-transferclan.tsx:55 Transfer data completo: {oldLeaderOidUser: 2147, newLeaderOidUser: 1457, adminDiscordId: '1375563306147774564'}
-DebugModal.tsx:345  Erro ao transferir liderança do clã: Error: GM não encontrado no banco principal ou está inativo
-    at ApiTauriService.handleResponse (api-tauri.service.ts:127:13)
-    at async ApiTauriService.transferClanLeadership (api-tauri.service.ts:932:22)
-    at async handleTransferClanAction (transferclan.tsx:57:20)
-    at async useModalAction.ts:68:22
-console.error @ DebugModal.tsx:345
-transferClanLeadership @ api-tauri.service.ts:944
-await in transferClanLeadership
-handleTransferClanAction @ transferclan.tsx:57
-await in handleTransferClanAction
-(anonymous) @ ActionFormModal.tsx:86
-(anonymous) @ useModalAction.ts:68
-executeDispatch @ react-dom-client.development.js:16368
-runWithFiberInDEV @ react-dom-client.development.js:1519
-processDispatchQueue @ react-dom-client.development.js:16418
-(anonymous) @ react-dom-client.development.js:17016
-batchedUpdates$1 @ react-dom-client.development.js:3262
-dispatchEventForPluginEventSystem @ react-dom-client.development.js:16572
-dispatchEvent @ react-dom-client.development.js:20658
-dispatchDiscreteEvent @ react-dom-client.development.js:20626
-<button>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-ConfirmationModal @ confirmmodal.tsx:65
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performSyncWorkOnRoot @ react-dom-client.development.js:16231
-flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
-processRootScheduleInMicrotask @ react-dom-client.development.js:16116
-(anonymous) @ react-dom-client.development.js:16250
-<ConfirmationModal>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-ActionFormModal @ ActionFormModal.tsx:208
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performSyncWorkOnRoot @ react-dom-client.development.js:16231
-flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
-processRootScheduleInMicrotask @ react-dom-client.development.js:16116
-(anonymous) @ react-dom-client.development.js:16250
-<ActionFormModal>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-TransferClan @ transferclan.tsx:75
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performSyncWorkOnRoot @ react-dom-client.development.js:16231
-flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
-processRootScheduleInMicrotask @ react-dom-client.development.js:16116
-(anonymous) @ react-dom-client.development.js:16250
-<TransferClan>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-SidebarMenu @ execucoes.tsx:245
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performSyncWorkOnRoot @ react-dom-client.development.js:16231
-flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
-processRootScheduleInMicrotask @ react-dom-client.development.js:16116
-(anonymous) @ react-dom-client.development.js:16250
-DebugModal.tsx:345  Erro na ação: Error: GM não encontrado no banco principal ou está inativo
-    at handleTransferClanAction (transferclan.tsx:60:13)
-    at async useModalAction.ts:68:22
-console.error @ DebugModal.tsx:345
-(anonymous) @ useModalAction.ts:73
-await in (anonymous)
-executeDispatch @ react-dom-client.development.js:16368
-runWithFiberInDEV @ react-dom-client.development.js:1519
-processDispatchQueue @ react-dom-client.development.js:16418
-(anonymous) @ react-dom-client.development.js:17016
-batchedUpdates$1 @ react-dom-client.development.js:3262
-dispatchEventForPluginEventSystem @ react-dom-client.development.js:16572
-dispatchEvent @ react-dom-client.development.js:20658
-dispatchDiscreteEvent @ react-dom-client.development.js:20626
-<button>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-ConfirmationModal @ confirmmodal.tsx:65
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performSyncWorkOnRoot @ react-dom-client.development.js:16231
-flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
-processRootScheduleInMicrotask @ react-dom-client.development.js:16116
-(anonymous) @ react-dom-client.development.js:16250
-<ConfirmationModal>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-ActionFormModal @ ActionFormModal.tsx:208
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performSyncWorkOnRoot @ react-dom-client.development.js:16231
-flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
-processRootScheduleInMicrotask @ react-dom-client.development.js:16116
-(anonymous) @ react-dom-client.development.js:16250
-<ActionFormModal>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-TransferClan @ transferclan.tsx:75
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performSyncWorkOnRoot @ react-dom-client.development.js:16231
-flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
-processRootScheduleInMicrotask @ react-dom-client.development.js:16116
-(anonymous) @ react-dom-client.development.js:16250
-<TransferClan>
-exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
-SidebarMenu @ execucoes.tsx:245
-react_stack_bottom_frame @ react-dom-client.development.js:23863
-renderWithHooks @ react-dom-client.development.js:5529
-updateFunctionComponent @ react-dom-client.development.js:8897
-beginWork @ react-dom-client.development.js:10522
-runWithFiberInDEV @ react-dom-client.development.js:1519
-performUnitOfWork @ react-dom-client.development.js:15132
-workLoopSync @ react-dom-client.development.js:14956
-renderRootSync @ react-dom-client.development.js:14936
-performWorkOnRoot @ react-dom-client.development.js:14419
-performSyncWorkOnRoot @ react-dom-client.development.js:16231
-flushSyncWorkAcrossRoots_impl @ react-dom-client.development.js:16079
-processRootScheduleInMicrotask @ react-dom-client.development.js:16116
-(anonymous) @ react-dom-client.development.js:16250
-  
+Tem dois tipos de caixas:
+1) Caixas de Itens
+Ao abrir, o item vai direto para o inventário.
 
-  
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
-  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
-  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
-}
-GM não encontrado no banco principal para Discord ID: 3592
+2) Caixa de Produtos
+Ao abrir, o item vai para o Pertences até ser ativado pelo usuário.
 
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
-  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
-  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
-}
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
-  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
-  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
-  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
-  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
-}
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
-  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
-  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-more information.
-more information.
-    at Object.trustProxy (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:346:13)
-    at wrappedValidations.<computed> [as trustProxy] (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:606:22)
-    at Object.keyGenerator (C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:707:20)
-    at C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:766:32
-    at async C:\Users\Andrey\Desktop\Projetos\FCAManager2\FCA BackEnd\node_modules\express-rate-limit\dist\index.cjs:747:5 {
-  code: 'ERR_ERL_PERMISSIVE_TRUST_PROXY',
-  help: 'https://express-rate-limit.github.io/ERR_ERL_PERMISSIVE_TRUST_PROXY/'
-}
-GM não encontrado no banco principal para Discord ID: 3592
-GM não encontrado no banco principal para Discord ID: 3592
+Cada uma possui sua própria tabela, mas forma de criação similar:
 
+
+A caixa de itens é na tabela CBT_ItemInfo_GachaponInfo_Item e possui as colunas:
+GachaponItemNo
+Percentage
+ItemNo
+ConsumeType
+Period
+Broadcast
+
+O funcionamente de cada coluna é simples:
+GachaponItemNo: o ItemNo da Caixa.
+Através da tabela CBT_ItemInfo, podemos pesquisar o Item da Caixa e pegar o ItemNo/GachaponItemNo dela.
+
+Percentage: a porcentagem de chances de vir cada item. O único segredo é que a soma de todas as linhas de Percentage da caixa (de cada item) devem totalizar 10.000, o que representa 100% de chances de vir um item. 
+Se não tiver 10.000 Pontos somados, a caixa não irá abrir e ficará presa no pertences do jogador.
+
+ItemNo: Número do Item que deseja colocar na caixa. Pode ser visto em CBT_ItemInfo.
+
+ConsumeType: O tipo de consumo daquele item. Armas não são consumiveis, então são sempre 0. 
+Mas itens de função, como Name Color, Passe EXP, Emblema de Clã, Medalha de Ressureição e afins são consumiveis, e o ConsumeType diz pro jogo a forma de consumir aquele item. 
+Se estiver mal configurado, o item adquirido da caixa vem bugado e não abre. Você pode obter o valor correto em: select ConsumeType00 from CBT_ProductInfo where ItemNo00 = @ItemNoDoItem
+
+Period: O períod de duração do item. Esta coluna é associada ao ConsumeType, onde o ConsumeType irá dizer se é em Dias, Unidades, etc. 1 = 1 Dia, 999 = Permanente.
+
+Broadcast: Se, ao tirar o Item na caixa, deve ser visualizado no chat ("Fulano abriu caixa XYZ e ganhou a recompensa ZYX por X Dias"). 
+Deixamos esta coluna 1 para quando é permanente. 0 Para todo o restante. Se a caixa tiver apenas itens permanentes, deixamos sempre 0.
+
+Ao terminar de preencher todas as linhas e colunas, a soma de Percentage deve ser 10000 para a caixa estar correta.
+
+SELECT SUM(Percentage) AS TotalPercentage FROM dbo.CBT_ItemInfo_GachaponInfo_Item WHERE GachaponItemNo = @GachaponItemNo;
+
+
+A caixa de Produtos é na tabela CBT_ItemInfo_GachaponInfo_Product e possui as colunas:
+GachaponItemNo
+Percentage
+ProductID
+ConsumeType
+Period
+Broadcast
+
+A única diferença aqui, é que ao inves de usarmos o ItemNo do item da tabela CBT_ItemInfo, usaremos o valor de ProductID na tabela CBT_ProductInfo, onde o código do Produto já define a quantidade de dias.
+Exemplo:
+O código 4251 é uma Autumn G36E Valkyrie por 1 dia. Enquanto o código 4255 é uma Autumn G36E Valkyrie permanente (999 dias).
+
+Dito isto, a coluna Period deve ser idêntica ao valor da coluna Period00 da tabela CBT_ProductInfo where ProductID = @ProductIDdoItemEscolhido, tal como o ConsumeType deve ser a mesma lógica (explicado anteriormente).
+
+SELECT SUM(Percentage) AS TotalPercentage FROM dbo.CBT_ItemInfo_GachaponInfo_Product WHERE GachaponItemNo = @GachaponItemNo;
+
+A soma de Percentage deve ser 10000 Pontos para conseguir abrir a caixa.
+
+Um item/produto com Percentage de valor 5 possui 0,05% de chances de ser obtido. Um item com Percentage valor 1, possui 0,01% de chances de ser obtido. 1 é o menor valor possível.
+Um item com Percentage de valor 1000 possui 10% de chances de ser obtido. Assim por diante.
+
+
+A ferramente de criação de caixas deve seguir as particularidades mencionadas, sempre obtendo automaticamente o ConsumeType e o Period (no caso da caixa de Produtos).
+Deve realizar a soma automática da coluna percentage, permitindo que o usuário coloque "0,01%" ao invés de 1.
+A escolha de itens/produtos deve ser via pesquisa de lista. Clica em um botão de +, aparece uma aba de pesquisa via nome ou código. Aparecerá os itens de acordo com a pesquisa, o usuário seleciona o desejado, informa a porcentagem e dá ok.
+Nisto, ficará uma listagem com todos os itens já selecionados, informando o nome da caixa que está alterando, o ItemNo/ProductID do Item, o Name/ProductName do item, a Percentage escolhida, o Period e o Broadcast. Por padrão, deixa o Broadcast desativado, e caso o usuário queira ativar, ele marca o checkbox.
+O usuário só conseguirá salvar a atualização da caixa caso a coluna Percantage some 10000 pontos.
+
+Ao salvar, você não deve alterar nada no banco, mas sim construir o INSERT para que eu possa posteriormente revisar e colocar no jogo.
+
+Deverá criar um insert similar ao abaixo:
+
+
+-- Delete para remover todos os itens antigos/existentes na caixa. Deve respeitar a tabela de acordo com o tipo Item/Produto.
+
+DELETE FROM dbo.CBT_ItemInfo_GachaponInfo_Item
+WHERE GachaponItemNo = 20021;
+
+-- Insert de itens. Coloquei detalhado para que possa entender o funcionamento.
+
+INSERT INTO dbo.CBT_ItemInfo_GachaponInfo_Item (GachaponItemNo, Percentage, ItemNo, ConsumeType, Period, Broadcast)
+VALUES
+-- ======================================================================
+-- PRÊMIOS PRINCIPAIS E ESPECÍFICOS (Total: 1479 pontos)
+-- ======================================================================
+-- Itens Permanentes (0.05% cada, total 25 pontos) Itens de função devem possuir Period 0 quando são permanentes. Pois o "Player Name Change" você ativa uma única vez, não tem duração, é permanente.
+(20021, 5, 9042, 1, 50, 0), -- Super Megaphone
+(20021, 5, 9006, 1, 0, 0), -- Base Character Change
+(20021, 5, 9007, 1, 0, 0), -- Gender Change
+(20021, 5, 9004, 1, 0, 0), -- Player Name Change
+(20021, 5, 9005, 1, 0, 0), -- Player Record Reset
+
+-- Chaves HiSec (0.01% cada, total 2 pontos)
+(20021, 1, 9037, 3, 7, 0), -- 7x Gray HiSec Key
+(20021, 1, 9038, 3, 3, 0), -- 3x Black HiSec Key
+
+-- Passes de EXP/GP (Quant. 10x, 16 pontos)
+(20021, 5, 9117, 3, 10, 0), -- 10x Bonus EXP (500%)+GP (300%) Pass
+(20021, 1, 9120, 3, 10, 0), -- 10x Bonus EXP (800%)+GP (500%) Pass
+(20021, 5, 9058, 3, 10, 0), -- 10x Bonus EXP Pass (300%)
+(20021, 5, 9057, 3, 10, 0), -- 10x Bonus EXP Pass (200%)
+
+-- Mudança de Cor de Nick (6 pontos)
+(20021, 5, 9008, 1, 30, 0), -- Player Name Color Change (30 dias)
+(20021, 1, 9008, 1, 90, 0), -- Player Name Color Change (90 dias)
+
+-- Tokens de Respawn (7.00% cada, 1400 pontos)
+(20021, 700, 9041, 3, 5, 0), -- 5x Respawn Token (Individual)
+(20021, 700, 9053, 3, 1, 0), -- 1x Party Respawn Token (Grupo)
+
+-- Itens de Moderador (30 pontos)
+(20021, 5,  9045, 1, 7, 0), -- Super Elite Moderator (7 dias)
+(20021, 25, 9010, 1, 7, 0), -- Elite Moderator (7 dias)
+
+-- ======================================================================
+-- ITENS DE PREENCHIMENTO (Total: 8521 pontos)
+-- 15 Itens com 533 pontos (5.33%) cada
+-- 1 Item com 526 pontos (5.26%)
+-- ======================================================================
+
+-- "Demais Itens" (Período 1)
+(20021, 533, 9075, 3, 1, 0), -- Mythic Weapon License
+(20021, 533, 9044, 1, 1, 0), -- Specialist Backpack License
+(20021, 533, 9076, 1, 1, 0), -- Specialist Backpack License (2 slot)
+(20021, 533, 9077, 1, 1, 0), -- Specialist 3 Slot License
+(20021, 533, 9036, 1, 1, 0), -- Specialist 2 Slot License
+(20021, 533, 9054, 0, 1, 0), -- Striker Mutagen
+(20021, 533, 9055, 0, 1, 0), -- Crusher Mutagen
+(20021, 533, 9059, 1, 1, 0), -- Battle Master
+(20021, 533, 9011, 1, 1, 0), -- Custom Reticle Type 1
+(20021, 533, 9012, 1, 1, 0), -- Custom Reticle Type 2
+(20021, 533, 9013, 1, 1, 0), -- Custom Reticle Type 3
+(20021, 533, 9014, 1, 1, 0), -- Custom Reticle Type 4
+
+-- Passes de EXP/GP (Quantidade 1x)
+(20021, 533, 9120, 3, 1, 0), -- 1x Bonus EXP (800%)+GP (500%) Pass
+(20021, 533, 9117, 3, 1, 0), -- 1x Bonus EXP (500%)+GP (300%) Pass
+(20021, 533, 9058, 3, 1, 0), -- 1x Bonus EXP Pass (300%)
+
+-- Último item de preenchimento (com ajuste de 526)
+(20021, 526, 9057, 3, 1, 0); -- 1x Bonus EXP Pass (200%)
+;
+
+
+FIM DO INSERT'
+
+Tenho duas procedures atualmente que utilizo para criar caixas, mas ambas são mais complicadas de utilizar:
+
+ITEM:
+
+EXEC dbo.BSP_GenerateGachaponBox
+    @GachaponItemNo = 8051,
+    @ItemNoList = N'10011,
+                     10012,
+                     10014',
+    @PeriodList = N'7,30,90,999',
+    @PercentageList = N'80,15,4,1';
+
+
+PRODUTO:
+
+EXEC dbo.BSP_GenerateGachaponProductBox
+    @GachaponItemNo = 8966,
+    @ProductIDList = N'21304, 21214, 14840, 14850, 14845, 24064, 23324, 23819, 24569, 24219, 21374, 24529, 24114, 24134, 18924, 20136, 6002, 18964, 5090, 22819, 3555, 23599, 18969, 21224, 21219, 22869, 23859, 23099, 24424, 23524, 23344, 22699, 21239, 21399, 24434, 24614, 24129, 16960, 21344, 23824, 24224, 23014, 15342, 15347, 13476, 3718, 24704, 23829, 23939, 12080, 24229, 24874, 24084, 23699, 23294, 24209, 24464, 24254, 22899, 22794, 23044, 15564, 24119, 18959, 24594, 23739, 20307, 6116, 6126, 23794, 21174, 24399, 24574, 24579, 23669, 24264, 24534, 24779, 23074, 21294, 15752, 15800, 24029, 23379, 23589, 22789, 23129, 23649, 18949, 24764, 24294, 24469, 21299, 8891',
+    @PeriodList = N'999',
+    @PercentageList = N'100';
+	
+	
+
+
+	
+
+
+Queries que utilizo para ver os itens de cada caixa:
+
+
+ITEM:
+
+select x.Name, g.*, i.ItemNo, i.Name
+from CBT_ItemInfo_GachaponInfo_Item g
+left join CBT_ItemInfo x on x.ItemNo = g.GachaponItemNo
+left join CBT_ItemInfo i on i.ItemNo = g.ItemNo 
+where GachaponItemNo = 8050
+order by i.ItemType, i.Name
+
+
+PRODUTO:
+
+select x.Name, g.*, p.ItemNo00, p.ProductName
+from CBT_ItemInfo_GachaponInfo_Product g
+left join CBT_ProductInfo p on p.ProductID = g.ProductID 
+left join CBT_ItemInfo x on x.ItemNo = g.GachaponItemNo
+where GachaponItemNo = 8966
+order by p.ProductName, p.ProductID 
+
+
+
+Atualmente, não sei o que define se uma caixa é Produto ou Item.
+O jogo, ao abrir a caixa, ele junta as duas tabelas.
+
+Se a caixa for de Produtos, mas você preencher os dados dela na tabela de itens, ao abrir a caixa, o jogo irá pegar o ItemNo informado e pesquisar ele na tabela de Produtos, para dar a recompensa ao jogador.
+Isso fará com que a caixa dê item X ao invés de Y, já que (por exemplo) o ItemNo 370 é uma Autumn G36E Valkyrie na tabela CBT_ItemInfo, mas o código 370 na ProductInfo é um Pente Extendido (Extremo).
+
+É isto. Quaisquer dúvidas, estou a disposição.
