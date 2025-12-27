@@ -2138,6 +2138,43 @@ class ApiTauriService {
     }
   }
 
+  /**
+   * Reenviar solicitação rejeitada
+   */
+  async resubmitGachaponRequest(id: number, config: any): Promise<{
+    success: boolean;
+    message?: string;
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/resubmit/${id}`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ config }),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Solicitação Reenviada', result.message || 'Solicitação reenviada para aprovação!');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao reenviar solicitação:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao reenviar solicitação'
+      };
+    }
+  }
+
   // Obter todos os itens para mudança de grade
   async getAllItemsForGradeChange(): Promise<{
     success: boolean;

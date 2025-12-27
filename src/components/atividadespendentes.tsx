@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { RefreshCw, Eye, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { RefreshCw, Eye, Check, X, ChevronDown, ChevronUp, Edit } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import apiService from '../services/api-tauri.service';
+import EditRejectedGachaponBox from './modal/editrejectedgachaponbox';
 
 interface PendingRequest {
   id: number;
@@ -26,6 +27,7 @@ const AtividadesPendentes: React.FC = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [error, setError] = useState('');
   const [showAllInserts, setShowAllInserts] = useState(false);
@@ -240,6 +242,8 @@ const AtividadesPendentes: React.FC = () => {
     const approvedRequests = requests.filter(r => r.status === 'aprovado');
     const rejectedRequests = requests.filter(r => r.status === 'rejeitado');
 
+    console.log('[AtividadesPendentes] RENDER - showEditModal:', showEditModal, 'selectedRequest:', selectedRequest);
+
     return (
       <div className="bg-[#1d1e24] rounded-lg border border-black flex flex-col h-full overflow-hidden">
         {/* Header */}
@@ -404,15 +408,29 @@ const AtividadesPendentes: React.FC = () => {
                                 Total: {(config.totalPercentage / 100).toFixed(2)}%
                               </span>
                             </div>
-                            <button
-                              onClick={() => {
-                                setSelectedRequest(request);
-                                setShowDetailsModal(true);
-                              }}
-                              className="bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded text-sm font-medium transition-colors"
-                            >
-                              DETALHES
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  console.log('Botão EDITAR clicado', request);
+                                  setSelectedRequest(request);
+                                  setShowEditModal(true);
+                                  console.log('Estado atualizado - showEditModal:', true);
+                                }}
+                                className="bg-green-600 hover:bg-green-700 px-4 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1"
+                              >
+                                <Edit size={16} />
+                                EDITAR
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedRequest(request);
+                                  setShowDetailsModal(true);
+                                }}
+                                className="bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded text-sm font-medium transition-colors"
+                              >
+                                DETALHES
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -756,6 +774,24 @@ const AtividadesPendentes: React.FC = () => {
                 </div>
               </div>
             </div>
+          );
+        })()}
+
+        {/* Modal de Edição de Solicitação Rejeitada */}
+        {(() => {
+          console.log('[NÃO-MASTER] Renderizando área do modal - showEditModal:', showEditModal, 'selectedRequest:', selectedRequest);
+          return showEditModal && selectedRequest && (
+            <EditRejectedGachaponBox
+              isOpen={showEditModal}
+              onClose={() => {
+                setShowEditModal(false);
+                setSelectedRequest(null);
+              }}
+              request={selectedRequest}
+              onSuccess={() => {
+                fetchMyRequests();
+              }}
+            />
           );
         })()}
       </div>
@@ -1323,6 +1359,28 @@ const AtividadesPendentes: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Edição de Solicitação Rejeitada */}
+      {(() => {
+        console.log('Renderizando área do modal - showEditModal:', showEditModal, 'selectedRequest:', selectedRequest);
+        return showEditModal && selectedRequest && (
+          <EditRejectedGachaponBox
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedRequest(null);
+            }}
+            request={selectedRequest}
+            onSuccess={() => {
+              if (isMaster) {
+                fetchRequests();
+              } else {
+                fetchMyRequests();
+              }
+            }}
+          />
+        );
+      })()}
     </div>
   );
 };
