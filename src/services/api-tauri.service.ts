@@ -2138,6 +2138,104 @@ class ApiTauriService {
     }
   }
 
+  // Obter todos os itens para mudança de grade
+  async getAllItemsForGradeChange(): Promise<{
+    success: boolean;
+    data?: Array<{ ItemNo: number; Name: string; ItemGrade: number }>;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/items/for-grade-change`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar itens'
+      };
+    }
+  }
+
+  // Buscar itens para mudança de grade com termo de busca
+  async searchItemsForGradeChange(searchTerm: string): Promise<{
+    success: boolean;
+    data?: Array<{ ItemNo: number; Name: string; ItemGrade: number; ItemType: number }>;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/itemgrade/search?searchTerm=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar itens'
+      };
+    }
+  }
+
+  // Obter produtos afetados por um array de ItemNos
+  async getAffectedProductsByItemNos(itemNos: number[]): Promise<{
+    success: boolean;
+    data?: Array<{ ProductID: number; ProductName: string; ItemNo00: number; ItemName: string; CurrentItemGrade: number; ItemType: number; ConsumeType00: number; Period00: number; CashPrice: number; PointPrice: number; PeriodName: string }>;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/itemgrade/affected-products`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ itemNos }),
+        connectTimeout: 30000
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar produtos afetados'
+      };
+    }
+  }
+
+  // Atualizar o ItemGrade de uma lista de itens
+  async updateItemGrade(itemNos: number[], newItemGrade: number): Promise<{
+    success: boolean;
+    message?: string;
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/itemgrade/execute`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ itemNos, newItemGrade }),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('ItemGrade Alterado', `${itemNos.length} item(ns) alterado(s) para ${newItemGrade} estrelas`);
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao atualizar itens'
+      };
+    }
+  }
+
 }
 
 // Exportar instância única

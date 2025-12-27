@@ -28,6 +28,7 @@ import AdjustKDA from './modal/adjustkda';
 import InsertFireteamBlacklist from './modal/insertfireteamblacklist';
 import CreateGachaponBox from './modal/creategachaponbox';
 import AtividadesPendentes from './atividadespendentes';
+import ChangeItemGradeModal from './modal/changeitemgrademodal';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -96,7 +97,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Emblema Clan', 'Remover Exp', 'Remover Cash', 'Remover Conta', ] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
-    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha', 'Ajustar KDA', 'Alterar Login'] }
+    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha', 'Ajustar KDA', 'Alterar Login', 'Alterar Valor de Item'] }
   ];
   
 return (
@@ -319,6 +320,12 @@ return (
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Alterar Login' && (
         <ChangeLogin
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Alterar Valor de Item' && (
+        <ChangeItemGradeModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />
