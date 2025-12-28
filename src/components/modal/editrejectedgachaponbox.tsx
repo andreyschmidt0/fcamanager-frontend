@@ -41,11 +41,9 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
 
   // Carregar configuração da solicitação rejeitada
   useEffect(() => {
-    console.log('EditRejectedGachaponBox useEffect', { isOpen, request });
     if (isOpen && request) {
       try {
         const config = JSON.parse(request.config_json);
-        console.log('Config carregado:', config);
         if (config && config.items) {
           setConfiguredItems(config.items.map((item: any) => ({
             itemNo: item.itemNo,
@@ -65,12 +63,7 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
     }
   }, [isOpen, request]);
 
-  if (!isOpen) {
-    console.log('Modal não aberto - isOpen:', isOpen);
-    return null;
-  }
-
-  console.log('Modal renderizando com request:', request);
+  if (!isOpen) return null;
 
   // Calcular total de percentages
   const totalPercentage = useMemo(() => {

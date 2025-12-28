@@ -242,8 +242,6 @@ const AtividadesPendentes: React.FC = () => {
     const approvedRequests = requests.filter(r => r.status === 'aprovado');
     const rejectedRequests = requests.filter(r => r.status === 'rejeitado');
 
-    console.log('[AtividadesPendentes] RENDER - showEditModal:', showEditModal, 'selectedRequest:', selectedRequest);
-
     return (
       <div className="bg-[#1d1e24] rounded-lg border border-black flex flex-col h-full overflow-hidden">
         {/* Header */}
@@ -411,10 +409,8 @@ const AtividadesPendentes: React.FC = () => {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => {
-                                  console.log('Botão EDITAR clicado', request);
                                   setSelectedRequest(request);
                                   setShowEditModal(true);
-                                  console.log('Estado atualizado - showEditModal:', true);
                                 }}
                                 className="bg-green-600 hover:bg-green-700 px-4 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1"
                               >
@@ -614,6 +610,55 @@ const AtividadesPendentes: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Contagens adicionais */}
+                    <div className="mt-3 pt-3 border-t border-gray-700 grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-gray-400">Quantidade de Itens Distintos:</span>
+                        <p className="text-white font-medium">
+                          {(() => {
+                            const isItemBox = selectedRequest.tipo_caixa === 'item';
+                            const uniqueItems = new Set();
+                            config.items.forEach((item: any) => {
+                              if (isItemBox) {
+                                uniqueItems.add(item.itemNo);
+                              } else {
+                                // Para caixas de produto, contar apenas ItemNo00
+                                if (item.productID && String(item.productID).endsWith('00')) {
+                                  uniqueItems.add(item.productID);
+                                }
+                              }
+                            });
+                            return uniqueItems.size;
+                          })()}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Itens por Período:</span>
+                        <div className="text-white font-medium space-y-1">
+                          {(() => {
+                            const periodCounts: { [key: number]: number } = {};
+                            config.items.forEach((item: any) => {
+                              const period = item.period || 0;
+                              periodCounts[period] = (periodCounts[period] || 0) + 1;
+                            });
+
+                            const totalItems = config.items.length;
+
+                            return Object.entries(periodCounts)
+                              .sort(([a], [b]) => Number(a) - Number(b))
+                              .map(([period, count]) => {
+                                const percentage = ((count / totalItems) * 100).toFixed(2);
+                                return (
+                                  <p key={period} className="text-xs">
+                                    {period} dia(s): {count} <span className="text-gray-400">({percentage}%)</span>
+                                  </p>
+                                );
+                              });
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Motivo da rejeição se houver */}
                     {selectedRequest.status === 'rejeitado' && selectedRequest.motivo_rejeicao && (
                       <div className="mt-4 bg-red-950 border border-red-600 p-3 rounded">
@@ -778,22 +823,19 @@ const AtividadesPendentes: React.FC = () => {
         })()}
 
         {/* Modal de Edição de Solicitação Rejeitada */}
-        {(() => {
-          console.log('[NÃO-MASTER] Renderizando área do modal - showEditModal:', showEditModal, 'selectedRequest:', selectedRequest);
-          return showEditModal && selectedRequest && (
-            <EditRejectedGachaponBox
-              isOpen={showEditModal}
-              onClose={() => {
-                setShowEditModal(false);
-                setSelectedRequest(null);
-              }}
-              request={selectedRequest}
-              onSuccess={() => {
-                fetchMyRequests();
-              }}
-            />
-          );
-        })()}
+        {showEditModal && selectedRequest && (
+          <EditRejectedGachaponBox
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedRequest(null);
+            }}
+            request={selectedRequest}
+            onSuccess={() => {
+              fetchMyRequests();
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -994,6 +1036,50 @@ const AtividadesPendentes: React.FC = () => {
                   <p className="text-sm text-gray-400">
                     Data: {new Date(selectedRequest.data_solicitacao).toLocaleString('pt-BR')}
                   </p>
+
+                  {/* Contagens adicionais */}
+                  <div className="mt-3 pt-3 border-t border-gray-700 space-y-1">
+                    <p className="text-sm text-gray-400">
+                      Quantidade de Itens Distintos: <span className="text-white font-medium">
+                        {(() => {
+                          const uniqueItems = new Set();
+                          config.items.forEach((item: any) => {
+                            if (isItemBox) {
+                              uniqueItems.add(item.itemNo);
+                            } else {
+                              // Para caixas de produto, contar apenas ItemNo00
+                              if (item.productID && String(item.productID).endsWith('00')) {
+                                uniqueItems.add(item.productID);
+                              }
+                            }
+                          });
+                          return uniqueItems.size;
+                        })()}
+                      </span>
+                    </p>
+                    <div className="text-sm text-gray-400">
+                      {(() => {
+                        const periodCounts: { [key: number]: number } = {};
+                        config.items.forEach((item: any) => {
+                          const period = item.period || 0;
+                          periodCounts[period] = (periodCounts[period] || 0) + 1;
+                        });
+
+                        const totalItems = config.items.length;
+
+                        return Object.entries(periodCounts)
+                          .sort(([a], [b]) => Number(a) - Number(b))
+                          .map(([period, count]) => {
+                            const percentage = ((count / totalItems) * 100).toFixed(2);
+                            return (
+                              <p key={period}>
+                                Quantidade de Itens por {period} Dia(s): <span className="text-white font-medium">{count}</span> <span className="text-gray-500">({percentage}%)</span>
+                              </p>
+                            );
+                          });
+                      })()}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Resumo de mudanças */}
@@ -1361,26 +1447,23 @@ const AtividadesPendentes: React.FC = () => {
       )}
 
       {/* Modal de Edição de Solicitação Rejeitada */}
-      {(() => {
-        console.log('Renderizando área do modal - showEditModal:', showEditModal, 'selectedRequest:', selectedRequest);
-        return showEditModal && selectedRequest && (
-          <EditRejectedGachaponBox
-            isOpen={showEditModal}
-            onClose={() => {
-              setShowEditModal(false);
-              setSelectedRequest(null);
-            }}
-            request={selectedRequest}
-            onSuccess={() => {
-              if (isMaster) {
-                fetchRequests();
-              } else {
-                fetchMyRequests();
-              }
-            }}
-          />
-        );
-      })()}
+      {showEditModal && selectedRequest && (
+        <EditRejectedGachaponBox
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedRequest(null);
+          }}
+          request={selectedRequest}
+          onSuccess={() => {
+            if (isMaster) {
+              fetchRequests();
+            } else {
+              fetchMyRequests();
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
