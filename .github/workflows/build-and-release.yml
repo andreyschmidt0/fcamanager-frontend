@@ -123,7 +123,7 @@ jobs:
           cat > latest.json << EOF
           {
             "version": "${{ steps.release_info.outputs.app_version }}",
-            "notes": "Correção para bugs do fluxo de reaprovação",
+            "notes": "Padronização de algumas tabelas e filtros",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "windows-x86_64": {
