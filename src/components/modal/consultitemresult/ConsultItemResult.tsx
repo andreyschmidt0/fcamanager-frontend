@@ -273,7 +273,7 @@ const ConsultItemResult: React.FC<ConsultItemResultProps> = ({
                       {/* Item Info */}
                       <div className="lg:col-span-2">
                         <p className="text-white font-medium text-base leading-tight">{item.ProductName}</p>
-                        <p className="text-xs text-gray-500">ID: {item.ProductID} | Item: {item.ItemNo}</p>
+                        <p className="text-xs text-gray-500">ProductID: {item.ProductID} | Item: {item.ItemNo}</p>
                         <p className="text-xs text-blue-400">{item.ProductType}</p>
                       </div>
 

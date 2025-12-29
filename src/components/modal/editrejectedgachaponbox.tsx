@@ -38,7 +38,7 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const boxType = request?.tipo_caixa || 'item';
+  const boxType = request?.tipo_caixa;
 
   // Carregar configuração da solicitação rejeitada
   useEffect(() => {
@@ -111,6 +111,8 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
 
   // Adicionar item à configuração
   const handleAddItem = (item: any) => {
+    const period = boxType === 'produto' ? (item.Period00) : (item.DefaultPeriod);
+
     const newItem: GachaponConfigItem = {
       itemNo: boxType === 'item' ? item.ItemNo : undefined,
       productID: boxType === 'produto' ? item.ProductID : undefined,
@@ -118,9 +120,9 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
       name: boxType === 'item' ? item.Name : item.ProductName,
       percentage: 0,
       percentageDisplay: 0,
-      period: boxType === 'produto' ? (item.Period00 || 999) : 999,
+      period: period,
       consumeType: boxType === 'item' ? 1 : (item.ConsumeType00 || 1),
-      broadcast: false
+      broadcast: period === 999
     };
 
     setConfiguredItems(prev => [...prev, newItem]);
@@ -387,34 +389,31 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
                 <table className="w-full text-sm">
                   <thead className="bg-[#16171b] sticky top-0 z-10">
                     <tr>
-                      <th className="px-3 py-2 text-left">Nome</th>
-                      <th className="px-3 py-2 text-center w-24">
+                      <th className="px-6 py-2 text-left">Nome</th>
+                      <th className="px-6 py-2 text-center w-32">
                         {boxType === 'item' ? 'ItemNo' : 'ProductID'}
                       </th>
-                      {boxType === 'produto' && (
-                        <th className="px-3 py-2 text-center w-24">Período</th>
-                      )}
-                      <th className="px-3 py-2 text-center w-32">Ação</th>
+                      <th className="px-6 py-2 text-center w-32">Período</th>
+                      <th className="px-6 py-2 text-center w-40">Ação</th>
                     </tr>
                   </thead>
                   <tbody>
                     {searchResults.map((item, index) => {
                       const itemId = boxType === 'item' ? item.ItemNo : item.ProductID;
+                      const period = boxType === 'item' ? item.DefaultPeriod : item.Period00;
 
                       return (
                         <tr key={index} className="border-t border-gray-800 hover:bg-gray-800">
-                          <td className="px-3 py-2">
+                          <td className="px-6 py-2">
                             <p className="font-medium">{boxType === 'item' ? item.Name : item.ProductName}</p>
                           </td>
-                          <td className="px-3 py-2 text-center text-gray-400">
+                          <td className="px-6 py-2 text-center text-gray-400">
                             {itemId}
                           </td>
-                          {boxType === 'produto' && (
-                            <td className="px-3 py-2 text-center text-gray-400">
-                              {item.Period00 || 999} dias
-                            </td>
-                          )}
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-6 py-2 text-center text-gray-400">
+                            {period} dias
+                          </td>
+                          <td className="px-6 py-2 text-center">
                             <button
                               onClick={() => handleAddItem(item)}
                               className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded transition-colors"

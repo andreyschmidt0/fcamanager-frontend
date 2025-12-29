@@ -292,13 +292,13 @@ const ConsultItem: React.FC<ConsultItemProps> = ({ isOpen, onClose }) => {
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Número do Item
+              ID do Item
             </label>
             <input
               type="number"
               name="itemNo"
               value={formData.itemNo}
-              placeholder="Ex: 100003114"
+              placeholder="Ex: 17850"
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
             />
