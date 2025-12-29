@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { X, Plus, Trash2, Search } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { X, Plus, Trash2 } from 'lucide-react';
 import apiService from '../../services/api-tauri.service';
 import BaseModal from '../common/BaseModal';
 
@@ -28,10 +28,16 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
   const [gachaponName, setGachaponName] = useState('');
   const [configuredItems, setConfiguredItems] = useState<GachaponConfigItem[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
+  // Estados de input (valores digitados - sem delay)
+  const [inputSearchTerm, setInputSearchTerm] = useState('');
+
+  // Estados de filtro (com debounce - disparam busca)
   const [searchTerm, setSearchTerm] = useState('');
+
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,6 +55,14 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
   const isValidConfig = useMemo(() => {
     return totalPercentage === 10000 && configuredItems.length > 0 && gachaponItemNo.trim() !== '';
   }, [totalPercentage, configuredItems, gachaponItemNo]);
+
+  // Debounce para searchTerm
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(inputSearchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputSearchTerm]);
 
   // Carregar configuração existente
   const handleLoadExistingConfig = async () => {
@@ -87,18 +101,17 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
 
   // Buscar itens/produtos
   const handleSearch = async () => {
-    if (searchTerm.length < 2) {
-      setError('Digite no mínimo 2 caracteres');
-      return;
-    }
-
     setIsSearching(true);
     setError('');
 
     try {
+      const filters = {
+        searchTerm: searchTerm || undefined
+      };
+
       const result = boxType === 'item'
-        ? await apiService.searchGachaponItems(searchTerm)
-        : await apiService.searchGachaponProducts(searchTerm);
+        ? await apiService.searchGachaponItems(filters)
+        : await apiService.searchGachaponProducts(filters);
 
       if (result.success && result.data) {
         setSearchResults(result.data);
@@ -110,9 +123,29 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
       console.error(err);
     } finally {
       setIsSearching(false);
-      setHasSearched(true);
     }
   };
+
+  // Carregar dados inicial ao abrir modal
+  useEffect(() => {
+    if (isSearchModalOpen && !hasLoaded) {
+      setHasLoaded(true);
+      handleSearch();
+    } else if (!isSearchModalOpen) {
+      setHasLoaded(false);
+      setSearchResults([]);
+      setInputSearchTerm('');
+      setSearchTerm('');
+      setError('');
+    }
+  }, [isSearchModalOpen]);
+
+  // Buscar quando searchTerm mudar (após debounce)
+  useEffect(() => {
+    if (isSearchModalOpen && hasLoaded) {
+      handleSearch();
+    }
+  }, [searchTerm]);
 
   // Adicionar item à configuração
   const handleAddItem = (item: any) => {
@@ -130,9 +163,6 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
 
     setConfiguredItems([...configuredItems, newItem]);
     setIsSearchModalOpen(false);
-    setSearchTerm('');
-    setSearchResults([]);
-    setHasSearched(false);
   };
 
   // Remover item da configuração
@@ -379,12 +409,7 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
                 Buscar {boxType === 'item' ? 'Item' : 'Produto'}
               </h3>
               <button
-                onClick={() => {
-                  setIsSearchModalOpen(false);
-                  setSearchTerm('');
-                  setSearchResults([]);
-                  setHasSearched(false);
-                }}
+                onClick={() => setIsSearchModalOpen(false)}
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 <X size={24} />
@@ -392,24 +417,18 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="flex gap-2">
+              <div>
                 <input
                   type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  value={inputSearchTerm}
+                  onChange={(e) => setInputSearchTerm(e.target.value)}
                   placeholder={`Nome ou ${boxType === 'item' ? 'ItemNo' : 'ProductID'}`}
-                  className="flex-1 px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none"
                 />
-                <button
-                  onClick={handleSearch}
-                  disabled={isSearching}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                  <Search size={20} />
-                  {isSearching ? 'Buscando...' : 'Buscar'}
-                </button>
               </div>
+
+              {error && <p className="text-red-400 text-sm">{error}</p>}
+              {isSearching && <p className="text-gray-400 text-sm">Buscando...</p>}
 
               {searchResults.length > 0 && (
                 <div className="space-y-2">
@@ -440,7 +459,7 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
               )}
 
               {/* Mensagem quando não há resultados */}
-              {hasSearched && searchResults.length === 0 && !isSearching && (
+              {searchResults.length === 0 && hasLoaded && !isSearching && (
                 <div className="rounded-lg p-4 text-center">
                   <p className="text-white font-medium mb-1">Nenhum resultado encontrado</p>
                   <p className="text-sm text-gray-400">

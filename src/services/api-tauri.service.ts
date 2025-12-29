@@ -1923,7 +1923,12 @@ class ApiTauriService {
   /**
    * Buscar itens para adicionar em caixa de gachapon
    */
-  async searchGachaponItems(searchTerm: string): Promise<{
+  async searchGachaponItems(filters: {
+    searchTerm?: string;
+    itemNo?: string;
+    name?: string;
+    period?: string;
+  }): Promise<{
     success: boolean;
     data?: Array<{
       ItemNo: number;
@@ -1935,7 +1940,13 @@ class ApiTauriService {
     error?: string;
   }> {
     try {
-      const response = await fetch(`${API_BASE}/actions/gachapon/search-items?searchTerm=${encodeURIComponent(searchTerm)}`, {
+      const params = new URLSearchParams();
+      if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
+      if (filters.itemNo) params.append('itemNo', filters.itemNo);
+      if (filters.name) params.append('name', filters.name);
+      if (filters.period) params.append('period', filters.period);
+
+      const response = await fetch(`${API_BASE}/actions/gachapon/search-items?${params.toString()}`, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 30000
@@ -1954,7 +1965,12 @@ class ApiTauriService {
   /**
    * Buscar produtos para adicionar em caixa de gachapon
    */
-  async searchGachaponProducts(searchTerm: string): Promise<{
+  async searchGachaponProducts(filters: {
+    searchTerm?: string;
+    productID?: string;
+    name?: string;
+    period?: string;
+  }): Promise<{
     success: boolean;
     data?: Array<{
       ProductID: number;
@@ -1970,7 +1986,13 @@ class ApiTauriService {
     error?: string;
   }> {
     try {
-      const response = await fetch(`${API_BASE}/actions/gachapon/search-products?searchTerm=${encodeURIComponent(searchTerm)}`, {
+      const params = new URLSearchParams();
+      if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
+      if (filters.productID) params.append('productID', filters.productID);
+      if (filters.name) params.append('name', filters.name);
+      if (filters.period) params.append('period', filters.period);
+
+      const response = await fetch(`${API_BASE}/actions/gachapon/search-products?${params.toString()}`, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 30000

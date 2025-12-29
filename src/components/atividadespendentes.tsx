@@ -1202,84 +1202,96 @@ const AtividadesPendentes: React.FC = () => {
 
                 {/* Itens Adicionados */}
                 {added.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-semibold text-green-400">Itens Adicionados ({added.length})</h4>
-                    {added.map((d, index) => (
-                      <div key={index} className="bg-green-900/20 border border-green-600 p-3 rounded-lg">
-                        <p className="text-white font-medium">{d.item.name}</p>
-                        <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-300">
-                          <p>{isItemBox ? `ItemNo: ${d.item.itemNo}` : `ProductID: ${d.item.productID}`}</p>
-                          <p>Percentage: {d.item.percentageDisplay}%</p>
-                          <p>Period: {d.item.period} dias</p>
-                          <p>ConsumeType: {d.item.consumeType}</p>
-                          <p>Broadcast: {d.item.broadcast ? 'Sim' : 'Não'}</p>
+                  <details className="bg-[#1d1e24] p-3 rounded-lg">
+                    <summary className="text-green-400 cursor-pointer font-semibold text-lg">
+                      Itens Adicionados ({added.length})
+                    </summary>
+                    <div className="space-y-2 mt-3">
+                      {added.map((d, index) => (
+                        <div key={index} className="bg-green-900/20 border border-green-600 p-3 rounded-lg">
+                          <p className="text-white font-medium">{d.item.name}</p>
+                          <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-300">
+                            <p>{isItemBox ? `ItemNo: ${d.item.itemNo}` : `ProductID: ${d.item.productID}`}</p>
+                            <p>Percentage: {d.item.percentageDisplay}%</p>
+                            <p>Period: {d.item.period} dias</p>
+                            <p>ConsumeType: {d.item.consumeType}</p>
+                            <p>Broadcast: {d.item.broadcast ? 'Sim' : 'Não'}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </details>
                 )}
 
                 {/* Itens Removidos */}
                 {removed.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-semibold text-red-400">✗ Itens Removidos ({removed.length})</h4>
-                    {removed.map((d, index) => (
-                      <div key={index} className="bg-red-900/20 border border-red-600 p-3 rounded-lg">
-                        <p className="text-white font-medium line-through">{d.oldItem.name}</p>
-                        <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-300">
-                          <p>{isItemBox ? `ItemNo: ${d.oldItem.itemNo}` : `ProductID: ${d.oldItem.productID}`}</p>
-                          <p>Percentage: {(d.oldItem.percentage / 100).toFixed(2)}%</p>
-                          <p>Period: {d.oldItem.period} dias</p>
-                          <p>ConsumeType: {d.oldItem.consumeType}</p>
-                          <p>Broadcast: {d.oldItem.broadcast ? 'Sim' : 'Não'}</p>
+                  <details className="bg-[#1d1e24] p-3 rounded-lg">
+                    <summary className="text-red-400 cursor-pointer font-semibold text-lg">
+                      ✗ Itens Removidos ({removed.length})
+                    </summary>
+                    <div className="space-y-2 mt-3">
+                      {removed.map((d, index) => (
+                        <div key={index} className="bg-red-900/20 border border-red-600 p-3 rounded-lg">
+                          <p className="text-white font-medium line-through">{d.oldItem.name}</p>
+                          <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-300">
+                            <p>{isItemBox ? `ItemNo: ${d.oldItem.itemNo}` : `ProductID: ${d.oldItem.productID}`}</p>
+                            <p>Percentage: {(d.oldItem.percentage / 100).toFixed(2)}%</p>
+                            <p>Period: {d.oldItem.period} dias</p>
+                            <p>ConsumeType: {d.oldItem.consumeType}</p>
+                            <p>Broadcast: {d.oldItem.broadcast ? 'Sim' : 'Não'}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </details>
                 )}
 
                 {/* Itens Modificados */}
                 {modified.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-semibold text-yellow-400">Itens Modificados ({modified.length})</h4>
-                    {modified.map((d, index) => (
-                      <div key={index} className="bg-yellow-900/20 border border-yellow-600 p-3 rounded-lg">
-                        <p className="text-white font-medium">{d.item.name}</p>
-                        <div className="grid grid-cols-1 gap-2 mt-2 text-sm">
-                          {d.changes.includes('percentage') && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-gray-400">Percentage:</span>
-                              <span className="text-red-400 line-through">{(d.oldItem.percentage / 100).toFixed(2)}%</span>
-                              <span className="text-gray-500">→</span>
-                              <span className="text-green-400 font-medium">{d.item.percentageDisplay}%</span>
-                            </div>
-                          )}
-                          {d.changes.includes('period') && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-gray-400">Period:</span>
-                              <span className="text-red-400 line-through">{d.oldItem.period} dias</span>
-                              <span className="text-gray-500">→</span>
-                              <span className="text-green-400 font-medium">{d.item.period} dias</span>
-                            </div>
-                          )}
-                          {d.changes.includes('broadcast') && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-gray-400">Broadcast:</span>
-                              <span className="text-red-400 line-through">{d.oldItem.broadcast ? 'Sim' : 'Não'}</span>
-                              <span className="text-gray-500">→</span>
-                              <span className="text-green-400 font-medium">{d.item.broadcast ? 'Sim' : 'Não'}</span>
-                            </div>
-                          )}
-                          {!d.changes.includes('percentage') && (
-                            <span className="text-gray-400 text-xs">Percentage: {d.item.percentageDisplay}%</span>
-                          )}
-                          {!d.changes.includes('period') && (
-                            <span className="text-gray-400 text-xs">Period: {d.item.period} dias</span>
-                          )}
+                  <details className="bg-[#1d1e24] p-3 rounded-lg">
+                    <summary className="text-yellow-400 cursor-pointer font-semibold text-lg">
+                      Itens Modificados ({modified.length})
+                    </summary>
+                    <div className="space-y-2 mt-3">
+                      {modified.map((d, index) => (
+                        <div key={index} className="bg-yellow-900/20 border border-yellow-600 p-3 rounded-lg">
+                          <p className="text-white font-medium">{d.item.name}</p>
+                          <div className="grid grid-cols-1 gap-2 mt-2 text-sm">
+                            {d.changes.includes('percentage') && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">Percentage:</span>
+                                <span className="text-red-400 line-through">{(d.oldItem.percentage / 100).toFixed(2)}%</span>
+                                <span className="text-gray-500">→</span>
+                                <span className="text-green-400 font-medium">{d.item.percentageDisplay}%</span>
+                              </div>
+                            )}
+                            {d.changes.includes('period') && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">Period:</span>
+                                <span className="text-red-400 line-through">{d.oldItem.period} dias</span>
+                                <span className="text-gray-500">→</span>
+                                <span className="text-green-400 font-medium">{d.item.period} dias</span>
+                              </div>
+                            )}
+                            {d.changes.includes('broadcast') && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">Broadcast:</span>
+                                <span className="text-red-400 line-through">{d.oldItem.broadcast ? 'Sim' : 'Não'}</span>
+                                <span className="text-gray-500">→</span>
+                                <span className="text-green-400 font-medium">{d.item.broadcast ? 'Sim' : 'Não'}</span>
+                              </div>
+                            )}
+                            {!d.changes.includes('percentage') && (
+                              <span className="text-gray-400 text-xs">Percentage: {d.item.percentageDisplay}%</span>
+                            )}
+                            {!d.changes.includes('period') && (
+                              <span className="text-gray-400 text-xs">Period: {d.item.period} dias</span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </details>
                 )}
 
                 {/* Itens Inalterados (colapsado por padrão) */}
