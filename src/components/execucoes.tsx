@@ -10,6 +10,7 @@ import ConsultInbox from './modal/consultinbox';
 import ConsultItem from './modal/consultitem';
 import ConsultBoxes from './modal/consultboxes';
 import ConsultCampItems from './modal/consultcampitems';
+import ConsultFireteamBlacklist from './modal/consultfireteamblacklist';
 import ChangeNickname from './modal/changenickname';
 import ChangeEmail from './modal/changeemail';
 import ChangeLogin from './modal/changelogin';
@@ -41,6 +42,34 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedAction, setSelectedAction] = useState<{ category: string; option: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Carregar ambiente atual do localStorage
+  const [currentEnvironment, setCurrentEnvironment] = useState<'production' | 'test'>(() => {
+    const saved = localStorage.getItem('currentEnvironment');
+    return (saved as 'production' | 'test') || 'production';
+  });
+
+  // Monitorar mudanças no ambiente
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('currentEnvironment');
+      const env = (saved as 'production' | 'test') || 'production';
+      if (env !== currentEnvironment) {
+        setCurrentEnvironment(env);
+      }
+    };
+
+    // Listener para mudanças no localStorage
+    window.addEventListener('storage', handleStorageChange);
+
+    // Polling a cada segundo para detectar mudanças (caso seja na mesma aba)
+    const interval = setInterval(handleStorageChange, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [currentEnvironment]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -91,9 +120,21 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     }
   };
 
+  // Opções de "ENVIAR / INSERIR" baseadas no ambiente
+  const getEnviarInserirOptions = () => {
+    const baseOptions = ['Enviar Cash', 'Enviar Item', 'Inserir BlackList EA'];
+
+    // Adicionar "Criar/Editar Caixa" SOMENTE se estiver em ambiente de TESTES
+    if (currentEnvironment === 'test') {
+      return [...baseOptions, 'Criar/Editar Caixa'];
+    }
+
+    return baseOptions;
+  };
+
   const actionButtons = [
-    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox', 'Consultar Caixas', 'Consultar Modo CAMP'] },
-    { name: 'ENVIAR / INSERIR', options: ['Enviar Cash', 'Enviar Item', 'Inserir BlackList EA',  'Criar/Editar Caixa'] },
+    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox', 'Consultar Caixas', 'Consultar Modo CAMP', 'Consultar Blacklist Fireteam'] },
+    { name: 'ENVIAR / INSERIR', options: getEnviarInserirOptions() },
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Emblema Clan', 'Remover Exp', 'Remover Cash', 'Remover Conta', ] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
@@ -152,18 +193,21 @@ return (
         </div>
 
         {/* === BLOCO INFERIOR: ATIVIDADES PENDENTES (EXPANSÍVEL E COM SCROLL) === */}
+        {/* VISÍVEL SOMENTE EM AMBIENTE DE TESTES */}
         {/* flex-1 faz ocupar todo o espaço restante. min-h-0 é CRUCIAL para scroll aninhado funcionar no flexbox */}
-        <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex-none flex items-center gap-2 text-sm font-medium mb-6">
-              <span className="w-2 h-2 bg-white rounded-full"></span>
-              <span className="text-base sm:text-lg text-white font-neofara font-medium">ATIVIDADES PENDENTES</span>
-            </div>
+        {currentEnvironment === 'test' && (
+          <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-none flex items-center gap-2 text-sm font-medium mb-6">
+                <span className="w-2 h-2 bg-white rounded-full"></span>
+                <span className="text-base sm:text-lg text-white font-neofara font-medium">ATIVIDADES PENDENTES</span>
+              </div>
 
-            {/* Container específico para a rolagem */}
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-               <AtividadesPendentes />
-            </div>
-        </div>
+              {/* Container específico para a rolagem */}
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                 <AtividadesPendentes />
+              </div>
+          </div>
+        )}
 
       </div>
 
@@ -224,6 +268,12 @@ return (
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Consultar Modo CAMP' && (
         <ConsultCampItems
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Consultar Blacklist Fireteam' && (
+        <ConsultFireteamBlacklist
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

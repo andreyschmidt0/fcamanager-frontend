@@ -52,8 +52,10 @@ const AtividadesPendentes: React.FC = () => {
   const statuses = [
     { value: 'TODOS', label: 'Todos Status' },
     { value: 'pendente', label: 'Pendentes' },
+    { value: 'aguardando_producao', label: 'Aguardando Produção' },
     { value: 'aprovado', label: 'Aprovadas' },
-    { value: 'rejeitado', label: 'Rejeitadas' }
+    { value: 'rejeitado', label: 'Rejeitadas' },
+    { value: 'revertido', label: 'Revertidas' }
   ];
 
   // Verificar se é Master (oidUser = 2)
@@ -622,9 +624,9 @@ const AtividadesPendentes: React.FC = () => {
                               if (isItemBox) {
                                 uniqueItems.add(item.itemNo);
                               } else {
-                                // Para caixas de produto, contar apenas ItemNo00
-                                if (item.productID && String(item.productID).endsWith('00')) {
-                                  uniqueItems.add(item.productID);
+                                // Para caixas de produto, contar ItemNo00 distintos
+                                if (item.itemNo00) {
+                                  uniqueItems.add(item.itemNo00);
                                 }
                               }
                             });
@@ -636,21 +638,29 @@ const AtividadesPendentes: React.FC = () => {
                         <span className="text-gray-400">Itens por Período:</span>
                         <div className="text-white font-medium space-y-1">
                           {(() => {
-                            const periodCounts: { [key: number]: number } = {};
+                            // Agrupa por período e soma as porcentagens
+                            const periodData: { [key: number]: { count: number; totalPercentage: number } } = {};
+
                             config.items.forEach((item: any) => {
                               const period = item.period || 0;
-                              periodCounts[period] = (periodCounts[period] || 0) + 1;
+                              const itemPercentage = item.percentage || 0; // Já está em base 10000 (100% = 10000)
+
+                              if (!periodData[period]) {
+                                periodData[period] = { count: 0, totalPercentage: 0 };
+                              }
+
+                              periodData[period].count++;
+                              periodData[period].totalPercentage += itemPercentage;
                             });
 
-                            const totalItems = config.items.length;
-
-                            return Object.entries(periodCounts)
+                            return Object.entries(periodData)
                               .sort(([a], [b]) => Number(a) - Number(b))
-                              .map(([period, count]) => {
-                                const percentage = ((count / totalItems) * 100).toFixed(2);
+                              .map(([period, data]) => {
+                                // Converter de base 10000 para porcentagem real (10000 = 100%)
+                                const realPercentage = (data.totalPercentage / 100).toFixed(2);
                                 return (
                                   <p key={period} className="text-xs">
-                                    {period} dia(s): {count} <span className="text-gray-400">({percentage}%)</span>
+                                    {period} dia(s): {data.count} <span className="text-gray-400">({realPercentage}%)</span>
                                   </p>
                                 );
                               });
@@ -846,17 +856,47 @@ const AtividadesPendentes: React.FC = () => {
       <div className="p-4 border-b border-black flex-shrink-0">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-neofara font-medium">SOLICITAÇÕES PENDENTES</h2>
-          <button
-            onClick={fetchRequests}
-            disabled={isLoading}
-            className="p-1 hover:bg-gray-700 rounded transition-colors"
-            title="Atualizar solicitações"
-          >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Filtros */}
+            <div className="relative">
+              <button
+                onClick={handleToggleStatusDropdown}
+                className="flex items-center border border-black gap-2 bg-[#111216] px-3 py-1.5 rounded-lg text-xs hover:bg-gray-700 transition-colors"
+              >
+                {statuses.find(s => s.value === selectedStatus)?.label || selectedStatus}
+                <ChevronDown size={16} className={showStatusDropdown ? 'rotate-180 transition-transform' : 'transition-transform'} />
+              </button>
+
+              {showStatusDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-[#111216] border border-black rounded-lg shadow-lg z-50">
+                  {statuses.map((status) => (
+                    <button
+                      key={status.value}
+                      onClick={() => {
+                        setSelectedStatus(status.value);
+                        setShowStatusDropdown(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                    >
+                      {status.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={fetchRequests}
+              disabled={isLoading}
+              className="p-1 hover:bg-gray-700 rounded transition-colors"
+              title="Atualizar solicitações"
+            >
+              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
         </div>
         <p className="text-xs text-gray-400 mt-1">
-          {requests.length} solicitação(ões) aguardando aprovação
+          {requests.length} solicitação(ões)
         </p>
       </div>
 
@@ -872,13 +912,19 @@ const AtividadesPendentes: React.FC = () => {
             <div className="bg-red-900/20 border border-red-500 rounded-lg p-3">
               <p className="text-sm text-red-400">{error}</p>
             </div>
-          ) : requests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
-              <p className="text-sm">Nenhuma solicitação pendente</p>
-            </div>
-          ) : (
-            <div className="h-full overflow-y-auto custom-scrollbar space-y-3">
-              {requests.map((request) => {
+          ) : (() => {
+            // Filtrar requests baseado no selectedStatus
+            const filteredRequests = selectedStatus === 'TODOS'
+              ? requests
+              : requests.filter(r => r.status === selectedStatus);
+
+            return filteredRequests.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <p className="text-sm">Nenhuma solicitação encontrada</p>
+              </div>
+            ) : (
+              <div className="h-full overflow-y-auto custom-scrollbar space-y-3">
+                {filteredRequests.map((request) => {
                 console.log('[AtividadesPendentes] Renderizando request:', request);
                 let config;
                 try {
@@ -894,8 +940,15 @@ const AtividadesPendentes: React.FC = () => {
                     className="bg-[#111216] p-4 rounded-lg space-y-3 hover:bg-[#252631] transition-colors border border-gray-700"
                   >
                     <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-white font-medium">{request.gachapon_name}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-medium">{request.gachapon_name}</p>
+                          {request.status === 'aguardando_producao' && (
+                            <span className="px-2 py-0.5 text-xs bg-purple-600/30 border border-purple-500 text-purple-300 rounded">
+                              Aguardando Produção
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-400">
                           GachaponItemNo: {request.gachapon_itemno} | Tipo: {request.tipo_caixa === 'item' ? 'Caixa de Itens' : 'Caixa de Produtos'}
                         </p>
@@ -924,26 +977,64 @@ const AtividadesPendentes: React.FC = () => {
                         <Eye size={16} />
                         Ver Detalhes
                       </button>
-                      <button
-                        onClick={() => handleShowApproveModal(request)}
-                        className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Check size={16} />
-                        Aprovar
-                      </button>
-                      <button
-                        onClick={() => handleShowRejectModal(request)}
-                        className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
-                      >
-                        <X size={16} />
-                        Rejeitar
-                      </button>
+
+                      {/* Botões baseados no status */}
+                      {request.status === 'pendente' && (
+                        <>
+                          <button
+                            onClick={() => handleShowApproveModal(request)}
+                            className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Check size={16} />
+                            Aprovar
+                          </button>
+                          <button
+                            onClick={() => handleShowRejectModal(request)}
+                            className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            <X size={16} />
+                            Rejeitar
+                          </button>
+                        </>
+                      )}
+
+                      {request.status === 'aguardando_producao' && (
+                        <>
+                          <button
+                            onClick={async () => {
+                              if (confirm('Enviar alterações para PRODUÇÃO? Esta ação não pode ser desfeita automaticamente.')) {
+                                const result = await apiService.sendGachaponToProduction(request.id);
+                                if (result.success) {
+                                  fetchRequests();
+                                }
+                              }
+                            }}
+                            className="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            Enviar p/ Produção
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (confirm('Reverter alterações para o estado original?')) {
+                                const result = await apiService.revertGachaponChanges(request.id);
+                                if (result.success) {
+                                  fetchRequests();
+                                }
+                              }
+                            }}
+                            className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            ↩️ Reverter
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
-          )}
+            );
+          })()}
         </div>
       </div>
 
@@ -1047,8 +1138,8 @@ const AtividadesPendentes: React.FC = () => {
                             if (isItemBox) {
                               uniqueItems.add(item.itemNo);
                             } else {
-                              // Para caixas de produto, contar apenas ItemNo00
-                              if (item.productID && String(item.productID).endsWith('00')) {
+                              // Para caixas de produto, contar todos os ProductIDs distintos
+                              if (item.productID) {
                                 uniqueItems.add(item.productID);
                               }
                             }
@@ -1059,21 +1150,29 @@ const AtividadesPendentes: React.FC = () => {
                     </p>
                     <div className="text-sm text-gray-400">
                       {(() => {
-                        const periodCounts: { [key: number]: number } = {};
+                        // Agrupa por período e soma as porcentagens
+                        const periodData: { [key: number]: { count: number; totalPercentage: number } } = {};
+
                         config.items.forEach((item: any) => {
                           const period = item.period || 0;
-                          periodCounts[period] = (periodCounts[period] || 0) + 1;
+                          const itemPercentage = item.percentage || 0; // Já está em base 10000 (100% = 10000)
+
+                          if (!periodData[period]) {
+                            periodData[period] = { count: 0, totalPercentage: 0 };
+                          }
+
+                          periodData[period].count++;
+                          periodData[period].totalPercentage += itemPercentage;
                         });
 
-                        const totalItems = config.items.length;
-
-                        return Object.entries(periodCounts)
+                        return Object.entries(periodData)
                           .sort(([a], [b]) => Number(a) - Number(b))
-                          .map(([period, count]) => {
-                            const percentage = ((count / totalItems) * 100).toFixed(2);
+                          .map(([period, data]) => {
+                            // Converter de base 10000 para porcentagem real (10000 = 100%)
+                            const realPercentage = (data.totalPercentage / 100).toFixed(2);
                             return (
                               <p key={period}>
-                                Quantidade de Itens por {period} Dia(s): <span className="text-white font-medium">{count}</span> <span className="text-gray-500">({percentage}%)</span>
+                                Quantidade de Itens por {period} Dia(s): <span className="text-white font-medium">{data.count}</span> <span className="text-gray-500">({realPercentage}%)</span>
                               </p>
                             );
                           });

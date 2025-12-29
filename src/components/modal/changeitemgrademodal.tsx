@@ -7,6 +7,7 @@ interface Item {
   ItemNo: number;
   Name: string;
   ItemGrade: number;
+  ItemType: number;
 }
 
 interface Product {
@@ -21,11 +22,43 @@ interface Product {
   CashPrice: number;
   PointPrice: number;
   PeriodName: string;
+  NewCashPrice?: number;
+  NewItemGrade?: number;
 }
 
 interface ChangeItemGradeModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface PriceMatrix {
+  ItemType: number;
+  TypeName: string;
+  Price9Stars_1Day: number;
+  Price9Stars_7Days: number;
+  Price9Stars_30Days: number;
+  Price9Stars_90Days: number;
+  Price9Stars_Perm: number;
+  Price8Stars_1Day: number;
+  Price8Stars_7Days: number;
+  Price8Stars_30Days: number;
+  Price8Stars_90Days: number;
+  Price8Stars_Perm: number;
+  Price7Stars_1Day: number;
+  Price7Stars_7Days: number;
+  Price7Stars_30Days: number;
+  Price7Stars_90Days: number;
+  Price7Stars_Perm: number;
+  Price6Stars_1Day: number;
+  Price6Stars_7Days: number;
+  Price6Stars_30Days: number;
+  Price6Stars_90Days: number;
+  Price6Stars_Perm: number;
+  Price5Stars_1Day: number;
+  Price5Stars_7Days: number;
+  Price5Stars_30Days: number;
+  Price5Stars_90Days: number;
+  Price5Stars_Perm: number;
 }
 
 const ChangeItemGradeModal: React.FC<ChangeItemGradeModalProps> = ({ isOpen, onClose }) => {
@@ -37,6 +70,8 @@ const ChangeItemGradeModal: React.FC<ChangeItemGradeModalProps> = ({ isOpen, onC
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [priceMatrix, setPriceMatrix] = useState<PriceMatrix | null>(null);
+  const [showPriceMatrix, setShowPriceMatrix] = useState(false);
 
   // Buscar itens quando o usuário digitar
   useEffect(() => {
@@ -73,13 +108,13 @@ const ChangeItemGradeModal: React.FC<ChangeItemGradeModalProps> = ({ isOpen, onC
     return () => clearTimeout(debounceTimer);
   }, [searchTerm]);
 
-  const fetchAffectedProducts = useCallback(async (itemNos: number[]) => {
+  const fetchAffectedProducts = useCallback(async (itemNos: number[], gradeValue?: number) => {
     if (itemNos.length === 0) {
       setAffectedProducts([]);
       return;
     }
     try {
-      const result = await apiService.getAffectedProductsByItemNos(itemNos);
+      const result = await apiService.getAffectedProductsByItemNos(itemNos, gradeValue);
       if (result.success) {
         setAffectedProducts(result.data || []);
       } else {
@@ -92,8 +127,32 @@ const ChangeItemGradeModal: React.FC<ChangeItemGradeModalProps> = ({ isOpen, onC
 
   useEffect(() => {
     const itemNos = Array.from(selectedItems);
-    fetchAffectedProducts(itemNos);
-  }, [selectedItems, fetchAffectedProducts]);
+    fetchAffectedProducts(itemNos, newItemGrade);
+
+    // Fetch price matrix for the first selected item's ItemType
+    if (itemNos.length > 0 && items.length > 0) {
+      const firstItem = items.find(i => i.ItemNo === itemNos[0]);
+      if (firstItem) {
+        fetchPriceMatrix(firstItem.ItemType);
+      }
+    } else {
+      setPriceMatrix(null);
+    }
+  }, [selectedItems, newItemGrade, fetchAffectedProducts, items]);
+
+  const fetchPriceMatrix = async (itemType: number) => {
+    try {
+      const result = await apiService.getPriceMatrixForItemType(itemType);
+      if (result.success && result.data) {
+        setPriceMatrix(result.data);
+      } else {
+        setPriceMatrix(null);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar matriz de preços:', err);
+      setPriceMatrix(null);
+    }
+  };
 
   const handleSelectAll = () => {
     if (selectedItems.size === items.length) {
@@ -243,21 +302,37 @@ const ChangeItemGradeModal: React.FC<ChangeItemGradeModalProps> = ({ isOpen, onC
                         <tr className="sticky top-0 bg-[#1d1e24] border-b border-gray-700">
                           <th className="px-2 py-1 text-left">Produto</th>
                           <th className="px-2 py-1 text-center">Período</th>
-                          <th className="px-2 py-1 text-right">Preço CA$</th>
+                          <th className="px-2 py-1 text-right">Preço Atual</th>
+                          <th className="px-2 py-1 text-right">Novo Preço</th>
+                          <th className="px-2 py-1 text-center">Mudança</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {affectedProducts.map(p => (
-                          <tr key={p.ProductID} className="border-t border-gray-800 hover:bg-gray-800">
-                            <td className="px-2 py-1 text-left">
-                              <div className="truncate" title={p.ProductName}>
-                                {p.ProductName}
-                              </div>
-                            </td>
-                            <td className="px-2 py-1 text-center text-gray-400">{p.PeriodName}</td>
-                            <td className="px-2 py-1 text-right text-green-400">{p.CashPrice?.toLocaleString()}</td>
-                          </tr>
-                        ))}
+                        {affectedProducts.map(p => {
+                          const priceDiff = p.NewCashPrice ? p.NewCashPrice - p.CashPrice : 0;
+                          const priceChangePercent = p.CashPrice > 0 ? ((priceDiff / p.CashPrice) * 100).toFixed(1) : '0';
+                          return (
+                            <tr key={p.ProductID} className="border-t border-gray-800 hover:bg-gray-800">
+                              <td className="px-2 py-1 text-left">
+                                <div className="truncate" title={p.ProductName}>
+                                  {p.ProductName}
+                                </div>
+                              </td>
+                              <td className="px-2 py-1 text-center text-gray-400">{p.PeriodName}</td>
+                              <td className="px-2 py-1 text-right text-gray-400">{p.CashPrice?.toLocaleString()}</td>
+                              <td className="px-2 py-1 text-right text-green-400">
+                                {p.NewCashPrice ? p.NewCashPrice.toLocaleString() : '-'}
+                              </td>
+                              <td className="px-2 py-1 text-center">
+                                {p.NewCashPrice ? (
+                                  <span className={priceDiff > 0 ? 'text-green-400' : priceDiff < 0 ? 'text-red-400' : 'text-gray-400'}>
+                                    {priceDiff > 0 ? '+' : ''}{priceDiff.toLocaleString()} ({priceChangePercent}%)
+                                  </span>
+                                ) : '-'}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   ) : (
@@ -267,6 +342,67 @@ const ChangeItemGradeModal: React.FC<ChangeItemGradeModalProps> = ({ isOpen, onC
                   )}
                 </div>
               </div>
+
+              {/* Price Matrix Section */}
+              {priceMatrix && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold">Tabela de Preços - {priceMatrix.TypeName}</h3>
+                    <button
+                      onClick={() => setShowPriceMatrix(!showPriceMatrix)}
+                      className="text-sm text-blue-400 hover:text-blue-300"
+                    >
+                      {showPriceMatrix ? 'Ocultar' : 'Mostrar'} Tabela
+                    </button>
+                  </div>
+                  {showPriceMatrix && (
+                    <div className="border border-gray-700 rounded-lg bg-[#1d1e24] overflow-x-auto custom-scrollbar">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-[#16171b]">
+                            <th className="px-2 py-2 text-left sticky left-0 bg-[#16171b] z-10">Estrelas</th>
+                            <th className="px-2 py-2 text-right">1 Dia</th>
+                            <th className="px-2 py-2 text-right">7 Dias</th>
+                            <th className="px-2 py-2 text-right">30 Dias</th>
+                            <th className="px-2 py-2 text-right">90 Dias</th>
+                            <th className="px-2 py-2 text-right">Permanente</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[9, 8, 7, 6, 5].map(stars => {
+                            const isCurrentGrade = stars === newItemGrade;
+                            return (
+                              <tr
+                                key={stars}
+                                className={`border-t border-gray-800 ${isCurrentGrade ? 'bg-green-900/20' : ''}`}
+                              >
+                                <td className={`px-2 py-2 font-medium sticky left-0 ${isCurrentGrade ? 'bg-green-900/20' : 'bg-[#1d1e24]'} z-10`}>
+                                  {stars} ⭐ {isCurrentGrade && <span className="text-green-400 ml-1">(Selecionado)</span>}
+                                </td>
+                                <td className="px-2 py-2 text-right text-gray-300">
+                                  {priceMatrix[`Price${stars}Stars_1Day` as keyof PriceMatrix]?.toLocaleString() || '-'}
+                                </td>
+                                <td className="px-2 py-2 text-right text-gray-300">
+                                  {priceMatrix[`Price${stars}Stars_7Days` as keyof PriceMatrix]?.toLocaleString() || '-'}
+                                </td>
+                                <td className="px-2 py-2 text-right text-gray-300">
+                                  {priceMatrix[`Price${stars}Stars_30Days` as keyof PriceMatrix]?.toLocaleString() || '-'}
+                                </td>
+                                <td className="px-2 py-2 text-right text-gray-300">
+                                  {priceMatrix[`Price${stars}Stars_90Days` as keyof PriceMatrix]?.toLocaleString() || '-'}
+                                </td>
+                                <td className="px-2 py-2 text-right text-green-400 font-medium">
+                                  {priceMatrix[`Price${stars}Stars_Perm` as keyof PriceMatrix]?.toLocaleString() || '-'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

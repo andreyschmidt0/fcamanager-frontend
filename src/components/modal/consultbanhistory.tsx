@@ -9,24 +9,6 @@ import PlayerValidationFields from '../common/PlayerValidationFields';
 import { CancelButton, SubmitButton } from '../common/ActionButton';
 import { usePlayerValidation } from '../../hooks/usePlayerValidation';
 
-interface BanLogEntry {
-  BanLogID: number;
-  MacAddress: string;
-  strDiscordID: string;
-  BlockStartDate: string;
-  BlockEndDate: string;
-  Motivo: string;
-  MacAddressBanned: string;
-  LogDate: string;
-  ClansDeleted: number;
-  AccountsBanned: number;
-  DeletedClanNames: string | null;
-  Status: string;
-  ExecutorNickName: string;
-  UnbannedByGM_oidUser: number | null;
-  UnbanDate: string | null;
-}
-
 interface ConsultBanHistoryProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,7 +24,6 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
   
   // Estados para busca e resultados
   const [isLoading, setIsLoading] = useState(false);
-  const [banHistory, setBanHistory] = useState<BanLogEntry[]>([]);
   const [showResults, setShowResults] = useState(false);
 
   // Usar hook de validação reutilizável
@@ -59,11 +40,9 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
         discordId: selectedPlayer.discordId || '',
         loginAccount: selectedPlayer.nexonId || ''
       });
-      setBanHistory([]);
       setShowResults(false);
     } else if (isOpen) {
       setFormData({ discordId: '', loginAccount: '' });
-      setBanHistory([]);
       setShowResults(false);
     }
   }, [selectedPlayer, isOpen]);
@@ -84,24 +63,24 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validar se o jogador foi validado antes de buscar histórico
     if (!validation.playerValidated || !validation.fetchedPlayerName || !validation.validatedOidUser) {
       validation.setErrorMessage('Por favor, aguarde a validação do jogador ser concluída.');
       return;
     }
-    
+
     // Validar se ainda está validando
     if (validation.isValidatingPlayer) {
       validation.setErrorMessage('Aguarde a validação ser concluída antes de consultar o histórico.');
       return;
     }
-    
+
     if (isLoading) return; // Prevent double-clicks
-    
+
     setIsLoading(true);
     try {
-      // Validação dupla antes de buscar histórico
+      // Validação dupla antes de abrir modal de resultados
       let oidUserToUse = validation.validatedOidUser;
       if (!validation.playerValidated || !validation.validatedOidUser) {
         try {
@@ -118,22 +97,12 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
         }
       }
 
-      // Buscar histórico de ban usando o oidUser validado
-      const result = await apiService.getBanHistory(oidUserToUse!);
-      
-      if (result.success) {
-        setBanHistory(result.data || []);
-        setShowResults(true);
-        validation.setErrorMessage('');
-      } else {
-        validation.setErrorMessage(result.error || 'Erro ao buscar histórico de bans');
-        setBanHistory([]);
-        setShowResults(false);
-      }
+      // Abrir modal de resultados - ele vai buscar os dados
+      setShowResults(true);
+      validation.setErrorMessage('');
     } catch (error) {
-      console.error('Erro ao buscar histórico:', error);
-      validation.setErrorMessage('Erro de conexão ao buscar histórico de bans');
-      setBanHistory([]);
+      console.error('Erro ao abrir modal de histórico:', error);
+      validation.setErrorMessage('Erro ao abrir histórico de bans');
       setShowResults(false);
     } finally {
       setIsLoading(false);
@@ -142,7 +111,6 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
 
   const handleCloseResultModal = () => {
     setShowResults(false);
-    setBanHistory([]);
   };
 
   return (
@@ -191,7 +159,6 @@ const ConsultBanHistory: React.FC<ConsultBanHistoryProps> = ({ isOpen, onClose }
       <ConsultBanHistoryResult
         isOpen={showResults}
         onClose={handleCloseResultModal}
-        banHistory={banHistory}
         playerName={validation.fetchedPlayerName}
         formData={formData}
         validatedOidUser={validation.validatedOidUser}

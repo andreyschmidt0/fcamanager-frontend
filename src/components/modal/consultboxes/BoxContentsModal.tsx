@@ -1,5 +1,9 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertCircle } from 'lucide-react';
+import apiService from '../../../services/api-tauri.service';
+import BaseModal from '../../common/BaseModal';
+import DataTable, { TableColumn } from '../../common/DataTable';
+import TableFilter, { FilterField } from '../../common/TableFilter';
 
 interface BoxData {
   BoxName: string;
@@ -33,27 +37,161 @@ interface BoxContentsModalProps {
   onClose: () => void;
   selectedBox: BoxData | null;
   boxType: 'items' | 'products';
-  boxContents: (ItemInBox | ProductInBox)[];
-  isLoading: boolean;
 }
 
 const BoxContentsModal: React.FC<BoxContentsModalProps> = ({
   isOpen,
   onClose,
   selectedBox,
-  boxType,
-  boxContents,
-  isLoading
+  boxType
 }) => {
-  if (!isOpen || !selectedBox) return null;
+  const [boxContents, setBoxContents] = useState<(ItemInBox | ProductInBox)[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  const [itemSearchTerm, setItemSearchTerm] = useState('');
+  // Valores digitados pelo usuário (sem delay)
+  const [inputItemNo, setInputItemNo] = useState('');
+  const [inputItemName, setInputItemName] = useState('');
+  const [inputItemType, setInputItemType] = useState('');
+  const [inputPercentage, setInputPercentage] = useState('');
+  const [inputProductID, setInputProductID] = useState('');
+  const [inputProductName, setInputProductName] = useState('');
+  const [inputPeriod, setInputPeriod] = useState('');
+
+  // Valores com debounce que disparam a busca
+  const [filterItemNo, setFilterItemNo] = useState('');
+  const [filterItemName, setFilterItemName] = useState('');
+  const [filterItemType, setFilterItemType] = useState('');
+  const [filterPercentage, setFilterPercentage] = useState('');
+  const [filterProductID, setFilterProductID] = useState('');
+  const [filterProductName, setFilterProductName] = useState('');
+  const [filterPeriod, setFilterPeriod] = useState('');
+
+  // Debounce para filtros de items
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterItemNo(inputItemNo);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputItemNo]);
 
   useEffect(() => {
-    if (isOpen) {
-      setItemSearchTerm('');
+    const timer = setTimeout(() => {
+      setFilterItemName(inputItemName);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputItemName]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterItemType(inputItemType);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputItemType]);
+
+  // Debounce para filtros de products
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterProductID(inputProductID);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputProductID]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterProductName(inputProductName);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputProductName]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterPeriod(inputPeriod);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputPeriod]);
+
+  // Debounce para percentage (comum a ambos)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterPercentage(inputPercentage);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputPercentage]);
+
+  // Buscar conteúdo quando modal abrir ou filtros mudarem
+  useEffect(() => {
+    if (isOpen && selectedBox && hasLoaded) {
+      loadContents();
+    }
+  }, [filterItemNo, filterItemName, filterItemType, filterPercentage, filterProductID, filterProductName, filterPeriod]);
+
+  // Carregar inicial ao abrir
+  useEffect(() => {
+    if (isOpen && selectedBox) {
+      setHasLoaded(true);
+      loadContents();
+    } else if (!isOpen) {
+      setBoxContents([]);
+      // Limpar inputs
+      setInputItemNo('');
+      setInputItemName('');
+      setInputItemType('');
+      setInputPercentage('');
+      setInputProductID('');
+      setInputProductName('');
+      setInputPeriod('');
+      // Limpar filtros
+      setFilterItemNo('');
+      setFilterItemName('');
+      setFilterItemType('');
+      setFilterPercentage('');
+      setFilterProductID('');
+      setFilterProductName('');
+      setFilterPeriod('');
+      setHasLoaded(false);
     }
   }, [isOpen, selectedBox]);
+
+  const loadContents = async () => {
+    if (!selectedBox) return;
+
+    setIsLoading(true);
+    try {
+      if (boxType === 'items') {
+        const filters = {
+          itemNo: filterItemNo,
+          itemName: filterItemName,
+          itemType: filterItemType,
+          percentage: filterPercentage
+        };
+        const result = await apiService.getItemsInBox(selectedBox.GachaponItemNo, filters);
+        if (result.success && result.data) {
+          setBoxContents(result.data);
+        } else {
+          setBoxContents([]);
+        }
+      } else {
+        const filters = {
+          productID: filterProductID,
+          productName: filterProductName,
+          period: filterPeriod,
+          percentage: filterPercentage
+        };
+        const result = await apiService.getProductsInBox(selectedBox.GachaponItemNo, filters);
+        if (result.success && result.data) {
+          setBoxContents(result.data);
+        } else {
+          setBoxContents([]);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar conteúdo da caixa:', error);
+      setBoxContents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getItemTypeLabel = (itemType: number): string => {
     const types: { [key: number]: string } = {
@@ -74,175 +212,180 @@ const BoxContentsModal: React.FC<BoxContentsModalProps> = ({
     return types[itemType] || 'Others';
   };
 
-  const filteredContents = useMemo(() => {
-    if (!itemSearchTerm.trim()) {
-      return boxContents;
+  if (!isOpen || !selectedBox) return null;
+
+  // Definir filtros baseado no tipo de caixa
+  const itemFilters: FilterField[] = [
+    {
+      key: 'itemNo',
+      label: 'Filtrar por Item No',
+      placeholder: 'Digite o Item No...',
+      value: inputItemNo,
+      onChange: setInputItemNo
+    },
+    {
+      key: 'itemName',
+      label: 'Filtrar por Nome',
+      placeholder: 'Digite o nome do item...',
+      value: inputItemName,
+      onChange: setInputItemName
+    },
+    {
+      key: 'itemType',
+      label: 'Filtrar por Tipo',
+      placeholder: 'Digite o tipo (número)...',
+      value: inputItemType,
+      onChange: setInputItemType
+    },
+    {
+      key: 'percentage',
+      label: 'Filtrar por Porcentagem',
+      placeholder: 'Ex: 0.5',
+      value: inputPercentage,
+      onChange: setInputPercentage
     }
+  ];
 
-    const term = itemSearchTerm.trim().toLowerCase();
+  const productFilters: FilterField[] = [
+    {
+      key: 'productID',
+      label: 'Filtrar por Product ID',
+      placeholder: 'Digite o Product ID...',
+      value: inputProductID,
+      onChange: setInputProductID
+    },
+    {
+      key: 'productName',
+      label: 'Filtrar por Nome',
+      placeholder: 'Digite o nome do produto...',
+      value: inputProductName,
+      onChange: setInputProductName
+    },
+    {
+      key: 'period',
+      label: 'Filtrar por Período',
+      placeholder: 'Digite o período (dias)...',
+      value: inputPeriod,
+      onChange: setInputPeriod
+    },
+    {
+      key: 'percentage',
+      label: 'Filtrar por Porcentagem',
+      placeholder: 'Ex: 0.5',
+      value: inputPercentage,
+      onChange: setInputPercentage
+    }
+  ];
 
-    return boxContents.filter((item) => {
-      if (boxType === 'items') {
-        const entry = item as ItemInBox;
-        const nameMatch = entry.ItemName?.toLowerCase().includes(term);
-        const idMatch = entry.ItemNo?.toString().includes(term);
-        const typeMatch = getItemTypeLabel(entry.ItemType).toLowerCase().includes(term);
-        return nameMatch || idMatch || typeMatch;
-      }
+  // Definir colunas baseado no tipo de caixa
+  const itemColumns: TableColumn<ItemInBox>[] = [
+    {
+      key: 'ItemNo',
+      header: 'Item No',
+      className: 'px-4 py-3 text-sm text-gray-400'
+    },
+    {
+      key: 'ItemName',
+      header: 'Nome do Item',
+      className: 'px-4 py-3 text-sm text-white'
+    },
+    {
+      key: 'ItemType',
+      header: 'Tipo',
+      render: (item: ItemInBox) => getItemTypeLabel(item.ItemType),
+      className: 'px-4 py-3 text-sm text-gray-400'
+    },
+    {
+      key: 'Percentage',
+      header: 'Porcentagem',
+      render: (item: ItemInBox) => `${item.Percentage}%`,
+      headerClassName: 'px-4 py-3 text-right text-sm font-semibold text-gray-300 border-b border-gray-700',
+      className: 'px-4 py-3 text-sm text-right text-gray-400'
+    }
+  ];
 
-      const entry = item as ProductInBox;
-      const nameMatch = entry.ProductName?.toLowerCase().includes(term);
-      const idMatch = entry.ProductID?.toString().includes(term);
-      return nameMatch || idMatch;
-    });
-  }, [boxContents, itemSearchTerm, boxType]);
+  const productColumns: TableColumn<ProductInBox>[] = [
+    {
+      key: 'ProductID',
+      header: 'Product ID',
+      className: 'px-4 py-3 text-sm text-gray-400'
+    },
+    {
+      key: 'ProductName',
+      header: 'Nome do Produto',
+      className: 'px-4 py-3 text-sm text-white'
+    },
+    {
+      key: 'Period',
+      header: 'Período (dias)',
+      render: (product: ProductInBox) => `${product.Period} dias`,
+      className: 'px-4 py-3 text-sm text-gray-400'
+    },
+    {
+      key: 'Percentage',
+      header: 'Porcentagem',
+      render: (product: ProductInBox) => `${product.Percentage}%`,
+      headerClassName: 'px-4 py-3 text-right text-sm font-semibold text-gray-300 border-b border-gray-700',
+      className: 'px-4 py-3 text-sm text-right text-gray-400'
+    }
+  ];
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-      <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-[#111216] z-10 relative flex items-center justify-center h-20 border-b border-gray-600">
-          <h2 className="text-2xl font-bold text-white font-neofara tracking-wider">
-            {selectedBox.BoxName}
-          </h2>
-          <button
-            onClick={onClose}
-            className="absolute right-6 text-gray-400 hover:text-white transition-colors"
-          >
-            <X size={24} />
-          </button>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={selectedBox.BoxName}
+      maxWidth="4xl"
+    >
+      <div className="space-y-4">
+        {/* Info Header */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-white">
+            {boxType === 'items' ? 'Itens na Caixa' : 'Produtos na Caixa'} ({boxContents.length})
+          </h3>
+          <span className="text-sm text-gray-400">
+            ID: {selectedBox.GachaponItemNo}
+          </span>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-gray-400">Carregando conteúdo...</p>
-              </div>
+        {/* Filtros - sempre visíveis após carregar */}
+        {hasLoaded && (
+          <TableFilter
+            filters={boxType === 'items' ? itemFilters : productFilters}
+            columnsPerRow={4}
+          />
+        )}
+
+        {/* Tabela */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-400">Carregando conteúdo...</p>
             </div>
-          ) : boxContents.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-lg">Nenhum item encontrado nesta caixa.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
-                  {boxType === 'items' ? 'Itens na Caixa' : 'Produtos na Caixa'} ({filteredContents.length}/{boxContents.length})
-                </h3>
-                <span className="text-sm text-gray-400">
-                  ID: {selectedBox.GachaponItemNo}
-                </span>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <label className="text-sm text-gray-300" htmlFor="box-contents-search">
-                  Pesquisar
-                </label>
-                <input
-                  id="box-contents-search"
-                  type="text"
-                  value={itemSearchTerm}
-                  onChange={(e) => setItemSearchTerm(e.target.value)}
-                  placeholder={boxType === 'items' ? 'Filtrar por nome, ID ou tipo de item' : 'Filtrar por nome ou ID do produto'}
-                  className="flex-1 px-3 py-2 bg-[#1d1e24] text-white rounded-lg border border-transparent focus:border-green-500 focus:outline-none"
-                />
-              </div>
-
-              {filteredContents.length === 0 ? (
-                <div className="bg-[#1d1e24] border border-gray-700 rounded-lg p-4 text-center text-gray-400">
-                  Nenhum resultado para "{itemSearchTerm}"
-                </div>
-              ) : (
-
-              <div className="overflow-x-auto rounded-lg border border-gray-700">
-                <table className="w-full">
-                  <thead className="bg-[#0a0b0e]">
-                    <tr>
-                      {boxType === 'items' ? (
-                        <>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Item No
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Nome do Item
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Tipo
-                          </th>
-                        </>
-                      ) : (
-                        <>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Product ID
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Nome do Produto
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Período (dias)
-                          </th>
-                        </>
-                      )}
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Porcentagem
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-700">
-                    {filteredContents.map((item, index) => (
-                      <tr key={index} className="hover:bg-[#1d1e24] transition-colors">
-                        {boxType === 'items' ? (
-                          <>
-                            <td className="px-4 py-3 text-sm text-gray-400">
-                              {(item as ItemInBox).ItemNo}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-white">
-                              {(item as ItemInBox).ItemName}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-400">
-                              {getItemTypeLabel((item as ItemInBox).ItemType)}
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="px-4 py-3 text-sm text-gray-400">
-                              {(item as ProductInBox).ProductID}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-white">
-                              {(item as ProductInBox).ProductName}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-400">
-                              {(item as ProductInBox).Period} dias
-                            </td>
-                          </>
-                        )}
-                        <td className="px-4 py-3 text-sm text-right text-gray-400">
-                          {item.Percentage}%
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-600">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
-          >
-            Fechar
-          </button>
-        </div>
+          </div>
+        ) : boxContents.length === 0 ? (
+          <div className="bg-[#1d1e24] rounded-lg p-8 text-center">
+            <AlertCircle className="mx-auto text-gray-500 mb-3" size={48} />
+            <p className="text-gray-400 text-lg">Nenhum item encontrado nesta caixa</p>
+          </div>
+        ) : boxType === 'items' ? (
+          <DataTable
+            columns={itemColumns}
+            data={boxContents as ItemInBox[]}
+            totalCount={boxContents.length}
+            maxHeight="60vh"
+          />
+        ) : (
+          <DataTable
+            columns={productColumns}
+            data={boxContents as ProductInBox[]}
+            totalCount={boxContents.length}
+            maxHeight="60vh"
+          />
+        )}
       </div>
-    </div>
+    </BaseModal>
   );
 };
 

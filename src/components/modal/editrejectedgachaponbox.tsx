@@ -14,6 +14,7 @@ interface EditRejectedGachaponBoxProps {
 interface GachaponConfigItem {
   itemNo?: number;
   productID?: number;
+  itemNo00?: number;
   name: string;
   percentage: number;
   percentageDisplay: number;
@@ -48,6 +49,7 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
           setConfiguredItems(config.items.map((item: any) => ({
             itemNo: item.itemNo,
             productID: item.productID,
+            itemNo00: item.itemNo00,
             name: item.name,
             percentage: item.percentage,
             percentageDisplay: item.percentageDisplay || (item.percentage / 100),
@@ -112,10 +114,11 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
     const newItem: GachaponConfigItem = {
       itemNo: boxType === 'item' ? item.ItemNo : undefined,
       productID: boxType === 'produto' ? item.ProductID : undefined,
+      itemNo00: boxType === 'produto' ? item.ItemNo00 : undefined,
       name: boxType === 'item' ? item.Name : item.ProductName,
       percentage: 0,
       percentageDisplay: 0,
-      period: boxType === 'item' ? 999 : (item.Period00 || 999),
+      period: boxType === 'produto' ? (item.Period00 || 999) : 999,
       consumeType: boxType === 'item' ? 1 : (item.ConsumeType00 || 1),
       broadcast: false
     };
@@ -377,29 +380,53 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
               {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
               {hasSearched && searchResults.length === 0 ? (
                 <p className="text-center text-gray-400 py-8">Nenhum resultado encontrado</p>
               ) : (
-                <div className="space-y-2">
-                  {searchResults.map((item, index) => (
-                    <div
-                      key={index}
-                      className="bg-[#1d1e24] p-3 rounded-lg flex justify-between items-center hover:bg-gray-800 cursor-pointer"
-                      onClick={() => handleAddItem(item)}
-                    >
-                      <div>
-                        <p className="font-medium">{boxType === 'item' ? item.Name : item.ProductName}</p>
-                        <p className="text-sm text-gray-400">
-                          {boxType === 'item' ? `ItemNo: ${item.ItemNo}` : `ProductID: ${item.ProductID}`}
-                        </p>
-                      </div>
-                      <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
-                        Adicionar
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <table className="w-full text-sm">
+                  <thead className="bg-[#16171b] sticky top-0 z-10">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Nome</th>
+                      <th className="px-3 py-2 text-center w-24">
+                        {boxType === 'item' ? 'ItemNo' : 'ProductID'}
+                      </th>
+                      {boxType === 'produto' && (
+                        <th className="px-3 py-2 text-center w-24">Período</th>
+                      )}
+                      <th className="px-3 py-2 text-center w-32">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {searchResults.map((item, index) => {
+                      const itemId = boxType === 'item' ? item.ItemNo : item.ProductID;
+
+                      return (
+                        <tr key={index} className="border-t border-gray-800 hover:bg-gray-800">
+                          <td className="px-3 py-2">
+                            <p className="font-medium">{boxType === 'item' ? item.Name : item.ProductName}</p>
+                          </td>
+                          <td className="px-3 py-2 text-center text-gray-400">
+                            {itemId}
+                          </td>
+                          {boxType === 'produto' && (
+                            <td className="px-3 py-2 text-center text-gray-400">
+                              {item.Period00 || 999} dias
+                            </td>
+                          )}
+                          <td className="px-3 py-2 text-center">
+                            <button
+                              onClick={() => handleAddItem(item)}
+                              className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded transition-colors"
+                            >
+                              Adicionar {boxType === 'item' ? 'Item' : 'Produto'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>

@@ -983,6 +983,46 @@ class ApiTauriService {
     }
   }
 
+  // Consultar blacklist de recompensa de Fireteam
+  async getFireteamBlacklist(filters?: { nickname?: string; reason?: string; date?: string }): Promise<{
+    success: boolean;
+    data?: Array<{
+      oidUser: number;
+      Reason: string;
+      AddedAt: string;
+      NickName: string;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (filters?.nickname) queryParams.append('nickname', filters.nickname);
+      if (filters?.reason) queryParams.append('reason', filters.reason);
+      if (filters?.date) queryParams.append('date', filters.date);
+
+      const url = `${API_BASE}/actions/fireteam-blacklist${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        data?: any[];
+      }>(response);
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao consultar blacklist de Fireteam:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao consultar blacklist de Fireteam'
+      };
+    }
+  }
+
   // Deletar clã usando BSP_DeleteSingleClan
   async deleteClan(data: {
     oidGuild: number;
@@ -1233,14 +1273,22 @@ class ApiTauriService {
   }
 
   // Buscar histórico de ban do jogador
-  async getBanHistory(targetOidUser: number): Promise<{
+  async getBanHistory(targetOidUser: number, filters?: { status?: string; executor?: string; motivo?: string; logDate?: string }): Promise<{
     success: boolean;
     data?: any[];
     error?: string;
     message?: string;
   }> {
     try {
-      const response = await fetch(`${API_BASE}/actions/ban-history/${targetOidUser}`, {
+      const queryParams = new URLSearchParams();
+      if (filters?.status) queryParams.append('status', filters.status);
+      if (filters?.executor) queryParams.append('executor', filters.executor);
+      if (filters?.motivo) queryParams.append('motivo', filters.motivo);
+      if (filters?.logDate) queryParams.append('logDate', filters.logDate);
+
+      const url = `${API_BASE}/actions/ban-history/${targetOidUser}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 30000
@@ -1251,7 +1299,7 @@ class ApiTauriService {
         data?: any[];
         message?: string;
       }>(response);
-      
+
       return result;
     } catch (error) {
       console.error('Erro ao buscar histórico de ban:', error);
@@ -1455,7 +1503,7 @@ class ApiTauriService {
   }
 
   // Listar itens habilitados para o modo CAMP
-  async getCampItems(): Promise<{
+  async getCampItems(filters?: { name?: string; value?: string }): Promise<{
     success: boolean;
     data: Array<{
       Name: string;
@@ -1468,7 +1516,13 @@ class ApiTauriService {
     error?: string;
   }> {
     try {
-      const response = await fetch(`${API_BASE}/actions/items/mode-camp`, {
+      const queryParams = new URLSearchParams();
+      if (filters?.name) queryParams.append('name', filters.name);
+      if (filters?.value) queryParams.append('value', filters.value);
+
+      const url = `${API_BASE}/actions/items/mode-camp${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 30000
@@ -1679,14 +1733,20 @@ class ApiTauriService {
   }
 
   // Obter todas as caixas de items (Gachapon)
-  async getAllItemBoxes(): Promise<{
+  async getAllItemBoxes(filters?: { boxName?: string; gachaponItemNo?: string }): Promise<{
     success: boolean;
     message?: string;
     error?: string;
     data?: Array<{ BoxName: string; GachaponItemNo: number }>;
   }> {
     try {
-      const response = await fetch(`${API_BASE}/actions/boxes/items`, {
+      const queryParams = new URLSearchParams();
+      if (filters?.boxName) queryParams.append('boxName', filters.boxName);
+      if (filters?.gachaponItemNo) queryParams.append('gachaponItemNo', filters.gachaponItemNo);
+
+      const url = `${API_BASE}/actions/boxes/items${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 30000
@@ -1709,14 +1769,20 @@ class ApiTauriService {
   }
 
   // Obter todas as caixas de produtos (Gachapon)
-  async getAllProductBoxes(): Promise<{
+  async getAllProductBoxes(filters?: { boxName?: string; gachaponItemNo?: string }): Promise<{
     success: boolean;
     message?: string;
     error?: string;
     data?: Array<{ BoxName: string; GachaponItemNo: number }>;
   }> {
     try {
-      const response = await fetch(`${API_BASE}/actions/boxes/products`, {
+      const queryParams = new URLSearchParams();
+      if (filters?.boxName) queryParams.append('boxName', filters.boxName);
+      if (filters?.gachaponItemNo) queryParams.append('gachaponItemNo', filters.gachaponItemNo);
+
+      const url = `${API_BASE}/actions/boxes/products${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 30000
@@ -1739,7 +1805,7 @@ class ApiTauriService {
   }
 
   // Obter itens dentro de uma caixa específica
-  async getItemsInBox(gachaponItemNo: number): Promise<{
+  async getItemsInBox(gachaponItemNo: number, filters?: { itemNo?: string; itemName?: string; itemType?: string; percentage?: string }): Promise<{
     success: boolean;
     message?: string;
     error?: string;
@@ -1755,7 +1821,15 @@ class ApiTauriService {
     }>;
   }> {
     try {
-      const response = await fetch(`${API_BASE}/actions/boxes/items/${gachaponItemNo}/contents`, {
+      const queryParams = new URLSearchParams();
+      if (filters?.itemNo) queryParams.append('itemNo', filters.itemNo);
+      if (filters?.itemName) queryParams.append('itemName', filters.itemName);
+      if (filters?.itemType) queryParams.append('itemType', filters.itemType);
+      if (filters?.percentage) queryParams.append('percentage', filters.percentage);
+
+      const url = `${API_BASE}/actions/boxes/items/${gachaponItemNo}/contents${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 30000
@@ -1787,7 +1861,7 @@ class ApiTauriService {
   }
 
   // Obter produtos dentro de uma caixa específica
-  async getProductsInBox(gachaponItemNo: number): Promise<{
+  async getProductsInBox(gachaponItemNo: number, filters?: { productID?: string; productName?: string; period?: string; percentage?: string }): Promise<{
     success: boolean;
     message?: string;
     error?: string;
@@ -1803,7 +1877,15 @@ class ApiTauriService {
     }>;
   }> {
     try {
-      const response = await fetch(`${API_BASE}/actions/boxes/products/${gachaponItemNo}/contents`, {
+      const queryParams = new URLSearchParams();
+      if (filters?.productID) queryParams.append('productID', filters.productID);
+      if (filters?.productName) queryParams.append('productName', filters.productName);
+      if (filters?.period) queryParams.append('period', filters.period);
+      if (filters?.percentage) queryParams.append('percentage', filters.percentage);
+
+      const url = `${API_BASE}/actions/boxes/products/${gachaponItemNo}/contents${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 30000
@@ -1878,8 +1960,12 @@ class ApiTauriService {
       ProductID: number;
       ProductName: string;
       ItemNo00: number;
-      ConsumeType: number;
-      Period: number;
+      ConsumeType00: number;
+      Period00: number;
+      Period01?: number;
+      Period02?: number;
+      Period03?: number;
+      Period04?: number;
     }>;
     error?: string;
   }> {
@@ -2175,6 +2261,74 @@ class ApiTauriService {
     }
   }
 
+  /**
+   * Enviar alterações para PRODUÇÃO
+   */
+  async sendGachaponToProduction(id: number): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/send-to-production/${id}`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Enviado para Produção', result.message || 'Alterações enviadas para PRODUÇÃO com sucesso!');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao enviar para produção:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao enviar para produção'
+      };
+    }
+  }
+
+  /**
+   * Reverter alterações para o estado original
+   */
+  async revertGachaponChanges(id: number): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/gachapon/revert/${id}`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Alterações Revertidas', result.message || 'Alterações revertidas com sucesso!');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao reverter alterações:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao reverter alterações'
+      };
+    }
+  }
+
   // Obter todos os itens para mudança de grade
   async getAllItemsForGradeChange(): Promise<{
     success: boolean;
@@ -2218,16 +2372,30 @@ class ApiTauriService {
   }
 
   // Obter produtos afetados por um array de ItemNos
-  async getAffectedProductsByItemNos(itemNos: number[]): Promise<{
+  async getAffectedProductsByItemNos(itemNos: number[], newItemGrade?: number): Promise<{
     success: boolean;
-    data?: Array<{ ProductID: number; ProductName: string; ItemNo00: number; ItemName: string; CurrentItemGrade: number; ItemType: number; ConsumeType00: number; Period00: number; CashPrice: number; PointPrice: number; PeriodName: string }>;
+    data?: Array<{
+      ProductID: number;
+      ProductName: string;
+      ItemNo00: number;
+      ItemName: string;
+      CurrentItemGrade: number;
+      ItemType: number;
+      ConsumeType00: number;
+      Period00: number;
+      CashPrice: number;
+      PointPrice: number;
+      PeriodName: string;
+      NewCashPrice?: number;
+      NewItemGrade?: number;
+    }>;
     error?: string;
   }> {
     try {
       const response = await fetch(`${API_BASE}/actions/itemgrade/affected-products`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify({ itemNos }),
+        body: JSON.stringify({ itemNos, newItemGrade }),
         connectTimeout: 30000
       });
       return await this.handleResponse(response);
@@ -2269,6 +2437,55 @@ class ApiTauriService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro ao atualizar itens'
+      };
+    }
+  }
+
+  // Obter matriz de preços para um ItemType
+  async getPriceMatrixForItemType(itemType: number): Promise<{
+    success: boolean;
+    data?: {
+      ItemType: number;
+      TypeName: string;
+      Price9Stars_1Day: number;
+      Price9Stars_7Days: number;
+      Price9Stars_30Days: number;
+      Price9Stars_90Days: number;
+      Price9Stars_Perm: number;
+      Price8Stars_1Day: number;
+      Price8Stars_7Days: number;
+      Price8Stars_30Days: number;
+      Price8Stars_90Days: number;
+      Price8Stars_Perm: number;
+      Price7Stars_1Day: number;
+      Price7Stars_7Days: number;
+      Price7Stars_30Days: number;
+      Price7Stars_90Days: number;
+      Price7Stars_Perm: number;
+      Price6Stars_1Day: number;
+      Price6Stars_7Days: number;
+      Price6Stars_30Days: number;
+      Price6Stars_90Days: number;
+      Price6Stars_Perm: number;
+      Price5Stars_1Day: number;
+      Price5Stars_7Days: number;
+      Price5Stars_30Days: number;
+      Price5Stars_90Days: number;
+      Price5Stars_Perm: number;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/itemgrade/price-matrix?itemType=${itemType}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar matriz de preços'
       };
     }
   }

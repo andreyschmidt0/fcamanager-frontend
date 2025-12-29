@@ -6,7 +6,7 @@ interface BaseModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl'| '5xl';
   maxHeight?: string;
   className?: string;
 }
@@ -29,7 +29,8 @@ const BaseModal: React.FC<BaseModalProps> = ({
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
     '3xl': 'max-w-3xl',
-    '4xl': 'max-w-4xl'
+    '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl'
   };
 
   return (

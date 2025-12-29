@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { X, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import apiService from '../../services/api-tauri.service';
 import BoxContentsModal from './consultboxes/BoxContentsModal';
+import DataTable from '../common/DataTable';
+import TableFilter from '../common/TableFilter';
 
 interface ConsultBoxesProps {
   isOpen: boolean;
@@ -15,122 +17,109 @@ interface BoxData {
   GachaponItemNo: number;
 }
 
-interface ItemInBox {
-  BoxName: string;
-  GachaponItemNo: number;
-  ItemNo: number;
-  ItemName: string;
-  ItemType: number;
-  Percentage: number;
-  Period: number;
-  ConsumeType: number;
-}
-
-interface ProductInBox {
-  BoxName: string;
-  GachaponItemNo: number;
-  ProductID: number;
-  ProductName: string;
-  ItemNo00: number;
-  Percentage: number;
-  Period: number;
-  ConsumeType: number;
-}
-
 const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
   const [boxType, setBoxType] = useState<BoxType>('items');
   const [boxes, setBoxes] = useState<BoxData[]>([]);
   const [isLoadingBoxes, setIsLoadingBoxes] = useState(false);
   const [selectedBox, setSelectedBox] = useState<BoxData | null>(null);
-  const [boxContents, setBoxContents] = useState<(ItemInBox | ProductInBox)[]>([]);
-  const [isLoadingContents, setIsLoadingContents] = useState(false);
   const [showContentsModal, setShowContentsModal] = useState(false);
   const [error, setError] = useState<string>('');
-  const [boxSearchTerm, setBoxSearchTerm] = useState('');
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Valores digitados pelo usuário (sem delay)
+  const [inputBoxName, setInputBoxName] = useState('');
+  const [inputGachaponItemNo, setInputGachaponItemNo] = useState('');
+
+  // Valores com debounce que disparam a busca
+  const [filterBoxName, setFilterBoxName] = useState('');
+  const [filterGachaponItemNo, setFilterGachaponItemNo] = useState('');
+
+  // Debounce para filtros
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterBoxName(inputBoxName);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputBoxName]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterGachaponItemNo(inputGachaponItemNo);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputGachaponItemNo]);
+
+  // Buscar caixas quando filtros mudarem
+  useEffect(() => {
+    if (isOpen && hasLoaded) {
+      handleListBoxes();
+    }
+  }, [filterBoxName, filterGachaponItemNo]);
+
+  // Resetar ao fechar
+  useEffect(() => {
+    if (!isOpen) {
+      setBoxType('items');
+      setBoxes([]);
+      setSelectedBox(null);
+      setShowContentsModal(false);
+      setError('');
+      // Limpar inputs
+      setInputBoxName('');
+      setInputGachaponItemNo('');
+      // Limpar filtros
+      setFilterBoxName('');
+      setFilterGachaponItemNo('');
+      setHasLoaded(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleClose = () => {
-    setBoxType('items');
-    setBoxes([]);
-    setSelectedBox(null);
-    setBoxContents([]);
-    setShowContentsModal(false);
-    setError('');
-    setBoxSearchTerm('');
     onClose();
   };
 
   const handleContentsModalClose = () => {
     setShowContentsModal(false);
     setSelectedBox(null);
-    setBoxContents([]);
   };
 
   const handleListBoxes = async () => {
     setIsLoadingBoxes(true);
     setError('');
     setSelectedBox(null);
-    setBoxContents([]);
     setShowContentsModal(false);
-    setBoxSearchTerm('');
+    setHasLoaded(true);
 
     try {
+      const filters = {
+        boxName: filterBoxName,
+        gachaponItemNo: filterGachaponItemNo
+      };
+
       const result = boxType === 'items'
-        ? await apiService.getAllItemBoxes()
-        : await apiService.getAllProductBoxes();
+        ? await apiService.getAllItemBoxes(filters)
+        : await apiService.getAllProductBoxes(filters);
 
       if (result.success && result.data) {
         setBoxes(result.data);
       } else {
         setError(result.error || 'Erro ao buscar caixas');
+        setBoxes([]);
       }
     } catch (err) {
       setError('Erro ao buscar caixas');
+      setBoxes([]);
       console.error(err);
     } finally {
       setIsLoadingBoxes(false);
     }
   };
 
-  const filteredBoxes = useMemo(() => {
-    if (!boxSearchTerm.trim()) {
-      return boxes;
-    }
-
-    const term = boxSearchTerm.trim().toLowerCase();
-    return boxes.filter((box) => {
-      const nameMatch = box.BoxName?.toLowerCase().includes(term);
-      const idMatch = box.GachaponItemNo?.toString().includes(term);
-      return nameMatch || idMatch;
-    });
-  }, [boxes, boxSearchTerm]);
-
-  const handleListContents = async (box: BoxData) => {
+  const handleListContents = (box: BoxData) => {
     setSelectedBox(box);
-    setIsLoadingContents(true);
     setShowContentsModal(true);
-    setBoxContents([]);
-    setError('');
-
-    try {
-      const result = boxType === 'items'
-        ? await apiService.getItemsInBox(box.GachaponItemNo)
-        : await apiService.getProductsInBox(box.GachaponItemNo);
-
-      if (result.success && result.data) {
-        setBoxContents(result.data);
-      } else {
-        setError(result.error || 'Erro ao buscar conteúdo da caixa');
-        setShowContentsModal(false);
-      }
-    } catch (err) {
-      setError('Erro ao buscar conteúdo da caixa');
-      console.error(err);
-      setShowContentsModal(false);
-    } finally {
-      setIsLoadingContents(false);
-    }
   };
 
   return (
@@ -185,66 +174,69 @@ const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          {/* Tabela de Caixas */}
-          {boxes.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white">
-                {boxType === 'items' ? 'Caixas de Items' : 'Caixas de Produtos'} ({filteredBoxes.length}/{boxes.length})
-              </h3>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <label className="text-sm text-gray-300" htmlFor="box-search">
-                  Pesquisar
-                </label>
-                <input
-                  id="box-search"
-                  type="text"
-                  value={boxSearchTerm}
-                  onChange={(e) => setBoxSearchTerm(e.target.value)}
-                  placeholder="Filtrar por nome ou ID da caixa"
-                  className="flex-1 px-3 py-2 bg-[#1d1e24] text-white rounded-lg border border-transparent focus:border-green-500 focus:outline-none"
-                />
-              </div>
-              {filteredBoxes.length === 0 ? (
-                <div className="bg-[#1d1e24] border border-gray-700 rounded-lg p-4 text-center text-gray-400">
-                  Nenhuma caixa encontrada para "{boxSearchTerm}"
-                </div>
-              ) : (
-              <div className="overflow-x-auto rounded-lg border border-gray-700">
-                <table className="w-full">
-                  <thead className="bg-[#111216]">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Nome da Caixa
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Item No
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Ações
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-700">
-                    {filteredBoxes.map((box) => (
-                      <tr key={box.GachaponItemNo} className="hover:bg-[#1d1e24] transition-colors">
-                        <td className="px-4 py-3 text-sm text-white">{box.BoxName}</td>
-                        <td className="px-4 py-3 text-sm text-gray-400">{box.GachaponItemNo}</td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => handleListContents(box)}
-                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                          >
-                            {boxType === 'items' ? 'Listar Itens' : 'Listar Produtos'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              )}
-            </div>
+          {/* Filtros - sempre visíveis após listar */}
+          {hasLoaded && (
+            <TableFilter
+              filters={[
+                {
+                  key: 'boxName',
+                  label: 'Filtrar por Nome',
+                  placeholder: 'Digite o nome da caixa...',
+                  value: inputBoxName,
+                  onChange: setInputBoxName
+                },
+                {
+                  key: 'gachaponItemNo',
+                  label: 'Filtrar por Item No',
+                  placeholder: 'Digite o Item No...',
+                  value: inputGachaponItemNo,
+                  onChange: setInputGachaponItemNo
+                }
+              ]}
+              columnsPerRow={2}
+            />
           )}
+
+          {/* Tabela de Caixas */}
+          {boxes.length > 0 ? (
+            <DataTable
+              columns={[
+                {
+                  key: 'BoxName',
+                  header: 'Nome da Caixa',
+                  className: 'px-4 py-3 text-sm text-white'
+                },
+                {
+                  key: 'GachaponItemNo',
+                  header: 'Item No',
+                  className: 'px-4 py-3 text-sm text-gray-400'
+                },
+                {
+                  key: 'actions',
+                  header: 'Ações',
+                  headerClassName: 'px-4 py-3 text-right text-sm font-semibold text-gray-300 border-b border-gray-700',
+                  render: (box: BoxData) => (
+                    <div className="text-right">
+                      <button
+                        onClick={() => handleListContents(box)}
+                        className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                      >
+                        {boxType === 'items' ? 'Listar Itens' : 'Listar Produtos'}
+                      </button>
+                    </div>
+                  ),
+                  className: 'px-4 py-3'
+                }
+              ]}
+              data={boxes}
+              totalCount={boxes.length}
+              maxHeight="60vh"
+            />
+          ) : hasLoaded && !isLoadingBoxes ? (
+            <div className="bg-[#1d1e24] rounded-lg p-8 text-center">
+              <p className="text-gray-400 text-lg">Nenhuma caixa encontrada</p>
+            </div>
+          ) : null}
         </div>
 
         {/* Footer */}
@@ -264,8 +256,6 @@ const ConsultBoxes: React.FC<ConsultBoxesProps> = ({ isOpen, onClose }) => {
         onClose={handleContentsModalClose}
         selectedBox={selectedBox}
         boxType={boxType}
-        boxContents={boxContents}
-        isLoading={isLoadingContents}
       />
     </div>
   );

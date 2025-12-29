@@ -13,6 +13,7 @@ type BoxType = 'item' | 'produto';
 interface GachaponConfigItem {
   itemNo?: number;
   productID?: number;
+  itemNo00?: number;
   name: string;
   percentage: number;
   percentageDisplay: number;
@@ -63,6 +64,7 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
         const loadedItems: GachaponConfigItem[] = result.data.map((item: any) => ({
           itemNo: boxType === 'item' ? item.ItemNo : undefined,
           productID: boxType === 'produto' ? item.ProductID : undefined,
+          itemNo00: boxType === 'produto' ? item.ItemNo00 : undefined,
           name: boxType === 'item' ? item.ItemName : item.ProductName,
           percentage: item.Percentage,
           percentageDisplay: item.Percentage / 100,
@@ -117,6 +119,7 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
     const newItem: GachaponConfigItem = {
       itemNo: boxType === 'item' ? item.ItemNo : undefined,
       productID: boxType === 'produto' ? item.ProductID : undefined,
+      itemNo00: boxType === 'produto' ? item.ItemNo00 : undefined,
       name: boxType === 'item' ? item.Name : item.ProductName,
       percentage: 0,
       percentageDisplay: 0,
