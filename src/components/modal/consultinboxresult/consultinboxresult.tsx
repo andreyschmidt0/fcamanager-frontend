@@ -203,11 +203,11 @@ const ConsultInboxResult: React.FC<ConsultInboxResultProps> = ({
                       <div className="lg:col-span-2 flex gap-4 lg:block">
                         <div className="flex-1">
                           <span className="text-xs text-gray-400">Preço:</span>
-                          <p className="text-green-400 font-semibold">{item.Price.toLocaleString('pt-BR')} GP</p>
+                          <p className="text-green-400 font-semibold">{(item.Price ?? 0).toLocaleString('pt-BR')} GP</p>
                         </div>
                         <div className="flex-1">
                           <span className="text-xs text-gray-400">Período:</span>
-                          <p className="text-white font-medium">{item.Period00} dias</p>
+                          <p className="text-white font-medium">{item.Period00 ?? 0} dias</p>
                         </div>
                       </div>
 

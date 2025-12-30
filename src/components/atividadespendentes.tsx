@@ -94,22 +94,13 @@ const AtividadesPendentes: React.FC = () => {
     });
   };
 
-  // Debug: Verificar dados do usuário
-  useEffect(() => {
-    console.log('[AtividadesPendentes] Debug - User:', user);
-    console.log('[AtividadesPendentes] Debug - user?.id:', user?.id);
-    console.log('[AtividadesPendentes] Debug - isMaster:', isMaster);
-  }, [user, isMaster]);
-
   useEffect(() => {
     // Aguardar user carregar antes de fazer qualquer fetch
     if (!user) return;
 
     if (isMaster) {
-      console.log('[AtividadesPendentes] Carregando solicitações pendentes (Master)...');
       fetchRequests();
     } else {
-      console.log('[AtividadesPendentes] Carregando minhas solicitações...');
       fetchMyRequests();
     }
   }, [isMaster, user]);
@@ -117,7 +108,6 @@ const AtividadesPendentes: React.FC = () => {
   // Refetch quando os filtros mudarem (apenas para não-Master)
   useEffect(() => {
     if (!isMaster && user) {
-      console.log('[AtividadesPendentes] Filtros alterados, recarregando...');
       const timeout = setTimeout(() => {
         fetchMyRequests();
       }, 300); // Debounce de 300ms
@@ -131,12 +121,8 @@ const AtividadesPendentes: React.FC = () => {
     setError('');
 
     try {
-      console.log('[AtividadesPendentes] Chamando API getPendingGachaponRequests...');
       const result = await apiService.getPendingGachaponRequests();
-      console.log('[AtividadesPendentes] Resposta da API:', result);
-
       if (result.success && result.data) {
-        console.log('[AtividadesPendentes] Solicitações carregadas:', result.data.length);
         setRequests(result.data);
       } else {
         console.error('[AtividadesPendentes] Erro na resposta:', result.error);
@@ -155,10 +141,6 @@ const AtividadesPendentes: React.FC = () => {
     setError('');
 
     try {
-      console.log('[AtividadesPendentes] Chamando API getMyGachaponRequests com filtros:', {
-        status: selectedStatus,
-        period: selectedPeriod
-      });
 
       const result = await apiService.getMyGachaponRequests(
         selectedStatus === 'TODOS' ? undefined : selectedStatus,
@@ -925,11 +907,9 @@ const AtividadesPendentes: React.FC = () => {
             ) : (
               <div className="h-full overflow-y-auto custom-scrollbar space-y-3">
                 {filteredRequests.map((request) => {
-                console.log('[AtividadesPendentes] Renderizando request:', request);
                 let config;
                 try {
                   config = JSON.parse(request.config_json);
-                  console.log('[AtividadesPendentes] Config parsed:', config);
                 } catch (err) {
                   console.error('[AtividadesPendentes] Erro ao fazer parse do config_json:', err);
                   return null;

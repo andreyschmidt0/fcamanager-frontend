@@ -310,24 +310,31 @@ class ApiTauriService {
   }
 
 
-  async getLogs(period?: string, gmNickname?: string, limit?: number): Promise<any[]> {
+  async getLogs(period?: string, gmNickname?: string, page: number = 1, pageSize: number = 20): Promise<{ logs: any[], pagination: { page: number, pageSize: number, total: number, totalPages: number } }> {
     try {
       const params = new URLSearchParams();
       if (period) params.append('period', period);
       if (gmNickname) params.append('gmNickname', gmNickname);
-      if (limit) params.append('limit', limit.toString());
-      
+      params.append('page', page.toString());
+      params.append('pageSize', pageSize.toString());
+
       const response = await fetch(`${API_BASE}/logs?${params.toString()}`, {
         method: 'GET',
         headers: this.getAuthHeaders(),
         connectTimeout: 15000
       });
 
-      const data = await this.handleResponse<{ logs: any[] }>(response);
-      return data.logs || [];
+      const data = await this.handleResponse<{ logs: any[], pagination: any }>(response);
+      return {
+        logs: data.logs || [],
+        pagination: data.pagination || { page: 1, pageSize: 20, total: 0, totalPages: 0 }
+      };
     } catch (error) {
       console.error('Erro ao buscar logs:', error);
-      return [];
+      return {
+        logs: [],
+        pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 }
+      };
     }
   }
 

@@ -19,6 +19,12 @@ const RecentActivities: React.FC = () => {
   const [gmUsers, setGMUsers] = useState<GMUser[]>([]);
   const [databaseLogs, setDatabaseLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 20,
+    total: 0,
+    totalPages: 0
+  });
   const { getActivitiesByPeriod } = useActivityLog();
   const { user } = useAuth();
 
@@ -89,13 +95,20 @@ const RecentActivities: React.FC = () => {
   // Buscar logs quando período ou GM mudarem (com debounce)
   useEffect(() => {
     if (!user) return;
-    
+
     const timeout = setTimeout(() => {
-      fetchLogs();
+      fetchLogs(1); // Resetar para página 1 quando mudar filtro
     }, 300); // Debounce de 300ms
 
     return () => clearTimeout(timeout);
   }, [selectedPeriod, selectedGM]);
+
+  // Função para mudar de página
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages && !isLoading) {
+      fetchLogs(newPage);
+    }
+  };
 
   // Cache para o Discord ID para evitar múltiplas chamadas
   const [cachedDiscordId, setCachedDiscordId] = useState<string | null>(null);
@@ -118,19 +131,21 @@ const RecentActivities: React.FC = () => {
     return null;
   };
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (page = 1) => {
     if (!user) {
       return;
     }
 
     setIsLoading(true);
     try {
-      // Usar JWT direto - não precisa buscar Discord ID separadamente
-      const logs = await apiService.getLogs(selectedPeriod, selectedGM || undefined, 150);
-      setDatabaseLogs(logs);
+      // Usar JWT direto com paginação
+      const response = await apiService.getLogs(selectedPeriod, selectedGM || undefined, page, 20);
+      setDatabaseLogs(response.logs || []);
+      setPagination(response.pagination || { page: 1, pageSize: 20, total: 0, totalPages: 0 });
     } catch (error) {
       console.error('Erro ao buscar logs:', error);
       setDatabaseLogs([]);
+      setPagination({ page: 1, pageSize: 20, total: 0, totalPages: 0 });
     } finally {
       setIsLoading(false);
     }
@@ -225,12 +240,39 @@ const RecentActivities: React.FC = () => {
   const activities = databaseLogs.map(convertLogToActivity);
 
   const formatTimestamp = (timestamp: Date) => {
+    // Validar se o timestamp é válido
+    if (!timestamp || isNaN(timestamp.getTime())) {
+      return 'Data inválida';
+    }
+
     const now = new Date();
     const diff = now.getTime() - timestamp.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
+    // Se a data for futura ou muito antiga (mais de 365 dias), mostrar data completa
+    if (diff < 0 || days > 365) {
+      return timestamp.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Para datas recentes (mais de 7 dias), mostrar data completa
+    if (days > 7) {
+      return timestamp.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Para datas muito recentes, mostrar tempo relativo
     if (days > 0) return `${days}d atrás`;
     if (hours > 0) return `${hours}h atrás`;
     if (minutes > 0) return `${minutes}m atrás`;
@@ -251,7 +293,7 @@ const RecentActivities: React.FC = () => {
               ÚLTIMAS ATIVIDADES
             </h2>
             <button
-              onClick={fetchLogs}
+              onClick={() => fetchLogs(pagination.page)}
               disabled={isLoading}
               className="p-1 hover:bg-gray-700 rounded transition-colors"
               title="Atualizar atividades"
@@ -417,6 +459,73 @@ const RecentActivities: React.FC = () => {
               ))
             )}
           </div>
+
+          {/* Paginação */}
+          {!isLoading && pagination.totalPages > 1 && (
+            <div className="border-t border-black pt-4 pb-2 px-4">
+              <div className="flex items-center justify-between text-xs text-gray-400">
+                {/* Page Info */}
+                <span>
+                  Página {pagination.page} de {pagination.totalPages}
+                  {' '}({((pagination.page - 1) * pagination.pageSize + 1).toLocaleString()} - {Math.min(pagination.page * pagination.pageSize, pagination.total).toLocaleString()} de {pagination.total.toLocaleString()})
+                </span>
+
+                {/* Navigation */}
+                <div className="flex items-center gap-2">
+                  {/* Botão Anterior */}
+                  <button
+                    onClick={() => handlePageChange(pagination.page - 1)}
+                    disabled={pagination.page <= 1 || isLoading}
+                    className="px-2 py-1 rounded bg-[#1d1e24] hover:bg-[#2a2b30] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ←
+                  </button>
+
+                  {/* Números de página */}
+                  <div className="flex gap-1">
+                    {[...Array(pagination.totalPages)].map((_, index) => {
+                      const pageNumber = index + 1;
+                      // Mostrar apenas algumas páginas (primeira, última, atual e adjacentes)
+                      const showPage =
+                        pageNumber === 1 ||
+                        pageNumber === pagination.totalPages ||
+                        (pageNumber >= pagination.page - 1 && pageNumber <= pagination.page + 1);
+
+                      if (!showPage && (pageNumber === 2 || pageNumber === pagination.totalPages - 1)) {
+                        return <span key={pageNumber} className="px-1">...</span>;
+                      }
+
+                      if (!showPage) return null;
+
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => handlePageChange(pageNumber)}
+                          disabled={isLoading}
+                          className={`px-2 py-1 rounded transition-colors ${
+                            pageNumber === pagination.page
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-[#1d1e24] hover:bg-[#2a2b30]'
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Botão Próxima */}
+                  <button
+                    onClick={() => handlePageChange(pagination.page + 1)}
+                    disabled={pagination.page >= pagination.totalPages || isLoading}
+                    className="px-2 py-1 rounded bg-[#1d1e24] hover:bg-[#2a2b30] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
