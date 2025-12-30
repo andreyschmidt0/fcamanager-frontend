@@ -796,6 +796,46 @@ class ApiTauriService {
     }
   }
 
+  async setUserStoreItemStatus(data: {
+    targetOidUser: number;
+    userStoreSeqNo: number;
+    action: string;
+    newExpireDate?: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/set-user-store-item-status`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+      
+      if (result.success) {
+        const actionText = data.action === 'A' ? 'ativado' : 'desativado';
+        this.showSuccessModal('Status Atualizado', `Item do inbox ${actionText} com sucesso!`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Erro ao alterar status do item do inbox:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao alterar status do item do inbox'
+      };
+    }
+  }
+
   async removeAccount(data: {
     targetNexonId: string;
     reason: string;
