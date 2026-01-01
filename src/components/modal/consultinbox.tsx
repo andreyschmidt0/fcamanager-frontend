@@ -16,6 +16,7 @@ interface ConsultInboxProps {
 
 export interface InboxItem {
   OrderNo: number;
+  UserStoreSeqNo: number;
   InventorySeqno: number;
   ProductID: number;
   ProductName: string;
@@ -27,6 +28,7 @@ export interface InboxItem {
   SendNickname: string;
   Message: string;
   GiftType: string;
+  Status: number;
 }
 
 const ConsultInbox: React.FC<ConsultInboxProps> = ({ isOpen, onClose }) => {
