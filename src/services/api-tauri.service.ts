@@ -1357,6 +1357,38 @@ class ApiTauriService {
     }
   }
 
+  // Consultar histórico de doações
+  async getDonationHistory(oidUser: number): Promise<{
+    success: boolean;
+    data?: any[];
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const url = `${API_BASE}/actions/donation-history/${oidUser}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        data?: any[];
+        message?: string;
+      }>(response);
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar histórico de doações:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar histórico de doações'
+      };
+    }
+  }
+
 
   // Search player inventory with filters
   async searchInventory(oidUser: string, useType?: string, itemName?: string): Promise<any[]> {

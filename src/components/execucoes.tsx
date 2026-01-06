@@ -4,6 +4,7 @@ import BanModal from './modal/banmodal';
 import UnbanModal from './modal/unbanmodal';
 import { usePlayer } from '../contexts/PlayerContext';
 import ConsultBanHistory from './modal/consultbanhistory';
+import ConsultDonationHistory from './modal/consultdonationhistory';
 import SendItem from './modal/senditem';
 import ConsultInventory from './modal/consultinventory';
 import ConsultInbox from './modal/consultinbox';
@@ -133,7 +134,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   };
 
   const actionButtons = [
-    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Inventário', 'Consultar Inbox', 'Consultar Caixas', 'Consultar Modo CAMP', 'Consultar Blacklist Fireteam'] },
+    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Histórico de Doação', 'Consultar Inventário', 'Consultar Inbox', 'Consultar Caixas', 'Consultar Modo CAMP', 'Consultar Blacklist Fireteam'] },
     { name: 'ENVIAR / INSERIR', options: getEnviarInserirOptions() },
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Emblema Clan', 'Remover Exp', 'Remover Cash', 'Remover Conta', ] },
@@ -226,6 +227,12 @@ return (
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Consultar Histórico de Ban' && (
         <ConsultBanHistory 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Consultar Histórico de Doação' && (
+        <ConsultDonationHistory 
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />
