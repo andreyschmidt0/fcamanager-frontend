@@ -123,7 +123,7 @@ jobs:
           cat > latest.json << EOF
           {
             "version": "${{ steps.release_info.outputs.app_version }}",
-            "notes": "Implementação de testes da Procedure para inativar itens do inbox",
+            "notes": "Mudança do servidor para fly.io",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "windows-x86_64": {
