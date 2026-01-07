@@ -2,7 +2,7 @@ import { fetch } from '@tauri-apps/plugin-http';
 
 // Test service using Tauri's native HTTP client
 class TauriHttpService {
-  private primaryURL = 'https://fcaranked.fly.dev/api';
+  private primaryURL = 'https://fca-backend.fly.dev/api';
   private fallbackURL = 'http://localhost:3000/api';
 
   async testConnection(): Promise<{success: boolean, details: string}> {
