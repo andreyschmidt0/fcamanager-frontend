@@ -124,7 +124,7 @@ jobs:
           cat > latest.json << EOF
           {
             "version": "${{ steps.release_info.outputs.app_version }}",
-            "notes": "Feature para converter listagem de products e itens para SQL e histórico de nicknames",
+            "notes": "Automatização do processo de troca de server.",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "windows-x86_64": {
