@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import '../index.css';
-import { X, Search, Copy } from 'lucide-react';
+import { X, Search, Copy, History } from 'lucide-react';
 import { usePlayer, Player } from '../contexts/PlayerContext';
 import { useClan, Clan } from '../contexts/ClanContext';
 import PlayerInfo from './modal/playerinfo/playerinfo';
 import PlayerProfile from './modal/playerprofile/PlayerProfile';
 import ClanMembersModal from './modal/ClanMembersModal';
+import ConsultNicknameHistory from './modal/ConsultNicknameHistory';
 import apiService from '../services/api-tauri.service';
 
 interface PlayersListProps {
@@ -28,6 +29,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
   const [showPlayerInfo, setShowPlayerInfo] = useState<boolean>(false);
   const [showPlayerProfile, setShowPlayerProfile] = useState<boolean>(false);
   const [showClanMembers, setShowClanMembers] = useState<boolean>(false);
+  const [showNicknameHistory, setShowNicknameHistory] = useState<boolean>(false);
 
   const copyToClipboard = (discordId: string) => {
     navigator.clipboard.writeText(discordId).then(() => {
@@ -549,6 +551,18 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
               
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Nickname:</span>
+                  <span className="text-gray-300">{selectedPlayer.name}</span>
+                  <button
+                    onClick={() => setShowNicknameHistory(true)}
+                    className="text-gray-400 hover:text-white transition-colors ml-1"
+                    title="Ver Histórico de Nicknames"
+                  >
+                    <History size={14} />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400">Discord:</span>
                   <span className="text-gray-300">{selectedPlayer.discordId}</span>
                   <button
@@ -809,6 +823,16 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
           onClose={() => setShowClanMembers(false)}
           clanName={selectedClan.strName}
           oidGuild={selectedClan.oidGuild}
+        />
+      )}
+
+      {/* Nickname History Modal */}
+      {selectedPlayer && showNicknameHistory && (
+        <ConsultNicknameHistory
+          isOpen={showNicknameHistory}
+          onClose={() => setShowNicknameHistory(false)}
+          targetOidUser={parseInt(selectedPlayer.id)}
+          currentNickname={selectedPlayer.name}
         />
       )}
     </>

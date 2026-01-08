@@ -28,6 +28,7 @@ import AtualizarValorFireteamModal from './modal/atualizarvalorfireteam';
 import MarcaDeBatalha from './modal/marcadebatalha';
 import AdjustKDA from './modal/adjustkda';
 import InsertFireteamBlacklist from './modal/insertfireteamblacklist';
+import InsertWeaponModal from './modal/insertweaponmodal';
 import CreateGachaponBox from './modal/creategachaponbox';
 import AtividadesPendentes from './atividadespendentes';
 import ChangeItemGradeModal from './modal/changeitemgrademodal';
@@ -123,7 +124,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
 
   // Opções de "ENVIAR / INSERIR" baseadas no ambiente
   const getEnviarInserirOptions = () => {
-    const baseOptions = ['Enviar Cash', 'Enviar Item', 'Inserir BlackList EA'];
+    const baseOptions = ['Enviar Cash', 'Enviar Item', 'Inserir BlackList EA', 'Inserir Arma'];
 
     // Adicionar "Criar/Editar Caixa" SOMENTE se estiver em ambiente de TESTES
     if (currentEnvironment === 'test') {
@@ -287,6 +288,12 @@ return (
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Inserir BlackList EA' && (
         <InsertFireteamBlacklist
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Inserir Arma' && (
+        <InsertWeaponModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

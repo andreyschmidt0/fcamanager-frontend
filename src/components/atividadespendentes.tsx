@@ -1082,7 +1082,7 @@ const AtividadesPendentes: React.FC = () => {
 
         return (
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto custom-scrollbar">
               <div className="sticky top-0 bg-[#111216] z-10 flex items-center justify-between p-6 border-b border-gray-600">
                 <h3 className="text-2xl font-bold text-white">Detalhes da Solicitação</h3>
                 <button
@@ -1339,7 +1339,7 @@ const AtividadesPendentes: React.FC = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
                 {/* Informações da Caixa */}
                 <div className="bg-[#1d1e24] p-4 rounded-lg border border-black">
                   <h4 className="text-lg font-bold text-white mb-3">Informações da Caixa</h4>

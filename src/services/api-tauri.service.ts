@@ -1389,6 +1389,46 @@ class ApiTauriService {
     }
   }
 
+  // Consultar histórico de nicknames
+  async getNicknameHistory(targetOidUser: number): Promise<{
+    success: boolean;
+    data?: Array<{
+      Ordem: number;
+      Nickname: string;
+      RegDate: string;
+    }>;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const url = `${API_BASE}/actions/nickname-history/${targetOidUser}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        data?: Array<{
+          Ordem: number;
+          Nickname: string;
+          RegDate: string;
+        }>;
+        message?: string;
+      }>(response);
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar histórico de nicknames:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar histórico de nicknames'
+      };
+    }
+  }
+
 
   // Search player inventory with filters
   async searchInventory(oidUser: string, useType?: string, itemName?: string): Promise<any[]> {
