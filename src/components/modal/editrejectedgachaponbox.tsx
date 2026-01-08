@@ -186,7 +186,7 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
 
   // Adicionar item à configuração
   const handleAddItem = (item: any) => {
-    const period = boxType === 'produto' ? (item.Period00) : (item.DefaultPeriod);
+    const period = boxType === 'produto' ? (item.Period) : (item.DefaultPeriod);
 
     const newItem: GachaponConfigItem = {
       itemNo: boxType === 'item' ? item.ItemNo : undefined,
@@ -196,7 +196,7 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
       percentage: 0,
       percentageDisplay: 0,
       period: period,
-      consumeType: boxType === 'item' ? 1 : (item.ConsumeType00 || 1),
+      consumeType: boxType === 'item' ? 1 : (item.ConsumeType || 1),
       broadcast: period === 999
     };
 
@@ -486,7 +486,7 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
                   <tbody>
                     {searchResults.map((item, index) => {
                       const itemId = boxType === 'item' ? item.ItemNo : item.ProductID;
-                      const period = boxType === 'item' ? item.DefaultPeriod : item.Period00;
+                      const period = boxType === 'item' ? item.DefaultPeriod : item.Period;
 
                       return (
                         <tr key={index} className="border-t border-gray-800 hover:bg-gray-800">

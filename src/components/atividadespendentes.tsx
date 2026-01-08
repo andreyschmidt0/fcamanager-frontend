@@ -354,11 +354,23 @@ const AtividadesPendentes: React.FC = () => {
                     <div className="space-y-2">
                     {rejectedRequests.map((request) => {
                       let config;
+                      let parseError = false;
                       try {
                         config = JSON.parse(request.config_json);
                       } catch (err) {
-                        return null;
+                        parseError = true;
                       }
+
+                      if (parseError) {
+                        return (
+                          <div key={request.id} className="bg-red-900/20 border border-red-500 p-4 rounded-lg space-y-2">
+                            <p className="text-red-400 font-bold">ERRO DE DADOS (JSON Corrompido)</p>
+                            <p className="text-white text-sm">ID: {request.id} | {request.gachapon_name}</p>
+                            <p className="text-xs text-gray-400">Esta solicitação contém dados inválidos e não pode ser exibida ou editada.</p>
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={request.id}
@@ -426,11 +438,22 @@ const AtividadesPendentes: React.FC = () => {
                     <div className="space-y-2">
                     {pendingRequests.map((request) => {
                       let config;
+                      let parseError = false;
                       try {
                         config = JSON.parse(request.config_json);
                       } catch (err) {
-                        return null;
+                        parseError = true;
                       }
+
+                      if (parseError) {
+                        return (
+                          <div key={request.id} className="bg-red-900/20 border border-red-500 p-4 rounded-lg space-y-2">
+                            <p className="text-red-400 font-bold">ERRO DE DADOS (JSON Corrompido)</p>
+                            <p className="text-white text-sm">ID: {request.id} | {request.gachapon_name}</p>
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={request.id}
@@ -469,11 +492,22 @@ const AtividadesPendentes: React.FC = () => {
                     <div className="space-y-2">
                     {approvedRequests.map((request) => {
                       let config;
+                      let parseError = false;
                       try {
                         config = JSON.parse(request.config_json);
                       } catch (err) {
-                        return null;
+                        parseError = true;
                       }
+
+                      if (parseError) {
+                        return (
+                          <div key={request.id} className="bg-red-900/20 border border-red-500 p-4 rounded-lg space-y-2">
+                            <p className="text-red-400 font-bold">ERRO DE DADOS (JSON Corrompido)</p>
+                            <p className="text-white text-sm">ID: {request.id} | {request.gachapon_name}</p>
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={request.id}
@@ -908,12 +942,23 @@ const AtividadesPendentes: React.FC = () => {
               <div className="h-full overflow-y-auto custom-scrollbar space-y-3">
                 {filteredRequests.map((request) => {
                 let config;
+                let parseError = false;
                 try {
                   config = JSON.parse(request.config_json);
                 } catch (err) {
-                  console.error('[AtividadesPendentes] Erro ao fazer parse do config_json:', err);
-                  return null;
+                  parseError = true;
                 }
+
+                if (parseError) {
+                  return (
+                    <div key={request.id} className="bg-red-900/20 border border-red-500 p-4 rounded-lg space-y-2">
+                      <p className="text-red-400 font-bold">ERRO DE DADOS (JSON Corrompido)</p>
+                      <p className="text-white text-sm">ID: {request.id} | {request.gachapon_name}</p>
+                      <p className="text-xs text-gray-400">Esta solicitação contém dados inválidos e não pode ser exibida ou aprovada.</p>
+                    </div>
+                  );
+                }
+
                 return (
                   <div
                     key={request.id}

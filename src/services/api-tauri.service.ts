@@ -2631,6 +2631,64 @@ class ApiTauriService {
     }
   }
 
+  // Buscar todas as recompensas GOA
+  async getGoaRankRewards(): Promise<{
+    success: boolean;
+    data?: Array<{
+      RankEmblem: number;
+      RankName: string;
+      RankEXP: number;
+      ProductIDs: string;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/goa-rank-rewards`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao buscar recompensas GOA'
+      };
+    }
+  }
+
+  // Atualizar recompensa GOA
+  async updateGoaRankReward(rankEmblem: number, productIDs: string): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/goa-rank-rewards`, {
+        method: 'PUT',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ rankEmblem, productIDs }),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Recompensa GOA Alterada', 'As recompensas do rank GOA foram atualizadas com sucesso!');
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao atualizar recompensa GOA'
+      };
+    }
+  }
+
 }
 
 // Exportar instância única
