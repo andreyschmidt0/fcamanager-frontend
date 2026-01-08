@@ -12,7 +12,13 @@ export interface PlayerProfileData {
 
 
 // Configuração da API
+// Em produção (Tauri), o Vite substitui isso pelo valor no .env durante o BUILD.
+// Se não houver .env, usamos a URL de produção como fallback seguro.
 const API_BASE = import.meta.env.VITE_API_URL || 'https://fca-backend.fly.dev/api';
+
+if (!import.meta.env.VITE_API_URL && import.meta.env.DEV) {
+  console.warn('VITE_API_URL não definida no .env! Usando fallback de produção.');
+}
 
 // Interface para o usuário retornado pelo backend
 export interface BackendUser {

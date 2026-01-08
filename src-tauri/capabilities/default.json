@@ -15,10 +15,10 @@
           "url": "https://fca-backend.fly.dev:*"
         },
         {
-          "url": "https://fca-backend.fly.dev:*"
+          "url": "http://localhost:*"
         },
         {
-          "url": "http://localhost:*"
+          "url": "http://181.215.45.220:*"
         }
       ]
     }

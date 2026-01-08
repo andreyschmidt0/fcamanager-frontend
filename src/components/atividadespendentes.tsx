@@ -3,6 +3,7 @@ import { RefreshCw, Eye, Check, X, ChevronDown, ChevronUp, Edit } from 'lucide-r
 import { useAuth } from '../hooks/useAuth';
 import apiService from '../services/api-tauri.service';
 import EditRejectedGachaponBox from './modal/editrejectedgachaponbox';
+import RequestTimeline from './common/RequestTimeline';
 
 interface PendingRequest {
   id: number;
@@ -587,6 +588,9 @@ const AtividadesPendentes: React.FC = () => {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                  {/* Timeline */}
+                  <RequestTimeline request={selectedRequest} />
+
                   {/* Info da Caixa */}
                   <div className="bg-[#1d1e24] p-4 rounded-lg border border-black">
                     <h4 className="text-white font-bold mb-3">Informações da Caixa</h4>
@@ -1142,6 +1146,9 @@ const AtividadesPendentes: React.FC = () => {
               </div>
 
               <div className="p-6 space-y-4">
+                {/* Timeline */}
+                <RequestTimeline request={selectedRequest} />
+
                 <div className="bg-[#1d1e24] p-4 rounded-lg">
                   <p className="text-white font-medium mb-2">{selectedRequest.gachapon_name}</p>
                   <p className="text-sm text-gray-400">GachaponItemNo: {selectedRequest.gachapon_itemno}</p>
