@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, User, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, User, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface RequestTimelineProps {
   request: any;
@@ -7,6 +7,8 @@ interface RequestTimelineProps {
 
 const RequestTimeline: React.FC<RequestTimelineProps> = ({ request }) => {
   if (!request) return null;
+
+  const isRejected = request.status === 'rejeitado';
 
   const steps = [
     {
@@ -22,19 +24,22 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({ request }) => {
       id: 2,
       title: 'Validação (Master)',
       date: request.data_aprovacao,
-      user: request.aprovador_oiduser ? `OID: ${request.aprovador_oiduser}` : null, // Idealmente buscar nickname
-      status: request.data_aprovacao ? 'completed' : request.status === 'rejeitado' ? 'rejected' : 'pending',
-      icon: CheckCircle,
-      description: request.status === 'rejeitado' ? `Rejeitado: ${request.motivo_rejeicao}` : 'Aguardando aprovação no Test Server'
+      user: request.aprovador_oiduser ? `OID: ${request.aprovador_oiduser}` : null,
+      status: isRejected ? 'rejected' : (request.data_aprovacao ? 'completed' : 'pending'),
+      icon: isRejected ? XCircle : (request.data_aprovacao ? CheckCircle : Clock),
+      description: isRejected ? `Rejeitado: ${request.motivo_rejeicao}` :
+                   (request.data_aprovacao ? 'Aprovado no Test Server' : 'Aguardando aprovação no Test Server')
     },
     {
       id: 3,
       title: 'Envio para Produção',
       date: request.data_envio_producao,
       user: request.executor_producao_oiduser ? `OID: ${request.executor_producao_oiduser}` : null,
-      status: request.data_envio_producao ? 'completed' : request.status === 'aguardando_producao' ? 'current' : 'pending',
+      status: request.data_envio_producao ? 'completed' :
+              (isRejected ? 'pending' :
+              (request.status === 'aguardando_producao' ? 'current' : 'pending')),
       icon: CheckCircle,
-      description: 'Envio para o servidor de Produção'
+      description: isRejected ? 'Processo interrompido' : 'Envio para o servidor de Produção'
     }
   ];
 
@@ -44,7 +49,7 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({ request }) => {
         {/* Linha de conexão (Desktop) */}
         <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gray-700 -z-10 transform -translate-y-1/2" />
 
-        {steps.map((step, index) => {
+        {steps.map((step) => {
           let statusColor = 'bg-gray-700 border-gray-600 text-gray-400';
           let iconColor = 'text-gray-400';
 
@@ -64,7 +69,7 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({ request }) => {
               <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center mb-3 bg-[#1d1e24] z-10 ${statusColor}`}>
                 <step.icon size={20} className={iconColor} />
               </div>
-              
+
               <div className="text-center">
                 <h4 className={`font-bold text-sm mb-1 ${step.status === 'pending' ? 'text-gray-500' : 'text-white'}`}>
                   {step.title}

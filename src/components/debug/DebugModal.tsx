@@ -1,362 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import tauriHttpService from '../../services/tauri-http.service';
 import apiService from '../../services/api-tauri.service';
-
-interface ErrorLog {
-  timestamp: Date;
-  error: string;
-  details: string;
-  type: 'connection' | 'api' | 'auth' | 'general' | 'updater' | 'performance' | 'ui';
-  stack?: string;
-  url?: string;
-  method?: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  userAgent?: string;
-  sessionId?: string;
-  userId?: string;
-  component?: string;
-  action?: string;
-  duration?: number;
-  memoryUsage?: number;
-  networkStatus?: string;
-}
-
-interface UpdaterLog {
-  timestamp: Date;
-  event: string;
-  details: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  version?: string;
-  progress?: number;
-  downloadSpeed?: number;
-  fileSize?: number;
-  checksum?: string;
-  installPath?: string;
-  rollbackAvailable?: boolean;
-  serverResponse?: any;
-}
-
-interface SystemInfo {
-  timestamp: Date;
-  appVersion: string;
-  platform: string;
-  userAgent: string;
-  screenResolution: string;
-  memoryUsage: number;
-  onlineStatus: boolean;
-  language: string;
-  timezone: string;
-  connectionType?: string;
-}
-
-interface PerformanceMetrics {
-  timestamp: Date;
-  componentName: string;
-  renderTime: number;
-  memoryDelta: number;
-  networkRequests: number;
-  apiResponseTimes: { [endpoint: string]: number };
-}
+import {
+  ErrorCapture,
+  UpdaterDebug,
+  SystemInfoCollector,
+  PerformanceTracker,
+  ErrorLog,
+  UpdaterLog,
+  SystemInfo,
+  PerformanceMetrics,
+  setupErrorInterception
+} from '../../services/debug.service';
 
 interface DebugModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-class ErrorCapture {
-  private static instance: ErrorCapture;
-  private errors: ErrorLog[] = [];
-  private maxErrors = 100;
-  private listeners: ((errors: ErrorLog[]) => void)[] = [];
-
-  static getInstance(): ErrorCapture {
-    if (!ErrorCapture.instance) {
-      ErrorCapture.instance = new ErrorCapture();
-    }
-    return ErrorCapture.instance;
-  }
-
-  addError(error: Partial<ErrorLog>) {
-    const sessionId = this.getSessionId();
-    const memoryUsage = this.getMemoryUsage();
-    const networkStatus = navigator.onLine ? 'online' : 'offline';
-    
-    const newError: ErrorLog = {
-      timestamp: new Date(),
-      error: error.error || 'Unknown error',
-      details: error.details || '',
-      type: error.type || 'general',
-      severity: error.severity || 'medium',
-      stack: error.stack,
-      url: error.url,
-      method: error.method,
-      userAgent: navigator.userAgent,
-      sessionId,
-      userId: error.userId,
-      component: error.component,
-      action: error.action,
-      duration: error.duration,
-      memoryUsage,
-      networkStatus
-    };
-
-    this.errors.unshift(newError);
-    if (this.errors.length > this.maxErrors) {
-      this.errors = this.errors.slice(0, this.maxErrors);
-    }
-
-    this.notifyListeners();
-  }
-
-  private getSessionId(): string {
-    let sessionId = sessionStorage.getItem('debug-session-id');
-    if (!sessionId) {
-      sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem('debug-session-id', sessionId);
-    }
-    return sessionId;
-  }
-
-  private getMemoryUsage(): number {
-    if ('memory' in performance) {
-      return (performance as any).memory.usedJSHeapSize / 1024 / 1024;
-    }
-    return 0;
-  }
-
-  getErrors(): ErrorLog[] {
-    return [...this.errors];
-  }
-
-  clearErrors(): void {
-    this.errors = [];
-    this.notifyListeners();
-  }
-
-  subscribe(listener: (errors: ErrorLog[]) => void): () => void {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
-    };
-  }
-
-  private notifyListeners(): void {
-    this.listeners.forEach(listener => listener(this.getErrors()));
-  }
-}
-
-class UpdaterDebug {
-  private static instance: UpdaterDebug;
-  private logs: UpdaterLog[] = [];
-  private maxLogs = 50;
-  private listeners: ((logs: UpdaterLog[]) => void)[] = [];
-
-  static getInstance(): UpdaterDebug {
-    if (!UpdaterDebug.instance) {
-      UpdaterDebug.instance = new UpdaterDebug();
-    }
-    return UpdaterDebug.instance;
-  }
-
-  addLog(log: Partial<UpdaterLog>) {
-    const newLog: UpdaterLog = {
-      timestamp: new Date(),
-      event: log.event || 'Unknown event',
-      details: log.details || '',
-      type: log.type || 'info',
-      version: log.version,
-      progress: log.progress,
-      downloadSpeed: log.downloadSpeed,
-      fileSize: log.fileSize,
-      checksum: log.checksum,
-      installPath: log.installPath,
-      rollbackAvailable: log.rollbackAvailable,
-      serverResponse: log.serverResponse
-    };
-
-    this.logs.unshift(newLog);
-    if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(0, this.maxLogs);
-    }
-
-    this.notifyListeners();
-  }
-
-  getLogs(): UpdaterLog[] {
-    return [...this.logs];
-  }
-
-  clearLogs(): void {
-    this.logs = [];
-    this.notifyListeners();
-  }
-
-  subscribe(listener: (logs: UpdaterLog[]) => void): () => void {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
-    };
-  }
-
-  private notifyListeners(): void {
-    this.listeners.forEach(listener => listener(this.getLogs()));
-  }
-}
-
-class SystemInfoCollector {
-  private static instance: SystemInfoCollector;
-  private systemInfo: SystemInfo | null = null;
-
-  static getInstance(): SystemInfoCollector {
-    if (!SystemInfoCollector.instance) {
-      SystemInfoCollector.instance = new SystemInfoCollector();
-    }
-    return SystemInfoCollector.instance;
-  }
-
-  async collectSystemInfo(): Promise<SystemInfo> {
-    const appVersion = await this.getAppVersion();
-    
-    this.systemInfo = {
-      timestamp: new Date(),
-      appVersion,
-      platform: navigator.platform,
-      userAgent: navigator.userAgent,
-      screenResolution: `${screen.width}x${screen.height}`,
-      memoryUsage: this.getMemoryUsage(),
-      onlineStatus: navigator.onLine,
-      language: navigator.language,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      connectionType: this.getConnectionType()
-    };
-
-    return this.systemInfo;
-  }
-
-  private async getAppVersion(): Promise<string> {
-    try {
-      const { getVersion } = await import('@tauri-apps/api/app');
-      return await getVersion();
-    } catch {
-      return 'Unknown';
-    }
-  }
-
-  private getMemoryUsage(): number {
-    if ('memory' in performance) {
-      return (performance as any).memory.usedJSHeapSize / 1024 / 1024;
-    }
-    return 0;
-  }
-
-  private getConnectionType(): string {
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-    return connection ? connection.effectiveType || connection.type : 'unknown';
-  }
-
-  getSystemInfo(): SystemInfo | null {
-    return this.systemInfo;
-  }
-}
-
-class PerformanceTracker {
-  private static instance: PerformanceTracker;
-  private metrics: PerformanceMetrics[] = [];
-  private maxMetrics = 50;
-
-  static getInstance(): PerformanceTracker {
-    if (!PerformanceTracker.instance) {
-      PerformanceTracker.instance = new PerformanceTracker();
-    }
-    return PerformanceTracker.instance;
-  }
-
-  trackComponentRender(componentName: string, renderTime: number) {
-    const metric: PerformanceMetrics = {
-      timestamp: new Date(),
-      componentName,
-      renderTime,
-      memoryDelta: this.getMemoryUsage(),
-      networkRequests: performance.getEntriesByType('navigation').length,
-      apiResponseTimes: this.getApiResponseTimes()
-    };
-
-    this.metrics.unshift(metric);
-    if (this.metrics.length > this.maxMetrics) {
-      this.metrics = this.metrics.slice(0, this.maxMetrics);
-    }
-  }
-
-  private getMemoryUsage(): number {
-    if ('memory' in performance) {
-      return (performance as any).memory.usedJSHeapSize / 1024 / 1024;
-    }
-    return 0;
-  }
-
-  private getApiResponseTimes(): { [endpoint: string]: number } {
-    const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-    const apiTimes: { [endpoint: string]: number } = {};
-    
-    entries.forEach(entry => {
-      if (entry.name.includes('/api/')) {
-        const url = new URL(entry.name);
-        apiTimes[url.pathname] = entry.duration;
-      }
-    });
-
-    return apiTimes;
-  }
-
-  getMetrics(): PerformanceMetrics[] {
-    return [...this.metrics];
-  }
-
-  clearMetrics(): void {
-    this.metrics = [];
-  }
-}
-
-// Setup error interception focused only on current API - singleton pattern
-let errorInterceptionSetup = false;
-let originalConsoleError: typeof console.error;
-
-const setupErrorInterception = () => {
-  if (errorInterceptionSetup) return;
-  
-  const errorCapture = ErrorCapture.getInstance();
-  
-  // Store original console.error
-  originalConsoleError = console.error;
-  
-  // Intercept console.error for connection errors
-  console.error = (...args) => {
-    const message = args.join(' ');
-    if (message.includes('Erro de conexão com o servidor') || 
-        message.includes('Network Error') ||
-        message.includes('Connection failed') ||
-        message.includes('Tauri HTTP')) {
-      errorCapture.addError({
-        error: 'Tauri API Connection Error',
-        details: message,
-        type: 'connection'
-      });
-    }
-    originalConsoleError.apply(console, args);
-  };
-  
-  errorInterceptionSetup = true;
-};
-
-const cleanupErrorInterception = () => {
-  if (!errorInterceptionSetup) return;
-  
-  if (originalConsoleError) {
-    console.error = originalConsoleError;
-  }
-  
-  errorInterceptionSetup = false;
-};
 
 const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'errors' | 'updater' | 'system' | 'performance'>('errors');
@@ -401,8 +61,6 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
       unsubscribeErrors();
       unsubscribeUpdater();
       clearInterval(performanceInterval);
-      // Note: We don't cleanup error interception here as it's global
-      // and may be used by other components
     };
   }, []);
 
@@ -498,10 +156,10 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
       <div 
         ref={modalRef}
-        className="bg-gray-900 border border-gray-700 rounded-lg w-5/6 h-5/6 flex flex-col text-white font-mono text-sm"
+        className="bg-gray-900 border border-gray-700 rounded-lg w-5/6 h-5/6 flex flex-col text-white font-mono text-sm overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-gray-800 px-4 py-3 border-b border-gray-700">
+        <div className="bg-gray-800 px-4 py-3 border-b border-gray-700 flex-shrink-0">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold">Debug Console</h2>
@@ -549,17 +207,26 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
             >
               Export
             </button>
-            <button 
-              onClick={() => errorCapture.clearErrors()}
+            <button
+              onClick={() => {
+                if (activeTab === 'errors') {
+                  errorCapture.clearErrors();
+                } else if (activeTab === 'updater') {
+                  updaterDebug.clearLogs();
+                } else if (activeTab === 'performance') {
+                  performanceTracker.clearMetrics();
+                  setPerformanceMetrics([]);
+                }
+              }}
               className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"
             >
               Clear
             </button>
-            <button 
+            <button
               onClick={onClose}
               className="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-sm"
             >
-              
+              Close
             </button>
           </div>
           
@@ -567,8 +234,7 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
           <div className="flex gap-1">
             <button
               onClick={() => setActiveTab('errors')}
-              className={`px-3 py-1 text-sm rounded-t ${
-                activeTab === 'errors' 
+              className={`px-3 py-1 text-sm rounded-t ${activeTab === 'errors' 
                   ? 'bg-gray-700 text-white' 
                   : 'bg-gray-800 text-gray-400 hover:text-gray-300'
               }`}
@@ -577,8 +243,7 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               onClick={() => setActiveTab('updater')}
-              className={`px-3 py-1 text-sm rounded-t ${
-                activeTab === 'updater' 
+              className={`px-3 py-1 text-sm rounded-t ${activeTab === 'updater' 
                   ? 'bg-gray-700 text-white' 
                   : 'bg-gray-800 text-gray-400 hover:text-gray-300'
               }`}
@@ -587,8 +252,7 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               onClick={() => setActiveTab('system')}
-              className={`px-3 py-1 text-sm rounded-t ${
-                activeTab === 'system' 
+              className={`px-3 py-1 text-sm rounded-t ${activeTab === 'system' 
                   ? 'bg-gray-700 text-white' 
                   : 'bg-gray-800 text-gray-400 hover:text-gray-300'
               }`}
@@ -597,8 +261,7 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               onClick={() => setActiveTab('performance')}
-              className={`px-3 py-1 text-sm rounded-t ${
-                activeTab === 'performance' 
+              className={`px-3 py-1 text-sm rounded-t ${activeTab === 'performance' 
                   ? 'bg-gray-700 text-white' 
                   : 'bg-gray-800 text-gray-400 hover:text-gray-300'
               }`}
@@ -609,12 +272,12 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-hidden flex flex-col p-4">
           {/* Test Results Section - sempre visível */}
           {testResults && (
-            <div className="mb-6 bg-gray-800 border border-gray-700 rounded p-4">
+            <div className="mb-4 bg-gray-800 border border-gray-700 rounded p-4 flex-shrink-0">
               <h3 className="text-green-400 font-semibold mb-2">Connection Test Results:</h3>
-              <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-gray-900 p-3 rounded overflow-x-auto">
+              <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-gray-900 p-3 rounded overflow-x-auto max-h-40">
                 {testResults}
               </pre>
               <button 
@@ -626,408 +289,404 @@ const DebugModal: React.FC<DebugModalProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* Errors Tab */}
-          {activeTab === 'errors' && (
-            <>
-              {filteredErrors.length === 0 ? (
-            <div className="text-center text-gray-500 mt-8">
-              <p>No Tauri API errors captured yet.</p>
-              <p className="text-sm mt-2">Tauri HTTP connection errors and API failures will appear here.</p>
-              <p className="text-sm mt-2">Use the "Test Connections" button to diagnose Tauri API issues.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredErrors.map((error, index) => (
-                <div key={index} className="bg-gray-800 border border-gray-700 rounded p-3">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-semibold ${getErrorTypeColor(error.type)}`}>
-                        [{error.type.toUpperCase()}]
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded ${getSeverityColor(error.severity)}`}>
-                        {error.severity.toUpperCase()}
-                      </span>
-                      <span className="text-gray-300">{error.error}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-gray-500">
-                        {error.timestamp.toLocaleString()}
-                      </span>
-                      <button 
-                        onClick={() => copyToClipboard(JSON.stringify(error, null, 2))}
-                        className="text-blue-400 hover:text-blue-300"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="text-gray-400 text-xs mb-2">
-                    <p>{error.details}</p>
-                    
-                    <div className="mt-2 grid grid-cols-2 gap-4">
-                      {error.url && (
-                        <div>
-                          <span className="text-gray-500">URL:</span> {error.method} {error.url}
-                        </div>
-                      )}
-                      {error.component && (
-                        <div>
-                          <span className="text-gray-500">Component:</span> {error.component}
-                        </div>
-                      )}
-                      {error.action && (
-                        <div>
-                          <span className="text-gray-500">Action:</span> {error.action}
-                        </div>
-                      )}
-                      {error.duration && (
-                        <div>
-                          <span className="text-gray-500">Duration:</span> {error.duration}ms
-                        </div>
-                      )}
-                      {error.memoryUsage && error.memoryUsage > 0 && (
-                        <div>
-                          <span className="text-gray-500">Memory:</span> {error.memoryUsage.toFixed(1)}MB
-                        </div>
-                      )}
-                      {error.networkStatus && (
-                        <div>
-                          <span className="text-gray-500">Network:</span> {error.networkStatus}
-                        </div>
-                      )}
-                      {error.sessionId && (
-                        <div>
-                          <span className="text-gray-500">Session:</span> {error.sessionId.slice(-8)}
-                        </div>
-                      )}
-                      {error.userId && (
-                        <div>
-                          <span className="text-gray-500">User:</span> {error.userId}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {error.stack && (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-gray-500 hover:text-gray-400 text-xs">
-                        Stack Trace
-                      </summary>
-                      <pre className="mt-2 text-xs text-gray-600 bg-gray-900 p-2 rounded overflow-x-auto">
-                        {error.stack}
-                      </pre>
-                    </details>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-            </>
-          )}
-
-          {/* Updater Tab */}
-          {activeTab === 'updater' && (
-            <>
-              {updaterLogs.length === 0 ? (
-                <div className="text-center text-gray-500 mt-8">
-                  <p>No updater events captured yet.</p>
-                  <p className="text-sm mt-2">Update checks, downloads, and installation events will appear here.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {updaterLogs.map((log, index) => (
-                    <div key={index} className="bg-gray-800 border border-gray-700 rounded p-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-semibold ${
-                            log.type === 'error' ? 'text-red-400' :
-                            log.type === 'success' ? 'text-green-400' :
-                            log.type === 'warning' ? 'text-yellow-400' :
-                            'text-blue-400'
-                          }`}>
-                            [{log.type.toUpperCase()}]
-                          </span>
-                          <span className="text-gray-300">{log.event}</span>
-                          {log.version && (
-                            <span className="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">
-                              v{log.version}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-gray-500">
-                            {log.timestamp.toLocaleTimeString()}
-                          </span>
-                          <button 
-                            onClick={() => copyToClipboard(JSON.stringify(log, null, 2))}
-                            className="text-blue-400 hover:text-blue-300"
-                          >
-                            Copy
-                          </button>
-                        </div>
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {/* Errors Tab */}
+            {activeTab === 'errors' && (
+              <>
+                {filteredErrors.length === 0 ? (
+              <div className="text-center text-gray-500 mt-8">
+                <p>No Tauri API errors captured yet.</p>
+                <p className="text-sm mt-2">Tauri HTTP connection errors and API failures will appear here.</p>
+                <p className="text-sm mt-2">Use the "Test Connections" button to diagnose Tauri API issues.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredErrors.map((error, index) => (
+                  <div key={index} className="bg-gray-800 border border-gray-700 rounded p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold ${getErrorTypeColor(error.type)}`}>
+                          [{error.type.toUpperCase()}]
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded ${getSeverityColor(error.severity)}`}>
+                          {error.severity.toUpperCase()}
+                        </span>
+                        <span className="text-gray-300">{error.error}</span>
                       </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-gray-500">
+                          {error.timestamp.toLocaleString()}
+                        </span>
+                        <button 
+                          onClick={() => copyToClipboard(JSON.stringify(error, null, 2))}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="text-gray-400 text-xs mb-2">
+                      <p>{error.details}</p>
                       
-                      <div className="text-gray-400 text-xs mb-2">
-                        <p>{log.details}</p>
-                        
-                        <div className="mt-2 grid grid-cols-2 gap-4">
-                          {log.downloadSpeed && (
-                            <div>
-                              <span className="text-gray-500">Speed:</span> {(log.downloadSpeed / 1024).toFixed(1)} KB/s
-                            </div>
-                          )}
-                          {log.fileSize && (
-                            <div>
-                              <span className="text-gray-500">Size:</span> {(log.fileSize / 1024 / 1024).toFixed(1)} MB
-                            </div>
-                          )}
-                          {log.checksum && (
-                            <div>
-                              <span className="text-gray-500">Checksum:</span> {log.checksum.slice(0, 8)}...
-                            </div>
-                          )}
-                          {log.installPath && (
-                            <div>
-                              <span className="text-gray-500">Path:</span> {log.installPath}
-                            </div>
-                          )}
-                          {log.rollbackAvailable !== undefined && (
-                            <div>
-                              <span className="text-gray-500">Rollback:</span> {log.rollbackAvailable ? 'Available' : 'Not available'}
-                            </div>
-                          )}
-                        </div>
-
-                        {log.progress !== undefined && (
-                          <div className="mt-3">
-                            <div className="flex justify-between text-xs mb-1">
-                              <span className="text-gray-500">Progress</span>
-                              <span className="text-gray-300">{log.progress}%</span>
-                            </div>
-                            <div className="w-full bg-gray-700 rounded-full h-2">
-                              <div 
-                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${log.progress}%` }}
-                              />
-                            </div>
+                      <div className="mt-2 grid grid-cols-2 gap-4">
+                        {error.url && (
+                          <div>
+                            <span className="text-gray-500">URL:</span> {error.method} {error.url}
                           </div>
                         )}
-
-                        {log.serverResponse && (
-                          <details className="mt-2">
-                            <summary className="cursor-pointer text-gray-500 hover:text-gray-400 text-xs">
-                              Server Response
-                            </summary>
-                            <pre className="mt-2 text-xs text-gray-600 bg-gray-900 p-2 rounded overflow-x-auto">
-                              {JSON.stringify(log.serverResponse, null, 2)}
-                            </pre>
-                          </details>
+                        {error.component && (
+                          <div>
+                            <span className="text-gray-500">Component:</span> {error.component}
+                          </div>
+                        )}
+                        {error.action && (
+                          <div>
+                            <span className="text-gray-500">Action:</span> {error.action}
+                          </div>
+                        )}
+                        {error.duration && (
+                          <div>
+                            <span className="text-gray-500">Duration:</span> {error.duration}ms
+                          </div>
+                        )}
+                        {error.memoryUsage && error.memoryUsage > 0 && (
+                          <div>
+                            <span className="text-gray-500">Memory:</span> {error.memoryUsage.toFixed(1)}MB
+                          </div>
+                        )}
+                        {error.networkStatus && (
+                          <div>
+                            <span className="text-gray-500">Network:</span> {error.networkStatus}
+                          </div>
+                        )}
+                        {error.sessionId && (
+                          <div>
+                            <span className="text-gray-500">Session:</span> {error.sessionId.slice(-8)}
+                          </div>
+                        )}
+                        {error.userId && (
+                          <div>
+                            <span className="text-gray-500">User:</span> {error.userId}
+                          </div>
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
 
-          {/* System Info Tab */}
-          {activeTab === 'system' && (
-            <div className="space-y-4">
-              {systemInfo ? (
-                <>
-                  <div className="bg-gray-800 border border-gray-700 rounded p-4">
-                    <h3 className="text-green-400 font-semibold mb-3">System Information</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-gray-500">App Version:</span>
-                          <span className="text-gray-300 ml-2">{systemInfo.appVersion}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Platform:</span>
-                          <span className="text-gray-300 ml-2">{systemInfo.platform}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Screen Resolution:</span>
-                          <span className="text-gray-300 ml-2">{systemInfo.screenResolution}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Language:</span>
-                          <span className="text-gray-300 ml-2">{systemInfo.language}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Timezone:</span>
-                          <span className="text-gray-300 ml-2">{systemInfo.timezone}</span>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-gray-500">Memory Usage:</span>
-                          <span className="text-gray-300 ml-2">{systemInfo.memoryUsage.toFixed(1)} MB</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Online Status:</span>
-                          <span className={`ml-2 ${systemInfo.onlineStatus ? 'text-green-400' : 'text-red-400'}`}>
-                            {systemInfo.onlineStatus ? 'Online' : 'Offline'}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Connection Type:</span>
-                          <span className="text-gray-300 ml-2">{systemInfo.connectionType}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Last Updated:</span>
-                          <span className="text-gray-300 ml-2">{systemInfo.timestamp.toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </div>
+                    {error.stack && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-gray-500 hover:text-gray-400 text-xs">
+                          Stack Trace
+                        </summary>
+                        <pre className="mt-2 text-xs text-gray-600 bg-gray-900 p-2 rounded overflow-x-auto">
+                          {error.stack}
+                        </pre>
+                      </details>
+                    )}
                   </div>
+                ))}
+              </div>
+            )}
+              </>
+            )}
 
-                  <div className="bg-gray-800 border border-gray-700 rounded p-4">
-                    <h3 className="text-blue-400 font-semibold mb-3">User Agent</h3>
-                    <pre className="text-xs text-gray-300 bg-gray-900 p-3 rounded overflow-x-auto break-all">
-                      {systemInfo.userAgent}
-                    </pre>
+            {/* Updater Tab */}
+            {activeTab === 'updater' && (
+              <>
+                {updaterLogs.length === 0 ? (
+                  <div className="text-center text-gray-500 mt-8">
+                    <p>No updater events captured yet.</p>
+                    <p className="text-sm mt-2">Update checks, downloads, and installation events will appear here.</p>
                   </div>
-
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => systemInfoCollector.collectSystemInfo().then(setSystemInfo)}
-                      className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm"
-                    >
-                      Refresh System Info
-                    </button>
-                    <button 
-                      onClick={() => copyToClipboard(JSON.stringify(systemInfo, null, 2))}
-                      className="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded text-sm"
-                    >
-                      Copy System Info
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center text-gray-500 mt-8">
-                  <p>Loading system information...</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Performance Tab */}
-          {activeTab === 'performance' && (
-            <div className="space-y-4">
-              {performanceMetrics.length === 0 ? (
-                <div className="text-center text-gray-500 mt-8">
-                  <p>No performance metrics available yet.</p>
-                  <p className="text-sm mt-2">Component render times and API response metrics will appear here.</p>
-                </div>
-              ) : (
-                <>
-                  <div className="bg-gray-800 border border-gray-700 rounded p-4">
-                    <h3 className="text-purple-400 font-semibold mb-3">Performance Overview</h3>
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-400">
-                          {performanceMetrics.length > 0 ? performanceMetrics[0].memoryDelta.toFixed(1) : '0'}MB
-                        </div>
-                        <div className="text-gray-500">Current Memory</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-400">
-                          {performanceMetrics.reduce((avg, metric) => avg + metric.renderTime, 0) / performanceMetrics.length || 0}ms
-                        </div>
-                        <div className="text-gray-500">Avg Render Time</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-400">
-                          {performanceMetrics.reduce((total, metric) => total + Object.keys(metric.apiResponseTimes).length, 0)}
-                        </div>
-                        <div className="text-gray-500">API Calls</div>
-                      </div>
-                    </div>
-                  </div>
-
+                ) : (
                   <div className="space-y-3">
-                    {performanceMetrics.map((metric, index) => (
+                    {updaterLogs.map((log, index) => (
                       <div key={index} className="bg-gray-800 border border-gray-700 rounded p-3">
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-purple-400">
-                              {metric.componentName}
+                            <span className={`font-semibold ${log.type === 'error' ? 'text-red-400' : log.type === 'success' ? 'text-green-400' : log.type === 'warning' ? 'text-yellow-400' : 'text-blue-400'}`}>
+                              [{log.type.toUpperCase()}]
                             </span>
-                            <span className="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">
-                              {metric.renderTime.toFixed(2)}ms
-                            </span>
+                            <span className="text-gray-300">{log.event}</span>
+                            {log.version && (
+                              <span className="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">
+                                v{log.version}
+                              </span>
+                            )}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {metric.timestamp.toLocaleTimeString()}
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-gray-500">
+                              {log.timestamp.toLocaleTimeString()}
+                            </span>
+                            <button 
+                              onClick={() => copyToClipboard(JSON.stringify(log, null, 2))}
+                              className="text-blue-400 hover:text-blue-300"
+                            >
+                              Copy
+                            </button>
                           </div>
                         </div>
                         
                         <div className="text-gray-400 text-xs mb-2">
-                          <div className="grid grid-cols-3 gap-4">
-                            <div>
-                              <span className="text-gray-500">Memory:</span> {metric.memoryDelta.toFixed(1)}MB
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Network Requests:</span> {metric.networkRequests}
-                            </div>
-                            <div>
-                              <span className="text-gray-500">API Responses:</span> {Object.keys(metric.apiResponseTimes).length}
-                            </div>
-                          </div>
+                          <p>{log.details}</p>
                           
-                          {Object.keys(metric.apiResponseTimes).length > 0 && (
+                          <div className="mt-2 grid grid-cols-2 gap-4">
+                            {log.downloadSpeed && (
+                              <div>
+                                <span className="text-gray-500">Speed:</span> {(log.downloadSpeed / 1024).toFixed(1)} KB/s
+                              </div>
+                            )}
+                            {log.fileSize && (
+                              <div>
+                                <span className="text-gray-500">Size:</span> {(log.fileSize / 1024 / 1024).toFixed(1)} MB
+                              </div>
+                            )}
+                            {log.checksum && (
+                              <div>
+                                <span className="text-gray-500">Checksum:</span> {log.checksum.slice(0, 8)}...
+                              </div>
+                            )}
+                            {log.installPath && (
+                              <div>
+                                <span className="text-gray-500">Path:</span> {log.installPath}
+                              </div>
+                            )}
+                            {log.rollbackAvailable !== undefined && (
+                              <div>
+                                <span className="text-gray-500">Rollback:</span> {log.rollbackAvailable ? 'Available' : 'Not available'}
+                              </div>
+                            )}
+                          </div>
+
+                          {log.progress !== undefined && (
+                            <div className="mt-3">
+                              <div className="flex justify-between text-xs mb-1">
+                                <span className="text-gray-500">Progress</span>
+                                <span className="text-gray-300">{log.progress}%</span>
+                              </div>
+                              <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div 
+                                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${log.progress}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {log.serverResponse && (
                             <details className="mt-2">
                               <summary className="cursor-pointer text-gray-500 hover:text-gray-400 text-xs">
-                                API Response Times
+                                Server Response
                               </summary>
-                              <div className="mt-2 space-y-1">
-                                {Object.entries(metric.apiResponseTimes).map(([endpoint, time]) => (
-                                  <div key={endpoint} className="flex justify-between">
-                                    <span className="text-gray-600">{endpoint}</span>
-                                    <span className="text-gray-400">{time.toFixed(2)}ms</span>
-                                  </div>
-                                ))}
-                              </div>
+                              <pre className="mt-2 text-xs text-gray-600 bg-gray-900 p-2 rounded overflow-x-auto">
+                                {JSON.stringify(log.serverResponse, null, 2)}
+                              </pre>
                             </details>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
+                )}
+              </>
+            )}
 
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => performanceTracker.clearMetrics()}
-                      className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm"
-                    >
-                      Clear Metrics
-                    </button>
-                    <button 
-                      onClick={() => copyToClipboard(JSON.stringify(performanceMetrics, null, 2))}
-                      className="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded text-sm"
-                    >
-                      Copy Metrics
-                    </button>
+            {/* System Info Tab */}
+            {activeTab === 'system' && (
+              <div className="space-y-4">
+                {systemInfo ? (
+                  <>
+                    <div className="bg-gray-800 border border-gray-700 rounded p-4">
+                      <h3 className="text-green-400 font-semibold mb-3">System Information</h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-gray-500">App Version:</span>
+                            <span className="text-gray-300 ml-2">{systemInfo.appVersion}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Platform:</span>
+                            <span className="text-gray-300 ml-2">{systemInfo.platform}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Screen Resolution:</span>
+                            <span className="text-gray-300 ml-2">{systemInfo.screenResolution}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Language:</span>
+                            <span className="text-gray-300 ml-2">{systemInfo.language}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Timezone:</span>
+                            <span className="text-gray-300 ml-2">{systemInfo.timezone}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-gray-500">Memory Usage:</span>
+                            <span className="text-gray-300 ml-2">{systemInfo.memoryUsage.toFixed(1)} MB</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Online Status:</span>
+                            <span className={`ml-2 ${systemInfo.onlineStatus ? 'text-green-400' : 'text-red-400'}`}>
+                              {systemInfo.onlineStatus ? 'Online' : 'Offline'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Connection Type:</span>
+                            <span className="text-gray-300 ml-2">{systemInfo.connectionType}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Last Updated:</span>
+                            <span className="text-gray-300 ml-2">{systemInfo.timestamp.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-800 border border-gray-700 rounded p-4">
+                      <h3 className="text-blue-400 font-semibold mb-3">User Agent</h3>
+                      <pre className="text-xs text-gray-300 bg-gray-900 p-3 rounded overflow-x-auto break-all">
+                        {systemInfo.userAgent}
+                      </pre>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => systemInfoCollector.collectSystemInfo().then(setSystemInfo)}
+                        className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm"
+                      >
+                        Refresh System Info
+                      </button>
+                      <button 
+                        onClick={() => copyToClipboard(JSON.stringify(systemInfo, null, 2))}
+                        className="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded text-sm"
+                      >
+                        Copy System Info
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center text-gray-500 mt-8">
+                    <p>Loading system information...</p>
                   </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+                )}
+              </div>
+            )}
 
+            {/* Performance Tab */}
+            {activeTab === 'performance' && (
+              <div className="space-y-4">
+                {performanceMetrics.length === 0 ? (
+                  <div className="text-center text-gray-500 mt-8">
+                    <p>No performance metrics available yet.</p>
+                    <p className="text-sm mt-2">Component render times and API response metrics will appear here.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-gray-800 border border-gray-700 rounded p-4">
+                      <h3 className="text-purple-400 font-semibold mb-3">Performance Overview</h3>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-purple-400">
+                            {performanceMetrics.length > 0 ? performanceMetrics[0].memoryDelta.toFixed(1) : '0'}MB
+                          </div>
+                          <div className="text-gray-500">Current Memory</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-400">
+                            {performanceMetrics.reduce((avg, metric) => avg + metric.renderTime, 0) / performanceMetrics.length || 0}ms
+                          </div>
+                          <div className="text-gray-500">Avg Render Time</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-400">
+                            {performanceMetrics.reduce((total, metric) => total + Object.keys(metric.apiResponseTimes).length, 0)}
+                          </div>
+                          <div className="text-gray-500">API Calls</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {performanceMetrics.map((metric, index) => (
+                        <div key={index} className="bg-gray-800 border border-gray-700 rounded p-3">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-purple-400">
+                                {metric.componentName}
+                              </span>
+                              <span className="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">
+                                {metric.renderTime.toFixed(2)}ms
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {metric.timestamp.toLocaleTimeString()}
+                            </div>
+                          </div>
+                          
+                          <div className="text-gray-400 text-xs mb-2">
+                            <div className="grid grid-cols-3 gap-4">
+                              <div>
+                                <span className="text-gray-500">Memory:</span> {metric.memoryDelta.toFixed(1)}MB
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Network Requests:</span> {metric.networkRequests}
+                              </div>
+                              <div>
+                                <span className="text-gray-500">API Responses:</span> {Object.keys(metric.apiResponseTimes).length}
+                              </div>
+                            </div>
+                            
+                            {Object.keys(metric.apiResponseTimes).length > 0 && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-gray-500 hover:text-gray-400 text-xs">
+                                  API Response Times
+                                </summary>
+                                <div className="mt-2 space-y-1">
+                                  {Object.entries(metric.apiResponseTimes).map(([endpoint, time]) => (
+                                    <div key={endpoint} className="flex justify-between">
+                                      <span className="text-gray-600">{endpoint}</span>
+                                      <span className="text-gray-400">{time.toFixed(2)}ms</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => performanceTracker.clearMetrics()}
+                        className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm"
+                      >
+                        Clear Metrics
+                      </button>
+                      <button 
+                        onClick={() => copyToClipboard(JSON.stringify(performanceMetrics, null, 2))}
+                        className="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded text-sm"
+                      >
+                        Copy Metrics
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        </div>
         {/* Footer */}
-        <div className="bg-gray-800 px-4 py-2 border-t border-gray-700 text-xs text-gray-500">
-          Press <kbd className="bg-gray-700 px-1 rounded">Ctrl+D</kbd> to toggle " <kbd className="bg-gray-700 px-1 rounded">Esc</kbd> to close
+        <div className="bg-gray-800 px-4 py-2 border-t border-gray-700 text-xs text-gray-500 flex-shrink-0">
+          Press <kbd className="bg-gray-700 px-1 rounded">Ctrl+D</kbd> to toggle · <kbd className="bg-gray-700 px-1 rounded">Esc</kbd> to close
         </div>
       </div>
-    </div>
     </div>
   );
 };
 
-export { ErrorCapture, UpdaterDebug, SystemInfoCollector, PerformanceTracker };
+
 export default DebugModal;

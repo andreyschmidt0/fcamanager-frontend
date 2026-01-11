@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import apiService from '../../services/api-tauri.service';
 import BaseModal from '../common/BaseModal';
+import ItemSearchModal from '../common/ItemSearchModal';
 
 interface CreateGachaponBoxProps {
   isOpen: boolean;
@@ -28,16 +29,6 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
   const [gachaponName, setGachaponName] = useState('');
   const [configuredItems, setConfiguredItems] = useState<GachaponConfigItem[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-
-  // Estados de input (valores digitados - sem delay)
-  const [inputSearchTerm, setInputSearchTerm] = useState('');
-
-  // Estados de filtro (com debounce - disparam busca)
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -55,14 +46,6 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
   const isValidConfig = useMemo(() => {
     return totalPercentage === 10000 && configuredItems.length > 0 && gachaponItemNo.trim() !== '';
   }, [totalPercentage, configuredItems, gachaponItemNo]);
-
-  // Debounce para searchTerm
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchTerm(inputSearchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [inputSearchTerm]);
 
   // Carregar configuração existente
   const handleLoadExistingConfig = async () => {
@@ -99,56 +82,10 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
     }
   };
 
-  // Buscar itens/produtos
-  const handleSearch = async () => {
-    setIsSearching(true);
-    setError('');
-
-    try {
-      const filters = {
-        searchTerm: searchTerm || undefined
-      };
-
-      const result = boxType === 'item'
-        ? await apiService.searchGachaponItems(filters)
-        : await apiService.searchGachaponProducts(filters);
-
-      if (result.success && result.data) {
-        setSearchResults(result.data);
-      } else {
-        setError(result.error || 'Erro ao buscar');
-      }
-    } catch (err) {
-      setError('Erro ao buscar');
-      console.error(err);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Carregar dados inicial ao abrir modal
-  useEffect(() => {
-    if (isSearchModalOpen && !hasLoaded) {
-      setHasLoaded(true);
-      handleSearch();
-    } else if (!isSearchModalOpen) {
-      setHasLoaded(false);
-      setSearchResults([]);
-      setInputSearchTerm('');
-      setSearchTerm('');
-      setError('');
-    }
-  }, [isSearchModalOpen]);
-
-  // Buscar quando searchTerm mudar (após debounce)
-  useEffect(() => {
-    if (isSearchModalOpen && hasLoaded) {
-      handleSearch();
-    }
-  }, [searchTerm]);
-
   // Adicionar item à configuração
   const handleAddItem = (item: any) => {
+    const period = boxType === 'produto' ? (item.Period) : (item.DefaultPeriod || 999);
+
     const newItem: GachaponConfigItem = {
       itemNo: boxType === 'item' ? item.ItemNo : undefined,
       productID: boxType === 'produto' ? item.ProductID : undefined,
@@ -156,13 +93,12 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
       name: boxType === 'item' ? item.Name : item.ProductName,
       percentage: 0,
       percentageDisplay: 0,
-      period: boxType === 'item' ? (item.DefaultPeriod || 999) : item.Period,
-      consumeType: item.ConsumeType,
-      broadcast: false
+      period: period,
+      consumeType: boxType === 'item' ? 1 : (item.ConsumeType || 1),
+      broadcast: period === 999
     };
 
     setConfiguredItems([...configuredItems, newItem]);
-    setIsSearchModalOpen(false);
   };
 
   // Remover item da configuração
@@ -233,8 +169,6 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
     setGachaponItemNo('');
     setGachaponName('');
     setConfiguredItems([]);
-    setSearchTerm('');
-    setSearchResults([]);
     setError('');
     onClose();
   };
@@ -400,77 +334,18 @@ const CreateGachaponBox: React.FC<CreateGachaponBoxProps> = ({ isOpen, onClose }
         </div>
       </BaseModal>
 
-      {/* Search Modal */}
-      {isSearchModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-          <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto custom-scrollbar">
-            <div className="sticky top-0 bg-[#111216] z-10 flex items-center justify-between p-6 border-b border-gray-600">
-              <h3 className="text-2xl font-bold text-white">
-                Buscar {boxType === 'item' ? 'Item' : 'Produto'}
-              </h3>
-              <button
-                onClick={() => setIsSearchModalOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <input
-                  type="text"
-                  value={inputSearchTerm}
-                  onChange={(e) => setInputSearchTerm(e.target.value)}
-                  placeholder={`Nome ou ${boxType === 'item' ? 'ItemNo' : 'ProductID'}`}
-                  className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none"
-                />
-              </div>
-
-              {error && <p className="text-red-400 text-sm">{error}</p>}
-              {isSearching && <p className="text-gray-400 text-sm">Buscando...</p>}
-
-              {searchResults.length > 0 && (
-                <div className="space-y-2">
-                  {searchResults.map((result, index) => (
-                    <div
-                      key={index}
-                      className="bg-[#1d1e24] p-3 rounded-lg flex items-center justify-between hover:bg-[#252631] transition-colors"
-                    >
-                      <div>
-                        <p className="text-white font-medium">
-                          {boxType === 'item' ? result.Name : result.ProductName}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          {boxType === 'item' ? `ItemNo: ${result.ItemNo}` : `ProductID: ${result.ProductID}`}
-                          {' | '}ConsumeType: {result.ConsumeType}
-                          {' | '}Period: {boxType === 'item' ? result.DefaultPeriod : result.Period}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleAddItem(result)}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                      >
-                        Adicionar
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Mensagem quando não há resultados */}
-              {searchResults.length === 0 && hasLoaded && !isSearching && (
-                <div className="rounded-lg p-4 text-center">
-                  <p className="text-white font-medium mb-1">Nenhum resultado encontrado</p>
-                  <p className="text-sm text-gray-400">
-                    Tente buscar por outro termo ou verifique se digitou corretamente
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal de busca */}
+      <ItemSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelect={handleAddItem}
+        boxType={boxType}
+        searchFunction={(filters) =>
+          boxType === 'item'
+            ? apiService.searchGachaponItems(filters)
+            : apiService.searchGachaponProducts(filters)
+        }
+      />
     </>
   );
 };

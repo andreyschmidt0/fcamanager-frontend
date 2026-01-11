@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import apiService from '../../services/api-tauri.service';
 import BaseModal from '../common/BaseModal';
+import ItemSearchModal from '../common/ItemSearchModal';
 import toast from 'react-hot-toast';
 
 interface EditRejectedGachaponBoxProps {
@@ -31,22 +32,6 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
 }) => {
   const [configuredItems, setConfiguredItems] = useState<GachaponConfigItem[]>([]);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-
-  // Estados de input (valores digitados - sem delay)
-  const [inputSearchTerm, setInputSearchTerm] = useState('');
-  const [inputFilterName, setInputFilterName] = useState('');
-  const [inputFilterItemNo, setInputFilterItemNo] = useState('');
-  const [inputFilterPeriod, setInputFilterPeriod] = useState('');
-
-  // Estados de filtro (com debounce - disparam busca)
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterName, setFilterName] = useState('');
-  const [filterItemNo, setFilterItemNo] = useState('');
-  const [filterPeriod, setFilterPeriod] = useState('');
-
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -56,7 +41,7 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
   useEffect(() => {
     if (isOpen && request) {
       try {
-        const config = JSON.parse(request.config_json);
+        const config = request.config || {};
         if (config && config.items) {
           setConfiguredItems(config.items.map((item: any) => ({
             itemNo: item.itemNo,
@@ -64,7 +49,7 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
             itemNo00: item.itemNo00,
             name: item.name,
             percentage: item.percentage,
-            percentageDisplay: item.percentageDisplay || (item.percentage / 100),
+            percentageDisplay: (item.percentage / 100),
             period: item.period,
             consumeType: item.consumeType,
             broadcast: item.broadcast
@@ -92,98 +77,6 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
     return totalPercentage === 10000 && configuredItems.length > 0;
   }, [totalPercentage, configuredItems]);
 
-  // Debounce para filtros
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchTerm(inputSearchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [inputSearchTerm]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilterName(inputFilterName);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [inputFilterName]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilterItemNo(inputFilterItemNo);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [inputFilterItemNo]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilterPeriod(inputFilterPeriod);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [inputFilterPeriod]);
-
-  // Buscar itens/produtos
-  const handleSearch = async () => {
-    setIsSearching(true);
-    setError('');
-
-    try {
-      const filters = {
-        searchTerm: searchTerm || undefined,
-        name: filterName || undefined,
-        period: filterPeriod || undefined,
-        ...(boxType === 'item'
-          ? { itemNo: filterItemNo || undefined }
-          : { productID: filterItemNo || undefined }
-        )
-      };
-
-      // Se todos os filtros estão vazios, ainda assim buscar (retorna todos os itens)
-      const result = boxType === 'item'
-        ? await apiService.searchGachaponItems(filters)
-        : await apiService.searchGachaponProducts(filters);
-
-      if (result.success) {
-        setSearchResults(result.data || []);
-      } else {
-        setError(result.error || 'Erro ao buscar');
-      }
-    } catch (err) {
-      setError('Erro ao buscar');
-      console.error(err);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Carregar dados inicial ao abrir modal
-  useEffect(() => {
-    if (isSearchModalOpen && !hasLoaded) {
-      setHasLoaded(true);
-      handleSearch();
-    } else if (!isSearchModalOpen) {
-      setHasLoaded(false);
-      setSearchResults([]);
-      // Limpar inputs
-      setInputSearchTerm('');
-      setInputFilterName('');
-      setInputFilterItemNo('');
-      setInputFilterPeriod('');
-      // Limpar filtros
-      setSearchTerm('');
-      setFilterName('');
-      setFilterItemNo('');
-      setFilterPeriod('');
-      setError('');
-    }
-  }, [isSearchModalOpen]);
-
-  // Buscar quando filtros mudarem (após debounce)
-  useEffect(() => {
-    if (isSearchModalOpen && hasLoaded) {
-      handleSearch();
-    }
-  }, [searchTerm, filterName, filterItemNo, filterPeriod]);
-
   // Adicionar item à configuração
   const handleAddItem = (item: any) => {
     const period = boxType === 'produto' ? (item.Period) : (item.DefaultPeriod);
@@ -201,7 +94,6 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
     };
 
     setConfiguredItems(prev => [...prev, newItem]);
-    setIsSearchModalOpen(false);
   };
 
   // Atualizar percentage de um item
@@ -417,106 +309,17 @@ const EditRejectedGachaponBox: React.FC<EditRejectedGachaponBoxProps> = ({
       </div>
 
       {/* Modal de busca */}
-      {isSearchModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-[60]">
-          <div className="bg-[#111216] border border-black rounded-lg shadow-xl text-white w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b border-gray-800">
-              <h3 className="text-lg font-medium">Buscar {boxType === 'item' ? 'Item' : 'Produto'}</h3>
-              <button onClick={() => setIsSearchModalOpen(false)}>
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="p-4 space-y-3">
-              {/* Busca geral */}
-              <div>
-                <input
-                  type="text"
-                  value={inputSearchTerm}
-                  onChange={(e) => setInputSearchTerm(e.target.value)}
-                  placeholder="Busca geral (nome ou código)..."
-                  className="w-full bg-[#1d1e24] border border-gray-700 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              {/* Filtros específicos */}
-              <div className="grid grid-cols-3 gap-2">
-                <input
-                  type="text"
-                  value={inputFilterName}
-                  onChange={(e) => setInputFilterName(e.target.value)}
-                  placeholder="Filtrar por Nome..."
-                  className="bg-[#1d1e24] border border-gray-700 rounded-lg px-3 py-2 text-sm"
-                />
-                <input
-                  type="text"
-                  value={inputFilterItemNo}
-                  onChange={(e) => setInputFilterItemNo(e.target.value)}
-                  placeholder={`Filtrar por ${boxType === 'item' ? 'ItemNo' : 'ProductID'}...`}
-                  className="bg-[#1d1e24] border border-gray-700 rounded-lg px-3 py-2 text-sm"
-                />
-                <input
-                  type="text"
-                  value={inputFilterPeriod}
-                  onChange={(e) => setInputFilterPeriod(e.target.value)}
-                  placeholder="Filtrar por Período..."
-                  className="bg-[#1d1e24] border border-gray-700 rounded-lg px-3 py-2 text-sm"
-                />
-              </div>
-
-              {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-              {isSearching && <p className="text-gray-400 text-sm">Buscando...</p>}
-            </div>
-
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {searchResults.length === 0 && hasLoaded && !isSearching ? (
-                <p className="text-center text-gray-400 py-8">Nenhum resultado encontrado</p>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="bg-[#16171b] sticky top-0 z-10">
-                    <tr>
-                      <th className="px-6 py-2 text-left">Nome</th>
-                      <th className="px-6 py-2 text-center w-32">
-                        {boxType === 'item' ? 'ItemNo' : 'ProductID'}
-                      </th>
-                      <th className="px-6 py-2 text-center w-32">Período</th>
-                      <th className="px-6 py-2 text-center w-40">Ação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {searchResults.map((item, index) => {
-                      const itemId = boxType === 'item' ? item.ItemNo : item.ProductID;
-                      const period = boxType === 'item' ? item.DefaultPeriod : item.Period;
-
-                      return (
-                        <tr key={index} className="border-t border-gray-800 hover:bg-gray-800">
-                          <td className="px-6 py-2">
-                            <p className="font-medium">{boxType === 'item' ? item.Name : item.ProductName}</p>
-                          </td>
-                          <td className="px-6 py-2 text-center text-gray-400">
-                            {itemId}
-                          </td>
-                          <td className="px-6 py-2 text-center text-gray-400">
-                            {period} dias
-                          </td>
-                          <td className="px-6 py-2 text-center">
-                            <button
-                              onClick={() => handleAddItem(item)}
-                              className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded transition-colors"
-                            >
-                              Adicionar {boxType === 'item' ? 'Item' : 'Produto'}
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <ItemSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelect={handleAddItem}
+        boxType={boxType}
+        searchFunction={(filters) =>
+          boxType === 'item'
+            ? apiService.searchGachaponItems(filters)
+            : apiService.searchGachaponProducts(filters)
+        }
+      />
     </BaseModal>
   );
 };

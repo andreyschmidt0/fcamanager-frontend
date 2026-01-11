@@ -4,6 +4,25 @@ import { useAuth } from '../hooks/useAuth';
 import apiService from '../services/api-tauri.service';
 import EditRejectedGachaponBox from './modal/editrejectedgachaponbox';
 import RequestTimeline from './common/RequestTimeline';
+import VersionCarousel from './common/VersionCarousel';
+
+interface GachaponItem {
+  itemNo?: number;
+  productID?: number;
+  name: string;
+  percentage: number;
+  period: number;
+  consumeType: number;
+  broadcast: boolean;
+}
+
+interface GachaponConfig {
+  items: GachaponItem[];
+  totalPercentage: number;
+  itemCount: number;
+  previousConfig: GachaponItem[];
+  history: any[];
+}
 
 interface PendingRequest {
   id: number;
@@ -13,12 +32,20 @@ interface PendingRequest {
   tipo_caixa: string;
   gachapon_itemno: number;
   gachapon_name: string;
-  config_json: string;
+  config: GachaponConfig;
   status: string;
   data_solicitacao: string;
   data_aprovacao?: string;
   motivo_rejeicao?: string;
 }
+
+const defaultConfig: GachaponConfig = {
+  items: [],
+  totalPercentage: 0,
+  itemCount: 0,
+  previousConfig: [],
+  history: []
+};
 
 const AtividadesPendentes: React.FC = () => {
   const { user } = useAuth();
@@ -354,23 +381,7 @@ const AtividadesPendentes: React.FC = () => {
                     <h3 className="text-red-400 font-semibold text-sm mb-2">REJEITADAS ({rejectedRequests.length})</h3>
                     <div className="space-y-2">
                     {rejectedRequests.map((request) => {
-                      let config;
-                      let parseError = false;
-                      try {
-                        config = JSON.parse(request.config_json);
-                      } catch (err) {
-                        parseError = true;
-                      }
-
-                      if (parseError) {
-                        return (
-                          <div key={request.id} className="bg-red-900/20 border border-red-500 p-4 rounded-lg space-y-2">
-                            <p className="text-red-400 font-bold">ERRO DE DADOS (JSON Corrompido)</p>
-                            <p className="text-white text-sm">ID: {request.id} | {request.gachapon_name}</p>
-                            <p className="text-xs text-gray-400">Esta solicitação contém dados inválidos e não pode ser exibida ou editada.</p>
-                          </div>
-                        );
-                      }
+                      const config = request.config || defaultConfig;
 
                       return (
                         <div
@@ -438,22 +449,7 @@ const AtividadesPendentes: React.FC = () => {
                     <h3 className="text-yellow-400 font-semibold text-sm mb-2">AGUARDANDO APROVAÇÃO ({pendingRequests.length})</h3>
                     <div className="space-y-2">
                     {pendingRequests.map((request) => {
-                      let config;
-                      let parseError = false;
-                      try {
-                        config = JSON.parse(request.config_json);
-                      } catch (err) {
-                        parseError = true;
-                      }
-
-                      if (parseError) {
-                        return (
-                          <div key={request.id} className="bg-red-900/20 border border-red-500 p-4 rounded-lg space-y-2">
-                            <p className="text-red-400 font-bold">ERRO DE DADOS (JSON Corrompido)</p>
-                            <p className="text-white text-sm">ID: {request.id} | {request.gachapon_name}</p>
-                          </div>
-                        );
-                      }
+                      const config = request.config || defaultConfig;
 
                       return (
                         <div
@@ -492,22 +488,7 @@ const AtividadesPendentes: React.FC = () => {
                     <h3 className="text-green-400 font-semibold text-sm mb-2">APROVADAS ({approvedRequests.length})</h3>
                     <div className="space-y-2">
                     {approvedRequests.map((request) => {
-                      let config;
-                      let parseError = false;
-                      try {
-                        config = JSON.parse(request.config_json);
-                      } catch (err) {
-                        parseError = true;
-                      }
-
-                      if (parseError) {
-                        return (
-                          <div key={request.id} className="bg-red-900/20 border border-red-500 p-4 rounded-lg space-y-2">
-                            <p className="text-red-400 font-bold">ERRO DE DADOS (JSON Corrompido)</p>
-                            <p className="text-white text-sm">ID: {request.id} | {request.gachapon_name}</p>
-                          </div>
-                        );
-                      }
+                      const config = request.config || defaultConfig;
 
                       return (
                         <div
@@ -564,7 +545,7 @@ const AtividadesPendentes: React.FC = () => {
         {showDetailsModal && selectedRequest && (() => {
           let config;
           try {
-            config = JSON.parse(selectedRequest.config_json);
+            config = selectedRequest.config || {};
           } catch (err) {
             return null;
           }
@@ -590,6 +571,15 @@ const AtividadesPendentes: React.FC = () => {
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
                   {/* Timeline */}
                   <RequestTimeline request={selectedRequest} />
+
+                  {/* Version History Carousel */}
+                  {config.history && config.history.length > 0 && (
+                    <VersionCarousel
+                      history={config.history}
+                      originalConfig={config.previousConfig || []}
+                      boxType={selectedRequest.tipo_caixa}
+                    />
+                  )}
 
                   {/* Info da Caixa */}
                   <div className="bg-[#1d1e24] p-4 rounded-lg border border-black">
@@ -705,7 +695,7 @@ const AtividadesPendentes: React.FC = () => {
 
                     // Função para criar chave única do item
                     const getItemKey = (item: any) =>
-                      `${selectedRequest.tipo_caixa === 'item' ? item.itemNo : item.productID}_${item.period}_${item.consumeType}`;
+                      `${selectedRequest.tipo_caixa === 'item' ? (item.itemNo || item.ItemNo) : (item.productID || item.ProductID)}_${item.period}_${item.consumeType}`;
 
                     // Mapear itens antigos e novos
                     const oldItemsMap = new Map(oldItems.map((item: any) => [getItemKey(item), item]));
@@ -717,7 +707,7 @@ const AtividadesPendentes: React.FC = () => {
                     const modified = newItems.filter((newItem: any) => {
                       const key = getItemKey(newItem);
                       const oldItem = oldItemsMap.get(key) as any;
-                      return oldItem && oldItem.percentage !== newItem.percentage;
+                      return oldItem && (oldItem.percentage || 0) !== (newItem.percentage || 0);
                     });
 
                     const hasChanges = removed.length > 0 || added.length > 0 || modified.length > 0;
@@ -745,7 +735,7 @@ const AtividadesPendentes: React.FC = () => {
                                     <p className="text-white font-medium">{item.name}</p>
                                     <div className="flex items-center justify-between mt-1 text-gray-400">
                                       <span>{item.period}d • CT:{item.consumeType}</span>
-                                      <span className="text-red-400 font-bold">{(item.percentage / 100).toFixed(2)}%</span>
+                                      <span className="text-red-400 font-bold">{((item.percentage || 0) / 100).toFixed(2)}%</span>
                                     </div>
                                   </div>
                                 ))}
@@ -763,7 +753,7 @@ const AtividadesPendentes: React.FC = () => {
                                     <p className="text-white font-medium">{item.name}</p>
                                     <div className="flex items-center justify-between mt-1 text-gray-400">
                                       <span>{item.period}d • CT:{item.consumeType}</span>
-                                      <span className="text-green-400 font-bold">{(item.percentage / 100).toFixed(2)}%</span>
+                                      <span className="text-green-400 font-bold">{((item.percentage || 0) / 100).toFixed(2)}%</span>
                                     </div>
                                   </div>
                                 ))}
@@ -773,20 +763,20 @@ const AtividadesPendentes: React.FC = () => {
 
                           {/* Porcentagens Modificadas */}
                           {modified.length > 0 && (
-                            <div className="bg-yellow-900/30 border border-yellow-600 p-3 rounded">
+                            <div className="bg-[#111216] border border-black p-3 rounded">
                               <h5 className="text-yellow-400 font-bold text-sm mb-2">📝 Porcentagem Alterada ({modified.length})</h5>
                               <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
                                 {modified.map((newItem: any, index: number) => {
                                   const oldItem = oldItemsMap.get(getItemKey(newItem)) as any;
                                   return (
-                                    <div key={index} className="bg-black/30 p-2 rounded border border-yellow-800 text-xs">
+                                    <div key={index} className="bg-[#1d1e24] p-2 rounded border border-black text-xs">
                                       <p className="text-white font-medium">{newItem.name}</p>
                                       <div className="flex items-center justify-between mt-1">
                                         <span className="text-gray-400">{newItem.period}d • CT:{newItem.consumeType}</span>
                                         <div className="flex items-center gap-2">
-                                          <span className="text-red-400 line-through">{(oldItem.percentage / 100).toFixed(2)}%</span>
+                                          <span className="text-red-400 line-through">{((oldItem?.percentage || 0) / 100).toFixed(2)}%</span>
                                           <span className="text-gray-500">→</span>
-                                          <span className="text-green-400 font-bold">{(newItem.percentage / 100).toFixed(2)}%</span>
+                                          <span className="text-green-400 font-bold">{((newItem.percentage || 0) / 100).toFixed(2)}%</span>
                                         </div>
                                       </div>
                                     </div>
@@ -813,7 +803,7 @@ const AtividadesPendentes: React.FC = () => {
                             <div className="flex-1">
                               <p className="text-white font-medium">{item.name}</p>
                               <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                                <span>{selectedRequest.tipo_caixa === 'item' ? `Item #${item.itemNo}` : `Produto #${item.productID}`}</span>
+                                <span>{selectedRequest.tipo_caixa === 'item' ? `ItemNo: ${item.itemNo}` : `Produto #${item.productID}`}</span>
                                 <span>•</span>
                                 <span>{item.period} dia(s)</span>
                                 <span>•</span>
@@ -945,23 +935,7 @@ const AtividadesPendentes: React.FC = () => {
             ) : (
               <div className="h-full overflow-y-auto custom-scrollbar space-y-3">
                 {filteredRequests.map((request) => {
-                let config;
-                let parseError = false;
-                try {
-                  config = JSON.parse(request.config_json);
-                } catch (err) {
-                  parseError = true;
-                }
-
-                if (parseError) {
-                  return (
-                    <div key={request.id} className="bg-red-900/20 border border-red-500 p-4 rounded-lg space-y-2">
-                      <p className="text-red-400 font-bold">ERRO DE DADOS (JSON Corrompido)</p>
-                      <p className="text-white text-sm">ID: {request.id} | {request.gachapon_name}</p>
-                      <p className="text-xs text-gray-400">Esta solicitação contém dados inválidos e não pode ser exibida ou aprovada.</p>
-                    </div>
-                  );
-                }
+                const config = request.config || defaultConfig;
 
                 return (
                   <div
@@ -1069,7 +1043,7 @@ const AtividadesPendentes: React.FC = () => {
 
       {/* Details Modal */}
       {showDetailsModal && selectedRequest && (() => {
-        const config = JSON.parse(selectedRequest.config_json);
+        const config = selectedRequest.config || defaultConfig;
         const previousConfig = config.previousConfig || [];
         const newItems = config.items || [];
         const isItemBox = selectedRequest.tipo_caixa === 'item';
@@ -1080,26 +1054,30 @@ const AtividadesPendentes: React.FC = () => {
           return `${idField}_${item.period}_${item.consumeType}`;
         };
 
-        // Função para comparar itens
+        // Função para comparar itens (Suporta duplicatas)
         const compareConfigs = () => {
           const results: any[] = [];
-          const processedKeys = new Set();
+          
+          // Clonar listas para poder remover itens à medida que encontramos correspondências
+          let remainingOldItems = [...previousConfig];
+          const newItemsList = [...newItems];
 
-          // Mapear configuração antiga por chave
-          const oldItemsMap = new Map(previousConfig.map((item: any) => [getItemKey(item), item]));
-
-          // Verificar itens novos e modificados
-          newItems.forEach((newItem: any) => {
+          // 1. Verificar correspondências exatas e modificações
+          newItemsList.forEach((newItem: any) => {
             const key = getItemKey(newItem);
-            processedKeys.add(key);
+            
+            // Encontrar primeiro item na lista antiga que tenha a mesma chave
+            const oldItemIndex = remainingOldItems.findIndex(old => getItemKey(old) === key);
 
-            const oldItem = oldItemsMap.get(key) as any;
-
-            if (!oldItem) {
-              // Item adicionado (nova combinação de ItemNo + Period + ConsumeType)
+            if (oldItemIndex === -1) {
+              // Item adicionado
               results.push({ type: 'added', item: newItem, oldItem: null });
             } else {
-              // Verificar se foi modificado (apenas percentage e broadcast podem mudar)
+              const oldItem = remainingOldItems[oldItemIndex];
+              // Remover da lista de pendentes para não casar de novo
+              remainingOldItems.splice(oldItemIndex, 1);
+
+              // Verificar se foi modificado (apenas percentage e broadcast podem mudar na lógica de negócio)
               const changes: string[] = [];
               if (oldItem.percentage !== newItem.percentage) changes.push('percentage');
               if (oldItem.broadcast !== newItem.broadcast) changes.push('broadcast');
@@ -1112,12 +1090,9 @@ const AtividadesPendentes: React.FC = () => {
             }
           });
 
-          // Verificar itens removidos
-          previousConfig.forEach((oldItem: any) => {
-            const key = getItemKey(oldItem);
-            if (!processedKeys.has(key)) {
-              results.push({ type: 'removed', item: null, oldItem });
-            }
+          // 2. O que sobrou na lista antiga foi removido
+          remainingOldItems.forEach((oldItem: any) => {
+            results.push({ type: 'removed', item: null, oldItem });
           });
 
           return results;
@@ -1148,6 +1123,15 @@ const AtividadesPendentes: React.FC = () => {
               <div className="p-6 space-y-4">
                 {/* Timeline */}
                 <RequestTimeline request={selectedRequest} />
+
+                {/* Version History Carousel */}
+                {config.history && config.history.length > 0 && (
+                  <VersionCarousel
+                    history={config.history}
+                    originalConfig={config.previousConfig || []}
+                    boxType={selectedRequest.tipo_caixa}
+                  />
+                )}
 
                 <div className="bg-[#1d1e24] p-4 rounded-lg">
                   <p className="text-white font-medium mb-2">{selectedRequest.gachapon_name}</p>
@@ -1212,135 +1196,6 @@ const AtividadesPendentes: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* Resumo de mudanças */}
-                <div className="bg-[#1d1e24] p-4 rounded-lg">
-                  <h4 className="text-lg font-semibold text-white mb-3">Resumo de Mudanças</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                    <div className="bg-green-900/30 border border-green-600 p-2 rounded">
-                      <p className="text-green-400 font-medium">{added.length} Adicionados</p>
-                    </div>
-                    <div className="bg-red-900/30 border border-red-600 p-2 rounded">
-                      <p className="text-red-400 font-medium">{removed.length} Removidos</p>
-                    </div>
-                    <div className="bg-yellow-900/30 border border-yellow-600 p-2 rounded">
-                      <p className="text-yellow-400 font-medium">{modified.length} Modificados</p>
-                    </div>
-                    <div className="bg-gray-700/30 border border-gray-600 p-2 rounded">
-                      <p className="text-gray-400 font-medium">{unchanged.length} Inalterados</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Itens Adicionados */}
-                {added.length > 0 && (
-                  <details className="bg-[#1d1e24] p-3 rounded-lg">
-                    <summary className="text-green-400 cursor-pointer font-semibold text-lg">
-                      Itens Adicionados ({added.length})
-                    </summary>
-                    <div className="space-y-2 mt-3">
-                      {added.map((d, index) => (
-                        <div key={index} className="bg-green-900/20 border border-green-600 p-3 rounded-lg">
-                          <p className="text-white font-medium">{d.item.name}</p>
-                          <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-300">
-                            <p>{isItemBox ? `ItemNo: ${d.item.itemNo}` : `ProductID: ${d.item.productID}`}</p>
-                            <p>Percentage: {d.item.percentageDisplay}%</p>
-                            <p>Period: {d.item.period} dias</p>
-                            <p>ConsumeType: {d.item.consumeType}</p>
-                            <p>Broadcast: {d.item.broadcast ? 'Sim' : 'Não'}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
-
-                {/* Itens Removidos */}
-                {removed.length > 0 && (
-                  <details className="bg-[#1d1e24] p-3 rounded-lg">
-                    <summary className="text-red-400 cursor-pointer font-semibold text-lg">
-                      ✗ Itens Removidos ({removed.length})
-                    </summary>
-                    <div className="space-y-2 mt-3">
-                      {removed.map((d, index) => (
-                        <div key={index} className="bg-red-900/20 border border-red-600 p-3 rounded-lg">
-                          <p className="text-white font-medium line-through">{d.oldItem.name}</p>
-                          <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-300">
-                            <p>{isItemBox ? `ItemNo: ${d.oldItem.itemNo}` : `ProductID: ${d.oldItem.productID}`}</p>
-                            <p>Percentage: {(d.oldItem.percentage / 100).toFixed(2)}%</p>
-                            <p>Period: {d.oldItem.period} dias</p>
-                            <p>ConsumeType: {d.oldItem.consumeType}</p>
-                            <p>Broadcast: {d.oldItem.broadcast ? 'Sim' : 'Não'}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
-
-                {/* Itens Modificados */}
-                {modified.length > 0 && (
-                  <details className="bg-[#1d1e24] p-3 rounded-lg">
-                    <summary className="text-yellow-400 cursor-pointer font-semibold text-lg">
-                      Itens Modificados ({modified.length})
-                    </summary>
-                    <div className="space-y-2 mt-3">
-                      {modified.map((d, index) => (
-                        <div key={index} className="bg-yellow-900/20 border border-yellow-600 p-3 rounded-lg">
-                          <p className="text-white font-medium">{d.item.name}</p>
-                          <div className="grid grid-cols-1 gap-2 mt-2 text-sm">
-                            {d.changes.includes('percentage') && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-gray-400">Percentage:</span>
-                                <span className="text-red-400 line-through">{(d.oldItem.percentage / 100).toFixed(2)}%</span>
-                                <span className="text-gray-500">→</span>
-                                <span className="text-green-400 font-medium">{d.item.percentageDisplay}%</span>
-                              </div>
-                            )}
-                            {d.changes.includes('period') && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-gray-400">Period:</span>
-                                <span className="text-red-400 line-through">{d.oldItem.period} dias</span>
-                                <span className="text-gray-500">→</span>
-                                <span className="text-green-400 font-medium">{d.item.period} dias</span>
-                              </div>
-                            )}
-                            {d.changes.includes('broadcast') && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-gray-400">Broadcast:</span>
-                                <span className="text-red-400 line-through">{d.oldItem.broadcast ? 'Sim' : 'Não'}</span>
-                                <span className="text-gray-500">→</span>
-                                <span className="text-green-400 font-medium">{d.item.broadcast ? 'Sim' : 'Não'}</span>
-                              </div>
-                            )}
-                            {!d.changes.includes('percentage') && (
-                              <span className="text-gray-400 text-xs">Percentage: {d.item.percentageDisplay}%</span>
-                            )}
-                            {!d.changes.includes('period') && (
-                              <span className="text-gray-400 text-xs">Period: {d.item.period} dias</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
-
-                {/* Itens Inalterados (colapsado por padrão) */}
-                {unchanged.length > 0 && (
-                  <details className="bg-[#1d1e24] p-3 rounded-lg">
-                    <summary className="text-gray-400 cursor-pointer font-medium">
-                      Itens Inalterados ({unchanged.length})
-                    </summary>
-                    <div className="space-y-2 mt-3">
-                      {unchanged.map((d, index) => (
-                        <div key={index} className="bg-[#252631] p-2 rounded text-sm text-gray-400">
-                          <p>{d.item.name} - {d.item.percentageDisplay}%</p>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
               </div>
 
               <div className="flex gap-3 p-6 border-t border-gray-600">
@@ -1361,12 +1216,7 @@ const AtividadesPendentes: React.FC = () => {
 
       {/* Approve Modal */}
       {showApproveModal && selectedRequest && (() => {
-        let config;
-        try {
-          config = JSON.parse(selectedRequest.config_json);
-        } catch (err) {
-          return null;
-        }
+        const config = selectedRequest.config || defaultConfig;
 
         const tableName = selectedRequest.tipo_caixa === 'item'
           ? 'CBT_ItemInfo_GachaponInfo_Item'

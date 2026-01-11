@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { check, Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { ask } from '@tauri-apps/plugin-dialog';
-import { UpdaterDebug } from '../components/debug/DebugModal';
+import { UpdaterDebug } from '../services/debug.service';
 import { UpdateDiagnostics, DiagnosticResult } from '../utils/update-diagnostics';
 
 export type UpdateStatus = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error';

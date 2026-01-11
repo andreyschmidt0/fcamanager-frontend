@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';import { RefreshCcw, Trash2, Plus, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { RefreshCcw, Trash2, AlertCircle, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import apiService from '../../services/api-tauri.service';
 import BaseModal from '../common/BaseModal';
 import DataTable, { TableColumn } from '../common/DataTable';
 import TableFilter, { FilterField } from '../common/TableFilter';
-import { SubmitButton, CancelButton } from '../common/ActionButton';
+import ItemSearchModal from '../common/ItemSearchModal';
 
 interface CampItem {
   Name: string;
@@ -24,8 +25,7 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newItemNo, setNewItemNo] = useState('');
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Valores digitados pelo usuário (sem delay)
@@ -103,19 +103,17 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
     }
   }, [isOpen, loadItems]);
 
-  const handleAddItem = async () => {
-    const numericItem = parseInt(newItemNo, 10);
-    if (isNaN(numericItem) || numericItem <= 0) {
-      toast.error('Informe um ItemNo válido.');
+  const handleAddItem = async (selectedItem: any) => {
+    const itemNo = selectedItem.ItemNo;
+    if (!itemNo || itemNo <= 0) {
+      toast.error('ItemNo inválido.');
       return;
     }
     setIsSubmitting(true);
     try {
-      const result = await apiService.addCampItem(numericItem);
+      const result = await apiService.addCampItem(itemNo);
       if (result.success) {
-        toast.success(result.message || 'Item adicionado ao modo CAMP.');
-        setShowAddModal(false);
-        setNewItemNo('');
+        toast.success(result.message || `Item ${selectedItem.Name} adicionado ao modo CAMP.`);
         loadItems();
       } else {
         toast.error(result.error || 'Erro ao adicionar item.');
@@ -173,6 +171,8 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
     {
       key: 'Name',
       header: 'Nome do Item',
+      headerClassName: 'px-4 py-3 text-left text-sm font-semibold text-gray-300 border-b border-gray-700',
+      className: 'px-4 py-3',
       render: (row) => (
         <div>
           <div className="text-white font-medium">{row.Name || 'N/A'}</div>
@@ -185,17 +185,20 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
     {
       key: 'AllowType',
       header: 'AllowType',
-      className: 'px-4 py-3 text-sm text-gray-200'
+      headerClassName: 'px-4 py-3 text-center text-sm font-semibold text-gray-300 border-b border-gray-700',
+      className: 'px-4 py-3 text-sm text-center text-gray-200'
     },
     {
       key: 'ValueType',
       header: 'ValueType',
-      className: 'px-4 py-3 text-sm text-gray-200'
+      headerClassName: 'px-4 py-3 text-center text-sm font-semibold text-gray-300 border-b border-gray-700',
+      className: 'px-4 py-3 text-sm text-center text-gray-200'
     },
     {
       key: 'Value',
-      header: 'Value (ItemNo)',
-      className: 'px-4 py-3 text-sm text-gray-200'
+      header: 'ItemNo',
+      headerClassName: 'px-4 py-3 text-center text-sm font-semibold text-gray-300 border-b border-gray-700',
+      className: 'px-4 py-3 text-sm text-center text-gray-200'
     },
     {
       key: 'actions',
@@ -237,12 +240,12 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
             </div>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowAddModal(true)}
-                disabled={isLoading}
+                onClick={() => setIsSearchModalOpen(true)}
+                disabled={isLoading || isSubmitting}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Plus size={16} />
-                Adicionar Item
+                <Search size={16} />
+                Buscar e Adicionar Item
               </button>
               <button
                 onClick={loadItems}
@@ -294,46 +297,15 @@ const ConsultCampItems: React.FC<ConsultCampItemsProps> = ({ isOpen, onClose }) 
         </div>
       </BaseModal>
 
-      {/* Modal de Adicionar Item */}
-      {showAddModal && (
-        <BaseModal
-          isOpen={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          title="ADICIONAR ITEM CAMP"
-          maxWidth="md"
-        >
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">ItemNo</label>
-              <input
-                type="number"
-                value={newItemNo}
-                onChange={(e) => setNewItemNo(e.target.value)}
-                className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-                placeholder="Ex: 17998"
-              />
-            </div>
-            <div className="flex gap-3 justify-end pt-4">
-              <CancelButton
-                onClick={() => setShowAddModal(false)}
-                disabled={isSubmitting}
-                className="flex-1"
-              >
-                Cancelar
-              </CancelButton>
-              <SubmitButton
-                onClick={handleAddItem}
-                disabled={isSubmitting}
-                loading={isSubmitting}
-                loadingText="Salvando..."
-                className="flex-1"
-              >
-                Adicionar
-              </SubmitButton>
-            </div>
-          </div>
-        </BaseModal>
-      )}
+      {/* Item Search Modal */}
+      <ItemSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelect={handleAddItem}
+        boxType="item"
+        title="Buscar Item para Modo CAMP"
+        searchFunction={(filters) => apiService.searchGachaponItems(filters)}
+      />
     </>
   );
 };

@@ -1,4 +1,4 @@
-import { UpdaterDebug } from '../components/debug/DebugModal';
+import { UpdaterDebug } from '../services/debug.service';
 
 export interface DiagnosticStep {
   step: string;

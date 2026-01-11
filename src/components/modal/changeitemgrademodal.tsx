@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Search } from 'lucide-react';
+import { Search, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import apiService from '../../services/api-tauri.service';
+import BaseModal from '../common/BaseModal';
+import { CancelButton, SubmitButton } from '../common/ActionButton';
 
 interface Item {
   ItemNo: number;
@@ -204,19 +206,14 @@ const ChangeItemGradeModal: React.FC<ChangeItemGradeModalProps> = ({ isOpen, onC
   };
 
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
-      <div className="bg-[#111216] border border-black rounded-lg shadow-xl text-white w-full max-w-4xl max-h-[90vh] flex flex-col">
-        <div className="flex justify-between items-center p-4 border-b border-gray-800">
-          <h2 className="text-xl font-neofara">Alterar Valor do Item (ItemGrade)</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <X size={24} />
-          </button>
-        </div>
-
-        <div className="p-6 flex-grow overflow-y-auto custom-scrollbar">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="ALTERAR VALOR DO ITEM"
+      maxWidth="4xl"
+    >
+      <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left side: Item selection */}
             <div className="flex flex-col gap-4">
@@ -405,22 +402,25 @@ const ChangeItemGradeModal: React.FC<ChangeItemGradeModalProps> = ({ isOpen, onC
               )}
             </div>
           </div>
-        </div>
 
-        <div className="p-4 border-t border-gray-800 flex justify-end gap-4">
-            <p className="text-sm text-gray-400 self-center">
-                {selectedItems.size} item(s) selecionado(s).
-            </p>
-            <button
-                onClick={handleSubmit}
-                disabled={isUpdating || selectedItems.size === 0}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+        <div className="flex items-center justify-between pt-4">
+          <p className="text-sm text-gray-400">
+            {selectedItems.size} item(s) selecionado(s)
+          </p>
+          <div className="flex gap-3">
+            <CancelButton onClick={onClose}>Cancelar</CancelButton>
+            <SubmitButton
+              onClick={handleSubmit}
+              loading={isUpdating}
+              disabled={selectedItems.size === 0}
+              icon={Save}
             >
-                {isUpdating ? 'Atualizando...' : 'Confirmar e Alterar'}
-            </button>
+              Confirmar e Alterar
+            </SubmitButton>
+          </div>
         </div>
       </div>
-    </div>
+    </BaseModal>
   );
 };
 

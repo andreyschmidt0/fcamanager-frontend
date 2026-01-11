@@ -1,5 +1,6 @@
+// Force reload
 import { fetch } from '@tauri-apps/plugin-http';
-import { ErrorCapture } from '../components/debug/DebugModal';
+import { ErrorCapture } from './debug.service';
 import SuccessModalManager from '../utils/SuccessModalManager';
 import AuthStateManager from '../utils/authState';
 
@@ -2182,7 +2183,15 @@ class ApiTauriService {
   }): Promise<{
     success: boolean;
     message?: string;
-    data?: any;
+    data?: {
+      id: number;
+      solicitante_oiduser: number;
+      tipo_caixa: string;
+      gachapon_itemno: number;
+      gachapon_name: string;
+      status: string;
+      config: any;
+    };
     error?: string;
   }> {
     try {
@@ -2226,7 +2235,7 @@ class ApiTauriService {
       tipo_caixa: string;
       gachapon_itemno: number;
       gachapon_name: string;
-      config_json: string;
+      config: any;
       status: string;
       data_solicitacao: string;
     }>;
@@ -2262,7 +2271,7 @@ class ApiTauriService {
       tipo_caixa: string;
       gachapon_itemno: number;
       gachapon_name: string;
-      config_json: string;
+      config: any;
       status: string;
       data_solicitacao: string;
       data_aprovacao?: string;

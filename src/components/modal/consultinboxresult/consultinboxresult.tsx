@@ -279,11 +279,10 @@ const ConsultInboxResult: React.FC<ConsultInboxResultProps> = ({
                       {/* Product Info */}
                       <div className="lg:col-span-3">
                         <div className="flex items-start gap-2">
-                          <Package size={20} className={item.GiftType === 'Presente' ? 'text-purple-400' : 'text-blue-400'} />
                           <div className="flex-1">
                             <p className="text-white font-medium text-base leading-tight truncate" title={item.ProductName}>{item.ProductName}</p>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500">ID: {item.ProductID}</span>
+                              <span className="text-xs text-gray-500">ProductID: {item.ProductID}</span>
                               <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${
                                 item.GiftType === 'Presente'
                                   ? 'bg-purple-500/20 text-purple-300'

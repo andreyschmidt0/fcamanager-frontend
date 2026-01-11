@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, Trash2, Save, X } from 'lucide-react';
 import apiService from '../../services/api-tauri.service';
 import BaseModal from '../common/BaseModal';
+import ItemSearchModal from '../common/ItemSearchModal';
 import { CancelButton, SubmitButton } from '../common/ActionButton';
 import toast from 'react-hot-toast';
 
@@ -23,13 +24,9 @@ const ChangeGoaRewardModal: React.FC<ChangeGoaRewardModalProps> = ({ isOpen, onC
   const [selectedRank, setSelectedRank] = useState<GoaRankReward | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editProductIDs, setEditProductIDs] = useState('');
-  
+
   // Search states
   const [isSearchOpen, setIsSearchModalOpen] = useState(false);
-  const [inputSearchTerm, setInputSearchTerm] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
 
   // Load rewards
   const loadRewards = async () => {
@@ -58,32 +55,6 @@ const ChangeGoaRewardModal: React.FC<ChangeGoaRewardModalProps> = ({ isOpen, onC
     }
   }, [isOpen]);
 
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => setSearchTerm(inputSearchTerm), 500);
-    return () => clearTimeout(timer);
-  }, [inputSearchTerm]);
-
-  useEffect(() => {
-    if (isSearchOpen && searchTerm) {
-      handleSearch();
-    }
-  }, [searchTerm, isSearchOpen]);
-
-  const handleSearch = async () => {
-    setIsSearching(true);
-    try {
-      // Usar a rota de busca de itens do gachapon que retorna o que precisamos
-      const result = await apiService.searchGachaponProducts({ searchTerm });
-      if (result.success && result.data) {
-        setSearchResults(result.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
   const handleEdit = (rank: GoaRankReward) => {
     setSelectedRank(rank);
@@ -113,7 +84,8 @@ const ChangeGoaRewardModal: React.FC<ChangeGoaRewardModalProps> = ({ isOpen, onC
     }
   };
 
-  const addProductID = (productID: number) => {
+  const addProductID = (item: any) => {
+    const productID = item.ProductID;
     const ids = editProductIDs.split(',').map(id => id.trim()).filter(id => id !== '');
     if (!ids.includes(productID.toString())) {
       ids.push(productID.toString());
@@ -122,7 +94,6 @@ const ChangeGoaRewardModal: React.FC<ChangeGoaRewardModalProps> = ({ isOpen, onC
     } else {
       toast.error('Produto já está na lista');
     }
-    setIsSearchModalOpen(false);
   };
 
   const removeProductID = (idToRemove: string) => {
@@ -245,64 +216,14 @@ const ChangeGoaRewardModal: React.FC<ChangeGoaRewardModalProps> = ({ isOpen, onC
       </div>
 
       {/* Item Search Modal */}
-      {isSearchOpen && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[70] p-4">
-          <div className="bg-[#111216] rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-gray-700">
-            <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-white">Buscar Produto para Recompensa</h3>
-              <button onClick={() => setIsSearchModalOpen(false)} className="text-gray-400 hover:text-white">
-                <X size={24} />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-4 overflow-hidden flex flex-col">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-                <input
-                  type="text"
-                  autoFocus
-                  value={inputSearchTerm}
-                  onChange={(e) => setInputSearchTerm(e.target.value)}
-                  placeholder="Nome do produto ou ProductID..."
-                  className="w-full pl-10 pr-4 py-3 bg-[#1d1e24] text-white rounded-lg border border-gray-600 focus:border-green-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                {isSearching ? (
-                  <div className="py-12 text-center text-gray-500">Buscando...</div>
-                ) : searchResults.length > 0 ? (
-                  <div className="space-y-2">
-                    {searchResults.map((item, idx) => (
-                      <div key={idx} className="bg-[#1d1e24] p-3 rounded-lg border border-gray-700 flex justify-between items-center hover:bg-gray-800 transition-colors">
-                        <div>
-                          <p className="text-white font-medium">{item.ProductName}</p>
-                          <div className="flex gap-3 mt-1 text-xs text-gray-400 font-mono">
-                            <span>ProductID: <span className="text-green-400">{item.ProductID}</span></span>
-                            <span>ItemNo: {item.ItemNo00}</span>
-                            <span>Period: {item.Period}d</span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => addProductID(item.ProductID)}
-                          className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition-colors"
-                          title="Adicionar"
-                        >
-                          <Plus size={18} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : searchTerm ? (
-                  <div className="py-12 text-center text-gray-500">Nenhum resultado encontrado</div>
-                ) : (
-                  <div className="py-12 text-center text-gray-500 italic">Digite algo para buscar</div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ItemSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelect={addProductID}
+        boxType="produto"
+        title="Buscar Produto para Recompensa"
+        searchFunction={(filters) => apiService.searchGachaponProducts(filters)}
+      />
     </BaseModal>
   );
 };
