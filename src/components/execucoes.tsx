@@ -33,6 +33,7 @@ import ChangeGoaRewardModal from './modal/ChangeGoaRewardModal';
 import CreateGachaponBox from './modal/creategachaponbox';
 import AtividadesPendentes from './atividadespendentes';
 import ChangeItemGradeModal from './modal/changeitemgrademodal';
+import ChangeClanName from './modal/changeclanname';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -141,7 +142,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Emblema Clan', 'Remover Exp', 'Remover Cash', 'Remover Conta', ] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
-    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha', 'Ajustar KDA', 'Alterar Login', 'Alterar Valor de Item', 'Alterar recompensa GOA'] }
+    { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha', 'Ajustar KDA', 'Alterar Login', 'Alterar Valor de Item', 'Alterar recompensa GOA', 'Alterar nome do Clan'] }
   ];
   
 return (
@@ -401,7 +402,12 @@ return (
           onClose={() => setIsModalOpen(false)}
         />
       )}
-
+      {isModalOpen && selectedAction && selectedAction.option === 'Alterar nome do Clan' && (
+        <ChangeClanName
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

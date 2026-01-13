@@ -708,9 +708,6 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                 </div>
                 <div>
                   <h3 className="text-white font-medium text-sm">{selectedClan.strName}</h3>
-                  <p className="text-blue-400 text-xs">
-                    {selectedClan.dn_n4TotalRegularMember} membros
-                  </p>
                   <p className="text-gray-300 text-xs">Criado: {new Date(selectedClan.dateCreated).toLocaleDateString()}</p>
                 </div>
               </div>

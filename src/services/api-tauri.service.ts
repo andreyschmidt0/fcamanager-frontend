@@ -1115,6 +1115,44 @@ class ApiTauriService {
     }
   }
 
+  // Alterar nome do clã usando BSP_ChangeGuildName
+  async changeClanName(data: {
+    oidGuild: number;
+    newClanName: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    data?: any;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/change-clan-name`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{
+        success: boolean;
+        message?: string;
+        data?: any;
+      }>(response);
+
+      if (result.success) {
+        this.showSuccessModal('Nome do Clã Alterado', `Nome do clã foi alterado para "${data.newClanName}" com sucesso!`);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao alterar nome do clã:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao alterar nome do clã'
+      };
+    }
+  }
+
   // Remover emblema de clã usando BSP_RemoveClanEmblem
   async removeClanEmblem(data: {
     oidGuild: number;

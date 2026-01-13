@@ -188,11 +188,16 @@ const ActionFormModal: React.FC<ActionFormModalProps> = ({
             />
           )}
 
-          {children && React.isValidElement(children) && React.cloneElement(children, {
-            formData,
-            onInputChange: handleInputChange,
-            validatedPlayer: requiresPlayerValidation ? playerValidation.validatedPlayer : null
-          } as any)}
+          {children && React.isValidElement(children) && (
+            // Só passar props customizadas se for um componente React customizado (não um elemento DOM nativo)
+            typeof children.type === 'string'
+              ? children
+              : React.cloneElement(children, {
+                  formData,
+                  onInputChange: handleInputChange,
+                  validatedPlayer: requiresPlayerValidation ? playerValidation.validatedPlayer : null
+                } as any)
+          )}
 
           {/* Error Message */}
           {modalAction.errorMessage && (
