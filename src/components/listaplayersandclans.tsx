@@ -499,9 +499,7 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
                       <div className="flex-1 flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-white">{clan.strName}</p>
-                          <p className="text-xs text-gray-400 font-medium">
-                            {clan.dn_n4TotalRegularMember} membro(s)
-                          </p>
+
                           <p className="text-xs text-gray-500 font-medium">
                             Líder: {clan.dn_strCharacterName_master}
                           </p>

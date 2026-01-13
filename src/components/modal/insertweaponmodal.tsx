@@ -20,16 +20,45 @@ const InsertWeaponModal: React.FC<InsertWeaponModalProps> = ({ isOpen, onClose }
     setCopySuccess(false);
   };
 
+  // Helper function to get value from object with case-insensitive key matching
+  const getValue = (obj: Record<string, string>, ...keys: string[]): string => {
+    // Convert all object keys to lowercase for comparison
+    const lowerCaseObj: Record<string, string> = {};
+    Object.keys(obj).forEach(key => {
+      lowerCaseObj[key.toLowerCase()] = obj[key];
+    });
+
+    // Try each key variant (case-insensitive)
+    for (const key of keys) {
+      const value = lowerCaseObj[key.toLowerCase()];
+      if (value !== undefined && value !== null && value !== '') {
+        return value;
+      }
+    }
+    return '';
+  };
+
   const parseValue = (val: string) => {
     if (!val) return '0';
     // Remove inline comments like // 460
     val = val.split('//')[0].trim();
+
     // Check if string (surrounded by quotes)
     if (val.startsWith('"') && val.endsWith('"')) {
-      // Remove outer quotes and remove any single quotes inside (e.g., "Baron's" -> N'Barons')
-      const content = val.slice(1, -1).replace(/'/g, "");
-      return `N'${content}'`;
+      const content = val.slice(1, -1);
+
+      // Check if the content is a number
+      if (!isNaN(Number(content)) && content !== '') {
+        // It's a numeric value, return without quotes
+        return content;
+      }
+
+      // It's a text string, remove any single quotes inside (e.g., "Baron's" -> N'Barons')
+      const cleanContent = content.replace(/'/g, "");
+      return `N'${cleanContent}'`;
     }
+
+    // Not surrounded by quotes, return as is (likely already a number)
     return val;
   };
 
@@ -96,19 +125,19 @@ const InsertWeaponModal: React.FC<InsertWeaponModalProps> = ({ isOpen, onClose }
         sql += `) VALUES\n`;
         
         const itemValues = items.map(item => {
-           const name = parseValue(item['Name']);
-           const itemNo = parseValue(item['ItemNo']);
-           const itemType = parseValue(item['Itemtype'] || item['ItemType']);
-           const detailType = parseValue(item['Detailtype'] || item['DetailType'] || '0');
-           const functionInfo = parseValue(item['Functioninfo'] || item['FunctionInfo'] || '0');
-           const optionType = parseValue(item['OptionType'] || '0');
-           const slotNum = parseValue(item['SlotNum'] || item['Slot'] || '0');
-           const gpUnlock = parseValue(item['GP_Unlock'] || item['GPUnlock'] || '0');
-           const nxUnlock = parseValue(item['NX_Unlock'] || item['NXUnlock'] || '0');
-           const clanUnlock = parseValue(item['UnlockClanExp'] || item['ClanUnlock'] || '0'); 
-           const itemGrade = parseValue(item['ItemGrade'] || '0');
-           const category = '0'; 
-           const weaponSet = '0'; 
+           const name = parseValue(getValue(item, 'Name'));
+           const itemNo = parseValue(getValue(item, 'ItemNo'));
+           const itemType = parseValue(getValue(item, 'Itemtype', 'ItemType'));
+           const detailType = parseValue(getValue(item, 'Detailtype', 'DetailType'));
+           const functionInfo = parseValue(getValue(item, 'Functioninfo', 'FunctionInfo'));
+           const optionType = parseValue(getValue(item, 'OptionType'));
+           const slotNum = parseValue(getValue(item, 'SlotNum', 'Slot'));
+           const gpUnlock = parseValue(getValue(item, 'GP_Unlock', 'GPUnlock'));
+           const nxUnlock = parseValue(getValue(item, 'NX_Unlock', 'NXUnlock'));
+           const clanUnlock = parseValue(getValue(item, 'UnlockClanExp', 'ClanUnlock'));
+           const itemGrade = parseValue(getValue(item, 'ItemGrade'));
+           const category = '0';
+           const weaponSet = '0';
 
            return `(${itemNo}, ${name}, ${itemType}, ${detailType}, ${functionInfo}, ${optionType}, ${slotNum}, ${gpUnlock}, ${nxUnlock}, ${clanUnlock}, ${itemGrade}, ${category}, ${weaponSet})`;
         });
@@ -119,7 +148,7 @@ const InsertWeaponModal: React.FC<InsertWeaponModalProps> = ({ isOpen, onClose }
       const groupedProducts: Record<string, typeof products> = {};
       products.forEach(prod => {
           // Normalize name by removing quotes for the key if present, though parseValue adds N'...' we want the raw name for grouping or the display name
-          let rawName = prod['ProductName'];
+          let rawName = getValue(prod, 'ProductName');
           if (rawName && rawName.startsWith('"') && rawName.endsWith('"')) {
               rawName = rawName.slice(1, -1);
           }
@@ -141,19 +170,19 @@ const InsertWeaponModal: React.FC<InsertWeaponModalProps> = ({ isOpen, onClose }
         Object.keys(groupedProducts).forEach(name => {
             const group = groupedProducts[name];
             const groupValues = group.map(prod => {
-                const productID = parseValue(prod['ProductID']);
-                const productName = parseValue(prod['ProductName']);
-                const saleType = parseValue(prod['SaleType']);
-                const price = parseValue(prod['Price']);
-                const salePrice = parseValue(prod['SalePrice']);
-                const bonusGP = parseValue(prod['BonusGP']);
-                const itemNum = parseValue(prod['Itemnum'] || prod['ItemNum']);
-                const itemNo0 = parseValue(prod['ItemNo0']);
-                const consumeType0 = parseValue(prod['Consumetype0']);
-                const period0 = parseValue(prod['Period0']);
-                const activationUnlock = parseValue(prod['ActivationUnlock']);
-                const inboxGift = parseValue(prod['InboxGift']);
-                
+                const productID = parseValue(getValue(prod, 'ProductID'));
+                const productName = parseValue(getValue(prod, 'ProductName'));
+                const saleType = parseValue(getValue(prod, 'SaleType'));
+                const price = parseValue(getValue(prod, 'Price'));
+                const salePrice = parseValue(getValue(prod, 'SalePrice'));
+                const bonusGP = parseValue(getValue(prod, 'BonusGP'));
+                const itemNum = parseValue(getValue(prod, 'Itemnum', 'ItemNum'));
+                const itemNo0 = parseValue(getValue(prod, 'ItemNo0'));
+                const consumeType0 = parseValue(getValue(prod, 'Consumetype0', 'ConsumeType0'));
+                const period0 = parseValue(getValue(prod, 'Period0'));
+                const activationUnlock = parseValue(getValue(prod, 'ActivationUnlock'));
+                const inboxGift = parseValue(getValue(prod, 'InboxGift'));
+
                 const zeros = '0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0';
                 return `(${productID}, ${productName}, ${saleType}, ${price}, ${salePrice}, ${bonusGP}, ${itemNum}, ${itemNo0}, ${consumeType0}, ${period0}, ${zeros}, ${activationUnlock}, ${inboxGift})`;
             });
@@ -171,7 +200,7 @@ const InsertWeaponModal: React.FC<InsertWeaponModalProps> = ({ isOpen, onClose }
         Object.keys(groupedProducts).forEach(name => {
             const group = groupedProducts[name];
             const groupValues = group.map(prod => {
-                 const productID = parseValue(prod['ProductID']);
+                 const productID = parseValue(getValue(prod, 'ProductID'));
                  return `(${productID}, 1)`;
             });
              shopViewBlocks.push(`-- ${name}\n` + groupValues.join(', ')); // Joined by comma space for compactness or comma newline
