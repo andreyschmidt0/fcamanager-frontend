@@ -2742,6 +2742,35 @@ class ApiTauriService {
     }
   }
 
+  // Gerar lista de banimentos semanal
+  async getWeeklyBanList(): Promise<{
+    success: boolean;
+    data?: {
+      model1: string;
+      model2: string;
+      totalCount: number;
+      model1Count: number;
+      model2Count: number;
+      startDate: string;
+    };
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/weekly-ban-list`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao gerar lista de banimentos'
+      };
+    }
+  }
+
 }
 
 // Exportar instância única
