@@ -317,11 +317,12 @@ class ApiTauriService {
   }
 
 
-  async getLogs(period?: string, gmNickname?: string, page: number = 1, pageSize: number = 20): Promise<{ logs: any[], pagination: { page: number, pageSize: number, total: number, totalPages: number } }> {
+  async getLogs(period?: string, gmNickname?: string, targetNickname?: string, page: number = 1, pageSize: number = 20): Promise<{ logs: any[], pagination: { page: number, pageSize: number, total: number, totalPages: number } }> {
     try {
       const params = new URLSearchParams();
       if (period) params.append('period', period);
       if (gmNickname) params.append('gmNickname', gmNickname);
+      if (targetNickname) params.append('targetNickname', targetNickname);
       params.append('page', page.toString());
       params.append('pageSize', pageSize.toString());
 

@@ -124,7 +124,7 @@ jobs:
           cat > latest.json << EOF
           {
             "version": "${{ steps.release_info.outputs.app_version }}",
-            "notes": "Troca de motivo do ban para dropdwon fixo e Nova consulta de Histórico de uso de itens por partida",
+            "notes": "Barra de Pesquisa em Atividades Pendentes",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "windows-x86_64": {

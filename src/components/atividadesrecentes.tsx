@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, RefreshCw } from 'lucide-react';
+import { ChevronDown, RefreshCw, Search } from 'lucide-react';
 import { useActivityLog, ActivityLog } from '../contexts/ActivityLogContext';
 import { useAuth } from '../hooks/useAuth';
 import apiService from '../services/api-tauri.service';
@@ -15,6 +15,7 @@ const RecentActivities: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('HOJE');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedGM, setSelectedGM] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [showGMDropdown, setShowGMDropdown] = useState(false);
   const [gmUsers, setGMUsers] = useState<GMUser[]>([]);
   const [databaseLogs, setDatabaseLogs] = useState<any[]>([]);
@@ -101,7 +102,7 @@ const RecentActivities: React.FC = () => {
     }, 300); // Debounce de 300ms
 
     return () => clearTimeout(timeout);
-  }, [selectedPeriod, selectedGM]);
+  }, [selectedPeriod, selectedGM, searchTerm]);
 
   // Função para mudar de página
   const handlePageChange = (newPage: number) => {
@@ -138,8 +139,12 @@ const RecentActivities: React.FC = () => {
 
     setIsLoading(true);
     try {
+      // Passar searchTerm como targetNickname se existir
+      const targetFilter = searchTerm || undefined;
+      const gmFilter = selectedGM || undefined;
+      
       // Usar JWT direto com paginação
-      const response = await apiService.getLogs(selectedPeriod, selectedGM || undefined, page, 20);
+      const response = await apiService.getLogs(selectedPeriod, gmFilter, targetFilter, page, 20);
       setDatabaseLogs(response.logs || []);
       setPagination(response.pagination || { page: 1, pageSize: 20, total: 0, totalPages: 0 });
     } catch (error) {
@@ -288,7 +293,7 @@ const RecentActivities: React.FC = () => {
       ref={dropdownRef}
     >
       {/* Header */}
-      <div className="p-4 border-b border-black" style={{ flexShrink: 0 }}>
+      <div className="p-6 border-b border-black" style={{ flexShrink: 0 }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-neofara font-medium">
@@ -304,6 +309,21 @@ const RecentActivities: React.FC = () => {
             </button>
           </div>
           <div className="flex items-center gap-3">
+
+            {/* Search Bar */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar Nickname..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (e.target.value) setSelectedGM(''); // Clear dropdown selection when typing
+                }}
+                className="bg-[#1d1e24] border border-black rounded-lg pl-3 pr-8 py-1.5 text-xs sm:text-sm text-white focus:outline-none focus:border-gray-500 w-32 sm:w-40 transition-all placeholder-gray-500"
+              />
+              <Search size={14} className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+            </div>
 
             {/* GM Selector - Show only for Masters (users with access to GM list) */}
             {user && gmUsers.length > 0 && (
@@ -328,6 +348,7 @@ const RecentActivities: React.FC = () => {
                     <button
                       onClick={() => {
                         setSelectedGM('');
+                        setSearchTerm(''); // Clear search term when selecting "All"
                         setShowGMDropdown(false);
                       }}
                       className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors text-red-400"
@@ -339,6 +360,7 @@ const RecentActivities: React.FC = () => {
                         key={gm.strLNexonID}
                         onClick={() => {
                           setSelectedGM(gm.NickName);
+                          setSearchTerm(''); // Clear search term when selecting specific GM
                           setShowGMDropdown(false);
                         }}
                         className="block w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-700 transition-colors"
