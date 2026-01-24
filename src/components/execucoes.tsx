@@ -35,6 +35,7 @@ import AtividadesPendentes from './atividadespendentes';
 import ChangeItemGradeModal from './modal/changeitemgrademodal';
 import ChangeClanName from './modal/changeclanname';
 import ConsultWeeklyBanList from './modal/consultweeklybanlist';
+import ConsultItemUseHistory from './modal/consultitemusehistory';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
@@ -138,7 +139,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   };
 
   const actionButtons = [
-    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Histórico de Doação', 'Consultar Inventário', 'Consultar Inbox', 'Consultar Caixas', 'Consultar Modo CAMP', 'Consultar Blacklist Fireteam', 'Consultar Lista de Bans'] },
+    { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Histórico de Doação', 'Consultar Inventário', 'Consultar Inbox', 'Consultar Caixas', 'Consultar Modo CAMP', 'Consultar Blacklist Fireteam', 'Consultar Lista de Bans', 'Consultar Histórico de uso de itens por partida'] },
     { name: 'ENVIAR / INSERIR', options: getEnviarInserirOptions() },
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Emblema Clan', 'Remover Exp', 'Remover Cash', 'Remover Conta', ] },
@@ -291,6 +292,12 @@ return (
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Consultar Lista de Bans' && (
         <ConsultWeeklyBanList
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Consultar Histórico de uso de itens por partida' && (
+        <ConsultItemUseHistory
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

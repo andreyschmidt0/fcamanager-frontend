@@ -30,14 +30,28 @@ const BanFormFields = ({ formData, onInputChange }: any) => (
         <label className="block text-sm font-medium text-white mb-2">
           Motivo do banimento
         </label>
-        <textarea
+        <select
           name="banReason"
           value={formData.banReason}
           onChange={onInputChange}
-          rows={3}
-          className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors resize-none"
+          className="w-full px-3 py-2 bg-[#1d1e24] text-white rounded-lg focus:border-green-500 focus:outline-none transition-colors"
           required
-        />
+        >
+          <option value="">Selecione o motivo...</option>
+          <option value="HACK">HACK</option>
+          <option value="RACISMO">RACISMO</option>
+          <option value="POWER LEVEL DE CLÃ">POWER LEVEL DE CLÃ</option>
+          <option value="POWERLEVER">POWER LEVEL</option>
+          <option value="BUG/EXPLOIT/GLITCH">BUG/EXPLOIT/GLITCH</option>
+          <option value="BUG DE KDA">BUG DE KDA</option>
+          <option value="PRECONCEITO">PRECONCEITO</option>
+          <option value="COMPARTILHAMENTO DE CONTA">COMPARTILHAMENTO DE CONTA</option>
+          <option value="CONTAS FAKE">CONTAS FAKE</option>
+          <option value="CHEAT/MACRO">CHEAT/MACRO</option>
+          <option value="BOOSTING">BOOSTING</option>
+          <option value="DIVULGAÇÃO INDEVIDA">DIVULGAÇÃO INDEVIDA</option>
+
+        </select>
       </div>
 
       {/* Escopo */}
