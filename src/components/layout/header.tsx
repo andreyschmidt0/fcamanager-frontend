@@ -1,10 +1,15 @@
-import { Bell, Menu, ChevronDown, LogOut, Database } from 'lucide-react';
+import { Bell, Menu, ChevronDown, LogOut, Database, Trophy } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import Sidebar from './Sidebar';
 import apiService from '../../services/api-tauri.service';
 
-const Header = () => {
+interface HeaderProps {
+  appContext: 'normal' | 'tournament';
+  setAppContext: (context: 'normal' | 'tournament') => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ appContext, setAppContext }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   
@@ -66,13 +71,21 @@ const Header = () => {
   }, []);
     return (
       <>
-      <header className="bg-black border-b border-gray-800 p-2">
+      <header className={`border-b p-2 transition-colors duration-500 ${
+        appContext === 'tournament' 
+          ? 'bg-[#0a1a2f] border-blue-500/30' 
+          : 'bg-black border-gray-800'
+      }`}>
       <div className="relative flex items-center justify-between px-6 py-4">
         <div ref={menuContainerRef} className="flex items-center gap-4 relative">
           <button 
             ref={menuButtonRef}
             onClick={handleMenuToggle}
-            className="text-white hover:text-gray-300 transition-colors p-2 hover:bg-gray-800 rounded-lg"
+            className={`transition-colors p-2 rounded-lg ${
+              appContext === 'tournament'
+                ? 'text-blue-400 hover:bg-blue-900/30'
+                : 'text-white hover:bg-gray-800'
+            }`}
             aria-label="Abrir menu"
           >
             <Menu size={24} />
@@ -85,22 +98,40 @@ const Header = () => {
               onClose={() => setShowSidebar(false)}
               onEnvironmentChange={(env) => setCurrentEnvironment(env)}
               buttonRef={menuButtonRef}
+              appContext={appContext}
+              setAppContext={setAppContext}
             />
           )}
           
-          {/* Indicador de Ambiente */}
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold border ${
-            currentEnvironment === 'production'
-              ? 'bg-green-600/20 text-green-400 border-green-500/30'
-              : 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30'
-          }`}>
-            <Database size={14} />
-            <span>{currentEnvironment === 'production' ? 'OFICIAL' : 'TESTES'}</span>
+          {/* Indicadores */}
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold border ${
+              currentEnvironment === 'production'
+                ? 'bg-green-600/20 text-green-400 border-green-500/30'
+                : 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30'
+            }`}>
+              <Database size={14} />
+              <span>{currentEnvironment === 'production' ? 'OFICIAL' : 'TESTES'}</span>
+            </div>
+
+            {appContext === 'tournament' && (
+              <div className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-2">
+                <Trophy size={14} />
+                <span>MODO TORNEIO</span>
+              </div>
+            )}
           </div>
         </div>
         
-        <div className="absolute left-1/2 transform -translate-x-1/2">
-          <h1 className="text-2xl font-neofara font-semibold tracking-wider">GERENCIADOR</h1>
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+          <h1 className={`text-2xl font-neofara font-semibold tracking-wider transition-colors ${
+            appContext === 'tournament' ? 'text-blue-400' : 'text-white'
+          }`}>
+            GERENCIADOR
+          </h1>
+          {appContext === 'tournament' && (
+            <span className="text-[10px] text-blue-500 font-bold tracking-[0.2em] -mt-1">OPÇÕES DE TORNEIO</span>
+          )}
         </div>
         
         <div className="flex items-center gap-4">

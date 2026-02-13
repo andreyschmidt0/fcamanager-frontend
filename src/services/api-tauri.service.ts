@@ -2001,6 +2001,73 @@ class ApiTauriService {
     }
   }
 
+  // ============================================
+  // TOURNAMENT ACTIONS
+  // ============================================
+
+  /**
+   * Obtém o ranking geral de seeds (clãs ranqueados)
+   * Adicionado em 12/02/2026
+   */
+  async getSeedRanking(): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/tournament/seed-ranking`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{ success: boolean; data: any[] }>(response);
+      return result.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar ranking de seeds:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém a lista de todos os torneios
+   */
+  async getTournaments(): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_BASE}/actions/tournament/list`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{ success: boolean; data: any[] }>(response);
+      return result.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar torneios:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém a lista de inscrições nos torneios
+   */
+  async getTournamentInscriptions(filters?: { torneioId?: string; clanId?: string; status?: string }): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      if (filters?.torneioId) params.append('torneioId', filters.torneioId);
+      if (filters?.clanId) params.append('clanId', filters.clanId);
+      if (filters?.status) params.append('status', filters.status);
+
+      const response = await fetch(`${API_BASE}/actions/tournament/inscriptions?${params.toString()}`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        connectTimeout: 30000
+      });
+
+      const result = await this.handleResponse<{ success: boolean; data: any[] }>(response);
+      return result.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar inscrições:', error);
+      throw error;
+    }
+  }
+
   // Obter itens dentro de uma caixa específica
   async getItemsInBox(gachaponItemNo: number, filters?: { itemNo?: string; itemName?: string; itemType?: string; percentage?: string }): Promise<{
     success: boolean;

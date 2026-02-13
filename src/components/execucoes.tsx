@@ -36,13 +36,21 @@ import ChangeItemGradeModal from './modal/changeitemgrademodal';
 import ChangeClanName from './modal/changeclanname';
 import ConsultWeeklyBanList from './modal/consultweeklybanlist';
 import ConsultItemUseHistory from './modal/consultitemusehistory';
+import SeedRankingModal from './modal/SeedRankingModal';
+import ConsultTournamentsModal from './modal/ConsultTournamentsModal';
+import ConsultInscriptionsModal from './modal/ConsultInscriptionsModal';
 
 interface SidebarMenuProps {
   activeTab: 'execucoes' | 'pendentes';
   setActiveTab: (tab: 'execucoes' | 'pendentes') => void;
+  appContext?: 'normal' | 'tournament';
 }
 
-const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) => {
+const SidebarMenu: React.FC<SidebarMenuProps> = ({ 
+  activeTab, 
+  setActiveTab, 
+  appContext = 'normal' 
+}) => {
   const { selectedPlayer } = usePlayer();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -109,6 +117,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
   };
 
   const handleOptionClick = (category: string, option: string) => {
+    // No contexto de torneio, as ações podem ser diferentes no futuro
+    // Por enquanto, mantemos as mesmas, mas preparadas para mudança
+    console.log(`Ação no contexto ${appContext}: ${category} - ${option}`);
+    
     setSelectedAction({ category, option });
     setIsModalOpen(true);
     setOpenDropdown(null);
@@ -138,13 +150,21 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeTab, setActiveTab }) =>
     return baseOptions;
   };
 
-  const actionButtons = [
+  const actionButtons = appContext === 'normal' ? [
     { name: 'CONSULTAR', options: ['Consultar Item', 'Consultar Histórico de Ban', 'Consultar Histórico de Doação', 'Consultar Inventário', 'Consultar Inbox', 'Consultar Caixas', 'Consultar Modo CAMP', 'Consultar Blacklist Fireteam', 'Consultar Lista de Bans', 'Consultar Histórico de uso de itens por partida'] },
     { name: 'ENVIAR / INSERIR', options: getEnviarInserirOptions() },
     { name: 'BANIR', options: getBanOptions() },
     { name: 'EXCLUIR', options: ['Remover Clã', 'Remover Emblema Clan', 'Remover Exp', 'Remover Cash', 'Remover Conta', ] },
     { name: 'TRANSFERIR', options: ['Transferir Clã', 'Transferir Discord'] },
     { name: 'ALTERAR', options: ['Alterar Nickname', 'Alterar Email', 'Alterar Senha', 'Alterar Fireteam', 'Marca de Batalha', 'Ajustar KDA', 'Alterar Login', 'Alterar Valor de Item', 'Alterar recompensa GOA', 'Alterar nome do Clan'] }
+  ] : [
+    // CONTEXTO DE TORNEIO (Exemplo: Ações específicas de torneio)
+    { name: 'CONSULTAR', options: ['Consultar Ranking de Seeds', 'Consultar Torneios', 'Consultar Inscrições', 'Consultar Player Torneio', 'Verificar Equipamentos', 'Status da Partida'] },
+    { name: 'ENVIAR / INSERIR', options: ['Enviar Kit Torneio', 'Inserir na Partida'] },
+    { name: 'BANIR', options: ['Desqualificar Player', 'Banir Temporariamente'] },
+    { name: 'EXCLUIR', options: ['Remover do Torneio', 'Limpar Pontuação'] },
+    { name: 'TRANSFERIR', options: ['Mover de Time', 'Trocar de Chave'] },
+    { name: 'ALTERAR', options: ['Alterar Tag de Time', 'Resetar Partida'] }
   ];
   
 return (
@@ -152,11 +172,12 @@ return (
       <div className="flex flex-col h-full p-6" style={{ minHeight: 0 }}>
         
         {/* === BLOCO SUPERIOR: EXECUÇÕES (FIXO) === */}
-        {/* flex-none impede que este bloco encolha ou cresça, ele ocupa apenas o espaço necessário */}
         <div className="flex-none mb-8">
             <div className="flex items-center gap-2 text-sm font-medium mb-6">
-              <span className="w-2 h-2 bg-white rounded-full"></span>
-              <span className="text-base sm:text-lg text-white font-neofara font-medium">EXECUÇÕES</span>
+              <span className={`w-2 h-2 rounded-full ${appContext === 'tournament' ? 'bg-blue-400 animate-pulse' : 'bg-white'}`}></span>
+              <span className="text-base sm:text-lg text-white font-neofara font-medium">
+                {appContext === 'normal' ? 'EXECUÇÕES' : 'TORNEIO'}
+              </span>
             </div>
 
             {/* Action buttons grid */}
@@ -418,6 +439,24 @@ return (
       )}
       {isModalOpen && selectedAction && selectedAction.option === 'Alterar nome do Clan' && (
         <ChangeClanName
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Consultar Ranking de Seeds' && (
+        <SeedRankingModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Consultar Torneios' && (
+        <ConsultTournamentsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {isModalOpen && selectedAction && selectedAction.option === 'Consultar Inscrições' && (
+        <ConsultInscriptionsModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

@@ -11,6 +11,7 @@ import Header from '../components/layout/header';
 const MainPage = () => {
   const [activeTab, setActiveTab] = useState<'execucoes' | 'pendentes'>('execucoes');
   const [mobileView, setMobileView] = useState<'execucoes' | 'players' | 'activities'>('execucoes');
+  const [appContext, setAppContext] = useState<'normal' | 'tournament'>('normal');
   
   return (
     <PlayerProvider>
@@ -18,7 +19,7 @@ const MainPage = () => {
         
         {/* Main container with flex layout */}
         <div className="h-screen bg-[#1d1e24] text-white flex flex-col overflow-hidden">
-          <Header />
+          <Header appContext={appContext} setAppContext={setAppContext} />
 
           {/* Mobile Tab Navigation - Visible only on small screens */}
           <div className="lg:hidden flex justify-around bg-[#111216] border-b border-black p-2">
@@ -30,7 +31,7 @@ const MainPage = () => {
                 : 'text-gray-400 hover:text-white'
               }`}
               >
-              EXECUÇÕES
+              {appContext === 'normal' ? 'EXECUÇÕES' : 'TORNEIO'}
             </button>
             <button
               onClick={() => setMobileView('players')}
@@ -60,7 +61,11 @@ const MainPage = () => {
             <div className="hidden lg:grid lg:grid-cols-12 gap-6 h-full p-6">
               {/* Sidebar - Execuções e Atividades Pendentes */}
               <div className="col-span-5 h-full overflow-hidden">
-                <SidebarMenu activeTab={activeTab} setActiveTab={setActiveTab} />
+                <SidebarMenu 
+                  activeTab={activeTab} 
+                  setActiveTab={setActiveTab} 
+                  appContext={appContext}
+                />
               </div>
 
               {/* Lista de Players/Clans */}
@@ -78,7 +83,11 @@ const MainPage = () => {
             <div className="lg:hidden h-full overflow-hidden p-4">
               {mobileView === 'execucoes' && (
                 <div className="h-full overflow-hidden">
-                  <SidebarMenu activeTab={activeTab} setActiveTab={setActiveTab} />
+                  <SidebarMenu 
+                    activeTab={activeTab} 
+                    setActiveTab={setActiveTab} 
+                    appContext={appContext}
+                  />
                 </div>
               )}
               

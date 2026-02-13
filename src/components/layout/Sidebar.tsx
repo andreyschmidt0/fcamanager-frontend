@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Database, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Database, AlertTriangle, CheckCircle, ChevronRight, ChevronLeft, Trophy, Menu } from 'lucide-react';
 import apiService from '../../services/api-tauri.service';
 
 interface SidebarProps {
@@ -7,10 +7,20 @@ interface SidebarProps {
   onClose: () => void;
   onEnvironmentChange?: (env: 'production' | 'test') => void;
   buttonRef?: React.RefObject<HTMLButtonElement | null>;
+  appContext: 'normal' | 'tournament';
+  setAppContext: (context: 'normal' | 'tournament') => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onEnvironmentChange, buttonRef }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+  isOpen, 
+  onClose, 
+  onEnvironmentChange, 
+  buttonRef,
+  appContext,
+  setAppContext
+}) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<'main' | 'database'>('main');
   
   // Inicializar com o ambiente salvo no localStorage
   const [currentEnv, setCurrentEnv] = useState<'production' | 'test'>(() => {
@@ -21,9 +31,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onEnvironmentChange,
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Apenas sincronizar com o servidor uma vez quando o dropdown abrir pela primeira vez
+  // Resetar view quando abrir
   useEffect(() => {
     if (isOpen) {
+      setView('main');
+    }
+  }, [isOpen]);
+
+  // Apenas sincronizar com o servidor uma vez quando o dropdown abrir pela primeira vez
+  useEffect(() => {
+    if (isOpen && view === 'database') {
       const lastFetch = localStorage.getItem('lastEnvironmentFetch');
       const now = Date.now();
       
@@ -33,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onEnvironmentChange,
         localStorage.setItem('lastEnvironmentFetch', now.toString());
       }
     }
-  }, [isOpen]);
+  }, [isOpen, view]);
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -94,14 +111,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onEnvironmentChange,
           onEnvironmentChange(env);
         }
         
-        // Mostrar notificação de sucesso
-        const envName = env === 'production' ? 'Produção' : 'Testes';
-        
         // Fechar o dropdown
         onClose();
-        
-        // Aguardar um breve momento para garantir que a mudança foi processada
-        await new Promise(resolve => setTimeout(resolve, 500));
         
         // Recarregar a página para atualizar os dados do novo ambiente
         window.location.reload();
@@ -109,7 +120,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onEnvironmentChange,
     } catch (error: any) {
       console.error('Erro ao alternar ambiente:', error);
       
-      // Mensagens de erro específicas
       if (error.message.includes('403')) {
         setError('❌ Acesso negado. Apenas Masters podem alternar ambientes.');
       } else if (error.message.includes('401')) {
@@ -122,109 +132,151 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onEnvironmentChange,
     }
   };
 
+  const toggleTournamentContext = () => {
+    setAppContext(appContext === 'normal' ? 'tournament' : 'normal');
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
     <div 
       ref={dropdownRef}
-      className="absolute left-0 top-full mt-2 w-80 bg-[#1d1e24] rounded-lg shadow-2xl border border-gray-700 z-50 overflow-hidden"
+      className="absolute left-0 top-full mt-2 w-72 bg-[#1d1e24] rounded-lg shadow-2xl border border-gray-700 z-50 overflow-hidden animate-in fade-in zoom-in duration-200"
     >
-      {/* Header Section */}
-      <div className="bg-[#111216] px-4 py-3 border-b border-[#000000]">
-        <div className="flex items-center gap-2">
-          <Database size={18} className="text-blue-400" />
-          <h3 className="text-sm font-semibold text-white">Ambiente do Banco de Dados</h3>
-        </div>
-      </div>
+      {view === 'main' ? (
+        <>
+          {/* Header Menu Principal */}
+          <div className="bg-[#111216] px-4 py-3 border-b border-[#000000] flex items-center gap-2">
+            <Menu size={18} className="text-gray-400" />
+            <h3 className="text-sm font-semibold text-white">Menu de Ferramentas</h3>
+          </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-3">
-        {/* Current Environment Badge */}
-        <div className="flex items-center justify-between p-3 bg-[#111216] rounded-lg border border-gray-700">
-          <span className="text-md text-gray-400 font-medium">Ambiente Atual:</span>
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold ${
-            currentEnv === 'production' 
-              ? 'bg-green-600/20 text-green-400 border border-green-500/30' 
-              : 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30'
-          }`}>
-            {currentEnv === 'production' ? (
-              <>
-                <CheckCircle size={14} />
-                <span>OFICIAL</span>
-              </>
-            ) : (
-              <>
-                <AlertTriangle size={14} />
-                <span>TESTES</span>
-              </>
+          <div className="flex flex-col p-2 gap-1">
+            <p className="px-3 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ações</p>
+            
+            {/* Opção BANCO */}
+            <button
+              onClick={() => setView('database')}
+              className="flex items-center justify-between w-full p-3 hover:bg-[#2a2b34] rounded-lg transition-colors group border border-transparent hover:border-gray-700"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-600/10 text-blue-400 rounded-md group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <Database size={20} />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-semibold text-white">BANCO DE DADOS</span>
+                  <span className="text-[10px] text-gray-400 uppercase">
+                    Configurar: {currentEnv === 'production' ? 'Oficial' : 'Testes'}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-gray-600 group-hover:text-white transition-transform group-hover:translate-x-1" />
+            </button>
+
+            {/* Opção TORNEIO */}
+            <button
+              onClick={toggleTournamentContext}
+              className={`flex items-center justify-between w-full p-3 hover:bg-[#2a2b34] rounded-lg transition-colors group border ${
+                appContext === 'tournament' 
+                  ? 'bg-blue-600/10 border-blue-500/30' 
+                  : 'border-transparent hover:border-gray-700'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-md transition-colors ${
+                  appContext === 'tournament' 
+                    ? 'bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.3)]' 
+                    : 'bg-gray-700/50 text-gray-400 group-hover:bg-blue-600/20 group-hover:text-blue-400'
+                }`}>
+                  <Trophy size={20} />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-semibold text-white">MODO TORNEIO</span>
+                  <span className="text-[10px] text-gray-400 uppercase">
+                    Status: {appContext === 'normal' ? 'Desativado' : 'Ativado'}
+                  </span>
+                </div>
+              </div>
+              {appContext === 'tournament' ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-blue-400">ATIVO</span>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                </div>
+              ) : (
+                <ChevronRight size={18} className="text-gray-600 group-hover:text-white transition-transform group-hover:translate-x-1" />
+              )}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Header Sub-menu */}
+          <div className="bg-[#111216] px-4 py-3 border-b border-[#000000] flex items-center gap-2">
+            <button 
+              onClick={() => setView('main')}
+              className="p-1 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-white"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <Database size={18} className="text-blue-400" />
+            <h3 className="text-sm font-semibold text-white">Ambiente do Banco</h3>
+          </div>
+
+          {/* Content Sub-menu */}
+          <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between p-3 bg-[#111216] rounded-lg border border-gray-700">
+              <span className="text-xs text-gray-400 font-medium">Conectado a:</span>
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold ${
+                currentEnv === 'production' 
+                  ? 'bg-green-600/20 text-green-400 border border-green-500/30' 
+                  : 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30'
+              }`}>
+                {currentEnv === 'production' ? 'OFICIAL' : 'TESTES'}
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-2.5 bg-red-900/20 border border-red-600/30 rounded-lg">
+                <p className="text-xs text-red-300 leading-tight">{error}</p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <button
+                onClick={() => handleSwitchEnvironment('production')}
+                disabled={isLoading || currentEnv === 'production'}
+                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                  currentEnv === 'production'
+                    ? 'bg-green-600 text-white cursor-not-allowed shadow-[0_4px_10px_rgba(22,163,74,0.3)]'
+                    : 'bg-gray-700 text-white hover:bg-green-600'
+                }`}
+              >
+                {currentEnv === 'production' ? '✓ Oficial Ativo' : 'Mudar para Oficial'}
+              </button>
+
+              <button
+                onClick={() => handleSwitchEnvironment('test')}
+                disabled={isLoading || currentEnv === 'test'}
+                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                  currentEnv === 'test'
+                    ? 'bg-yellow-600 text-white cursor-not-allowed shadow-[0_4px_10px_rgba(202,138,4,0.3)]'
+                    : 'bg-gray-700 text-white hover:bg-yellow-600'
+                }`}
+              >
+                {currentEnv === 'test' ? '✓ Testes Ativo' : 'Mudar para Testes'}
+              </button>
+            </div>
+
+            {isLoading && (
+              <div className="flex items-center justify-center gap-3 text-blue-400 py-1">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-400 border-t-transparent"></div>
+                <span className="text-xs font-medium">Processando mudança...</span>
+              </div>
             )}
           </div>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="p-2.5 bg-red-900/20 border border-red-600/30 rounded-lg">
-            <p className="text-xs text-red-300">{error}</p>
-          </div>
-        )}
-
-        {/* Switch Buttons */}
-        <div className="space-y-2">
-          {/* Botão Produção */}
-          <button
-            onClick={() => handleSwitchEnvironment('production')}
-            disabled={isLoading || currentEnv === 'production'}
-            className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
-              currentEnv === 'production'
-                ? 'bg-green-600 text-white cursor-not-allowed'
-                : 'bg-gray-700 text-white hover:bg-green-600'
-            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {currentEnv === 'production' ? (
-              <>
-                <CheckCircle size={16} />
-                <span>✓ Oficial (Ativo)</span>
-              </>
-            ) : (
-              <>
-                <Database size={16} />
-                <span>Alternar para Oficial</span>
-              </>
-            )}
-          </button>
-
-          {/* Botão Testes */}
-          <button
-            onClick={() => handleSwitchEnvironment('test')}
-            disabled={isLoading || currentEnv === 'test'}
-            className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
-              currentEnv === 'test'
-                ? 'bg-yellow-600 text-white cursor-not-allowed'
-                : 'bg-gray-700 text-white hover:bg-yellow-600'
-            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {currentEnv === 'test' ? (
-              <>
-                <CheckCircle size={16} />
-                <span>✓ Testes (Ativo)</span>
-              </>
-            ) : (
-              <>
-                <Database size={16} />
-                <span>Alternar para Testes</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Loading Indicator */}
-        {isLoading && (
-          <div className="flex items-center justify-center gap-2 text-blue-400 pt-2">
-            <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-400 border-t-transparent"></div>
-            <span className="text-xs">Alterando...</span>
-          </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };
