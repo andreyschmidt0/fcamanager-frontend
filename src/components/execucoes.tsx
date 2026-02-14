@@ -201,7 +201,7 @@ return (
                   {openDropdown === button.name && (
                     <div
                       data-dropdown={button.name}
-                      className="absolute top-full left-0 mt-2 w-full bg-[#1d1e24] border border-black rounded-lg shadow-lg z-10 min-w-[150px] sm:min-w-[180px] md:min-w-[200px]"
+                      className="absolute top-full left-0 mt-2 w-full bg-[#1d1e24] border border-black rounded-lg shadow-lg z-10 min-w-[150px] sm:min-w-[180px] md:min-w-[200px] max-h-60 overflow-y-auto custom-scrollbar"
                     >
                       {button.options.map((option) => (
                         <button
