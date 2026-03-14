@@ -9,10 +9,13 @@
       "identifier": "http:default",
       "allow": [
         {
+          "url": "https://app.fcabr.net/*"
+        },
+        {
           "url": "https://fcamanager-backend.onrender.com/*"
         },
         {
-          "url": "https://fca-backend.fly.dev:*"
+          "url": "https://fca-backend.fly.dev/*"
         },
         {
           "url": "http://localhost:*"

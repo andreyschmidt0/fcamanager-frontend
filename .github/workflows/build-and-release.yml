@@ -72,7 +72,7 @@ jobs:
             
             ### ⚠️ Notas Importantes
             - Esta versão inclui:
-            - Atualização do backend para a versão 1.0.72.
+            - Atualização do backend para a versão 1.0.73.
             
             ---
             **Checksum dos arquivos disponível nos Assets abaixo**
@@ -124,7 +124,7 @@ jobs:
           cat > latest.json << EOF
           {
             "version": "${{ steps.release_info.outputs.app_version }}",
-            "notes": "Atualização do backend para a versão 1.0.72.",
+            "notes": "Atualização do backend para a versão 1.0.73.",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "windows-x86_64": {
