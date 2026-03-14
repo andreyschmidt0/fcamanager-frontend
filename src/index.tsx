@@ -6,7 +6,7 @@ const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
-  // Removing StrictMode to prevent duplicate API calls in development
+  // Removing StrictMode to prevent duplicate API calls
   // <React.StrictMode>
     <App />
   // </React.StrictMode>

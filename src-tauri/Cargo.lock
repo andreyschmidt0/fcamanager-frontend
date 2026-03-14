@@ -1025,7 +1025,7 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 [[package]]
 name = "fca-manager"
 <<<<<<< HEAD
-version = "1.0.70"
+version = "1.0.71"
 =======
 version = "1.0.69"
 >>>>>>> 2d33c5b0b24e6efa8fe1eee5c75a38e8e5d0702d
