@@ -514,9 +514,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
         )}
       </div>
 
-      {/* Player Popup - Fixed position at bottom left */}
+      {/* Player Popup - Fixed position at bottom right */}
       {selectedPlayer && (
-        <div className="fixed bottom-4 left-4 z-40">
+        <div className="fixed bottom-4 right-4 z-40">
           <div className="bg-[#111216] border border-black rounded-lg shadow-lg p-4 min-w-[280px] max-w-[320px]">
             {/* Close button */}
             <button 
@@ -684,9 +684,9 @@ const PlayersList: React.FC<PlayersListProps> = ({ activeTab }) => {
         </div>
       )}
 
-      {/* Clan Popup - Fixed position at bottom left */}
+      {/* Clan Popup - Fixed position at bottom right */}
       {selectedClan && (
-        <div className="fixed bottom-4 left-4 z-40">
+        <div className="fixed bottom-4 right-4 z-40">
           <div className="bg-[#111216] border border-gray-600 rounded-lg shadow-lg p-4 min-w-[280px] max-w-[320px]">
             {/* Close button */}
             <button 
